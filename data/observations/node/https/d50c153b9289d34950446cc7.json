@@ -1,0 +1,32 @@
+{
+  "case_id": "5411b35c1bfd98b707a4262c",
+  "identity": {
+    "client": "https",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x64",
+      "dependencies": {},
+      "os": "linux",
+      "runtime_resolved_version": "25.6.1",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.5.5"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "25.6.1",
+    "target": "node-https"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "kXrN3VEKDdzz2cPKTQaKzpxVTxQ=",
+      "tlsClientExtensionsSha1": "M5Sm/2qrabCxy8tG1NIWsjf99Ug=",
+      "tlsClientExtensionsSha1Le": "C6UcGP66kPwR41Cyi/I/iPOzh/Q="
+    }
+  ],
+  "record_id": "d50c153b9289d34950446cc7",
+  "schema_version": 1
+}
