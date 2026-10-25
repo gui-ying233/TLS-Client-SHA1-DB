@@ -257,6 +257,11 @@
           {
             "runtime_max": "22.18.99",
             "client_min": "8.0.0"
+          },
+          {
+            "runtime_min": "23.0.0",
+            "runtime_max": "23.7.99",
+            "client_min": "8.0.0"
           }
         ]
       }
