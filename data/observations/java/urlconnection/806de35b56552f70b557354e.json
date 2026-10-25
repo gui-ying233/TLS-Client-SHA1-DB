@@ -1,0 +1,31 @@
+{
+  "case_id": "daac4dc059611720fe9dd1a5",
+  "identity": {
+    "client": "urlconnection",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "amd64",
+      "os": "Linux",
+      "runtime_resolved_version": "17.0.20.1",
+      "tls_backend": {
+        "name": "JSSE",
+        "version": "17.0.20.1+1"
+      }
+    },
+    "language": "java",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "17",
+    "target": "java-urlconnection"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "JpP/awvpRE21buLj6IO4oY28uW0=",
+      "tlsClientExtensionsSha1": "xP1M71fEtVuI9y+cBe60UDcHfu4=",
+      "tlsClientExtensionsSha1Le": "xQWTYXCseJ7kxed7i/4ewwioxJU="
+    }
+  ],
+  "record_id": "806de35b56552f70b557354e",
+  "schema_version": 1
+}
