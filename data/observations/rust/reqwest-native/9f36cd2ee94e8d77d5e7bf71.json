@@ -1,0 +1,34 @@
+{
+  "case_id": "621ed136a3ed1ce0e328ca35",
+  "identity": {
+    "client": "reqwest-native",
+    "client_version": "0.12.28",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "reqwest": "0.12.28"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.90.0",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)"
+      }
+    },
+    "language": "rust",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.90.0",
+    "target": "rust-reqwest-native"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "cZTfz0G33jxhytWCjEfVzVcI6Z8=",
+      "tlsClientExtensionsSha1Le": "y3JKXe94tRJ0uCBnpApIPh1u0IQ="
+    }
+  ],
+  "record_id": "9f36cd2ee94e8d77d5e7bf71",
+  "schema_version": 1
+}
