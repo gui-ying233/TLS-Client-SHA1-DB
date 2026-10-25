@@ -65,6 +65,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.case.runtime_version }}
+          update-environment: false
       - uses: actions/setup-node@v4
         if: matrix.case.language == 'node'
         continue-on-error: true
@@ -121,7 +122,7 @@ jobs:
 
   persist:
     needs: [plan, collect]
-    if: needs.plan.outputs.has_work == 'true' && needs.collect.result == 'success'
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.has_work == 'true' && (needs.collect.result == 'success' || needs.collect.result == 'failure') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write

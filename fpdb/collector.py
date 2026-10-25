@@ -99,6 +99,12 @@ def collect(root: Path, case: dict) -> dict | None:
     adapter = target["adapter"]
     runtime_env = os.environ.copy()
     runtime_env.update({"FPDB_ENDPOINT": config["endpoint"], "FPDB_TARGET": case["target"]})
+    # The collector uses its own control Python. Each Python probe (and pip
+    # prepare command) must resolve libpython from the selected target build,
+    # not from the control interpreter's LD_LIBRARY_PATH.
+    if case["language"] == "python" and sys.platform == "linux":
+        target_python = Path(replacements["python_bin"]).resolve()
+        runtime_env["LD_LIBRARY_PATH"] = str(target_python.parent.parent / "lib")
     # Avoid accidental proxy-based TLS termination. Adapter may opt into a proxy
     # only by explicit own code; proxy variables are not inherited here.
     for name in list(runtime_env):
