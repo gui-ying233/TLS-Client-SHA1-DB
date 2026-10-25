@@ -1,0 +1,31 @@
+{
+  "case_id": "318f8b55ae0473c8d898000e",
+  "identity": {
+    "client": "net-http",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "amd64",
+      "os": "linux",
+      "runtime_resolved_version": "1.27.2",
+      "tls_backend": {
+        "name": "crypto/tls",
+        "version": "go1.27.2"
+      }
+    },
+    "language": "go",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.27.2",
+    "target": "go-http"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "QrF6UadKW3vtNOqdNqbd4frxxxE=",
+      "tlsClientExtensionsSha1": "VmypJ9I6O+wlbe1dI9qycuZ4Ywg=",
+      "tlsClientExtensionsSha1Le": "i+zMiC3iuMzkwC9CUcQV4FcnRkg="
+    }
+  ],
+  "record_id": "44b06de26e0c31cf00121681",
+  "schema_version": 1
+}

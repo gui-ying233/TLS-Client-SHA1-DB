@@ -1,0 +1,32 @@
+{
+  "case_id": "f71fb24862d77fe05cd83e0e",
+  "identity": {
+    "client": "fetch",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x64",
+      "dependencies": {},
+      "os": "linux",
+      "runtime_resolved_version": "22.17.1",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.0.16"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "22.17.1",
+    "target": "node-fetch"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ="
+    }
+  ],
+  "record_id": "bda99213a88d1f7c1eed35e2",
+  "schema_version": 1
+}
