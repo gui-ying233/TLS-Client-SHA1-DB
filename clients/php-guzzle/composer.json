@@ -1,1 +1,1 @@
-{"require":{"php":"^8.1","guzzlehttp/guzzle":"7.9.3"},"config":{"allow-plugins":false}}
+{"require":{"php":"^8.1","guzzlehttp/guzzle":"7.9.3"},"config":{"allow-plugins":false,"policy":{"advisories":{"block":false}}}}

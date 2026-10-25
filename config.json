@@ -1304,6 +1304,315 @@
           "{endpoint}"
         ]
       }
+    },
+    {
+      "id": "python-urllib3",
+      "language": "python",
+      "client": "urllib3",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.11",
+          "3.12",
+          "3.13"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "2.8.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/extra_probe.py",
+          "urllib3",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "{python_bin}",
+          "-m",
+          "pip",
+          "install",
+          "--disable-pip-version-check",
+          "--no-input",
+          "urllib3=={client_version}"
+        ]
+      }
+    },
+    {
+      "id": "python-aiohttp",
+      "language": "python",
+      "client": "aiohttp",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.11",
+          "3.12",
+          "3.13"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "3.14.5"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/extra_probe.py",
+          "aiohttp",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "{python_bin}",
+          "-m",
+          "pip",
+          "install",
+          "--disable-pip-version-check",
+          "--no-input",
+          "aiohttp=={client_version}"
+        ]
+      }
+    },
+    {
+      "id": "python-pycurl",
+      "language": "python",
+      "client": "pycurl",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.11",
+          "3.12",
+          "3.13"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "7.48.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/extra_probe.py",
+          "pycurl",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "{python_bin}",
+          "-m",
+          "pip",
+          "install",
+          "--disable-pip-version-check",
+          "--no-input",
+          "pycurl=={client_version}"
+        ]
+      }
+    },
+    {
+      "id": "python-tornado",
+      "language": "python",
+      "client": "tornado",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.11",
+          "3.12",
+          "3.13"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "6.6"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/extra_probe.py",
+          "tornado",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "{python_bin}",
+          "-m",
+          "pip",
+          "install",
+          "--disable-pip-version-check",
+          "--no-input",
+          "tornado=={client_version}"
+        ]
+      }
+    },
+    {
+      "id": "python-scrapy",
+      "language": "python",
+      "client": "scrapy",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.11",
+          "3.12",
+          "3.13"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "2.19.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/extra_probe.py",
+          "scrapy",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "{python_bin}",
+          "-m",
+          "pip",
+          "install",
+          "--disable-pip-version-check",
+          "--no-input",
+          "scrapy=={client_version}"
+        ]
+      }
+    },
+    {
+      "id": "ruby-faraday",
+      "language": "ruby",
+      "client": "faraday",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.2",
+          "3.3",
+          "3.4"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "2.15.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "ruby",
+          "clients/ruby/faraday_probe.rb",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "gem",
+          "install",
+          "faraday",
+          "-v",
+          "{client_version}",
+          "--no-document"
+        ]
+      }
+    },
+    {
+      "id": "go-gorequest",
+      "language": "go",
+      "client": "gorequest",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.25.5"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "0.2.17"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/gorequest/fpdb-gorequest",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/go/gorequest/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "go-requests",
+      "language": "go",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.24.3",
+          "1.25.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "0.26.2"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/requests/fpdb-requests",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/go/requests/prepare.sh"
+        ]
+      }
     }
   ]
 }
