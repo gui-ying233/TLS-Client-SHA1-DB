@@ -1,0 +1,34 @@
+{
+  "case_id": "9176d8737a73df4fde2f710a",
+  "identity": {
+    "client": "urllib3",
+    "client_version": "2.8.0",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "urllib3": "2.8.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.13.16",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "python",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.13",
+    "target": "python-urllib3"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "PPJlK7s0reMX4JkzHIaXBcX3W2k=",
+      "tlsClientExtensionsSha1": "tlH5gnoC5Z1HF45J5OgHEi338V0=",
+      "tlsClientExtensionsSha1Le": "mRCkyUCRFDTLCNHGQsZNFhkU1/4="
+    }
+  ],
+  "record_id": "6e19ac8676c86e270121a08d",
+  "schema_version": 1
+}

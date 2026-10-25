@@ -1,0 +1,34 @@
+{
+  "case_id": "26c43f36d0f9fc493bba6d90",
+  "identity": {
+    "client": "aiohttp",
+    "client_version": "3.14.5",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "aiohttp": "3.14.5"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.13.16",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "python",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.13",
+    "target": "python-aiohttp"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "PPJlK7s0reMX4JkzHIaXBcX3W2k=",
+      "tlsClientExtensionsSha1": "eBrZDr0YocoC2Wfqz/18YVTvEQE=",
+      "tlsClientExtensionsSha1Le": "dC4haEKQu51afM2H7tInG8zYGBw="
+    }
+  ],
+  "record_id": "bbe32e23f61f817c42c80ef4",
+  "schema_version": 1
+}

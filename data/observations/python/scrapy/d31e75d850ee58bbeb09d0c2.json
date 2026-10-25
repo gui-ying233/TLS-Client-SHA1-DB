@@ -1,0 +1,35 @@
+{
+  "case_id": "1b8513378c53a49e30599f88",
+  "identity": {
+    "client": "scrapy",
+    "client_version": "2.19.0",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "Twisted": "26.4.0",
+        "scrapy": "2.19.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.12.15",
+      "tls_backend": {
+        "name": "Twisted/OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "python",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.12",
+    "target": "python-scrapy"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "hCCNuWP9ky6AR69i97wdKYbhFQo=",
+      "tlsClientExtensionsSha1": "q6PJuz6hneBN7fwgJApuclnsx48=",
+      "tlsClientExtensionsSha1Le": "0bnKbLpmKUDr95ZRh4odWtVLHYc="
+    }
+  ],
+  "record_id": "d31e75d850ee58bbeb09d0c2",
+  "schema_version": 1
+}
