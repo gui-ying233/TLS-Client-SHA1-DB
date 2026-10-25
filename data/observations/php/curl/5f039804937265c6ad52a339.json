@@ -1,0 +1,34 @@
+{
+  "case_id": "1955fc6a826f7f6b7f0173be",
+  "identity": {
+    "client": "curl",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "libcurl": "8.5.0"
+      },
+      "os": "Linux",
+      "runtime_resolved_version": "8.2.35",
+      "tls_backend": {
+        "name": "OpenSSL/3.0.13",
+        "version": "OpenSSL/3.0.13"
+      }
+    },
+    "language": "php",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "8.2",
+    "target": "php-curl"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "tlH5gnoC5Z1HF45J5OgHEi338V0=",
+      "tlsClientExtensionsSha1Le": "mRCkyUCRFDTLCNHGQsZNFhkU1/4="
+    }
+  ],
+  "record_id": "5f039804937265c6ad52a339",
+  "schema_version": 1
+}
