@@ -1,0 +1,34 @@
+{
+  "case_id": "3f8f6b0f99cd8c3971db5fd6",
+  "identity": {
+    "client": "axios",
+    "client_version": "1.20.0",
+    "environment": {
+      "arch": "x64",
+      "dependencies": {
+        "axios": "1.20.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "26.2.0",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.5.6"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "26.2.0",
+    "target": "node-axios"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "kXrN3VEKDdzz2cPKTQaKzpxVTxQ=",
+      "tlsClientExtensionsSha1": "M5Sm/2qrabCxy8tG1NIWsjf99Ug=",
+      "tlsClientExtensionsSha1Le": "C6UcGP66kPwR41Cyi/I/iPOzh/Q="
+    }
+  ],
+  "record_id": "7dfb8d9de51f80d31d186aa4",
+  "schema_version": 1
+}

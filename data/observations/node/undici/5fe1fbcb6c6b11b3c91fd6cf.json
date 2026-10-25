@@ -1,0 +1,34 @@
+{
+  "case_id": "eab43cd07b9508b2ba17c842",
+  "identity": {
+    "client": "undici",
+    "client_version": "8.12.3",
+    "environment": {
+      "arch": "x64",
+      "dependencies": {
+        "undici": "8.12.3"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "24.11.1",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.5.4"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "24.11.1",
+    "target": "node-undici"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "kXrN3VEKDdzz2cPKTQaKzpxVTxQ=",
+      "tlsClientExtensionsSha1": "1eY97BUYYO8vDaTfHQywB1pcNdM=",
+      "tlsClientExtensionsSha1Le": "u4wtEMFQBY18l3BzHAvORm+KGRw="
+    }
+  ],
+  "record_id": "5fe1fbcb6c6b11b3c91fd6cf",
+  "schema_version": 1
+}
