@@ -12,7 +12,7 @@ def get_echo(client, endpoint):
     if client == "urllib":
         # No proxy; prevent a middlebox from replacing our TLS ClientHello.
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        request = urllib.request.Request(endpoint, headers=headers)
+        request = urllib.request.Request(endpoint, headers={**headers, "User-Agent": "TLS-Client-SHA1-DB/1"})
         with opener.open(request, timeout=25) as response:
             return json.load(response)
     if client == "requests":

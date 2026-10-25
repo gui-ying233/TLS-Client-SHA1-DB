@@ -22,5 +22,5 @@ $echo=json_decode($raw,true,512,JSON_THROW_ON_ERROR);
 print json_encode(['runtime_version'=>PHP_VERSION,'client_version'=>'stdlib',
 'environment'=>['os'=>PHP_OS_FAMILY,'arch'=>php_uname('m'),
  'tls_backend'=>['name'=>$backend,'version'=>$backendVersion],
- 'dependencies'=>$client==='curl'?['libcurl'=>(string)($info['version']??'unknown')]:[]],
+ 'dependencies'=>$client==='curl'?['libcurl'=>(string)($info['version']??'unknown')]:(object)[]],
  'echo'=>$echo],JSON_THROW_ON_ERROR|JSON_UNESCAPED_SLASHES)."\n";

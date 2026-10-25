@@ -97,6 +97,14 @@
           "--no-input",
           "requests=={client_version}"
         ]
+      },
+      "compatibility": {
+        "exclude": [
+          {
+            "runtime_max": "3.9.99",
+            "client_min": "2.33.0"
+          }
+        ]
       }
     },
     {
@@ -136,6 +144,14 @@
           "--disable-pip-version-check",
           "--no-input",
           "httpx=={client_version}"
+        ]
+      },
+      "compatibility": {
+        "exclude": [
+          {
+            "runtime_min": "3.15.0",
+            "client_max": "0.25.99"
+          }
         ]
       }
     },
@@ -230,6 +246,18 @@
           "--prefix",
           "clients/node",
           "undici@{client_version}"
+        ]
+      },
+      "compatibility": {
+        "exclude": [
+          {
+            "runtime_max": "20.18.0",
+            "client_min": "7.0.0"
+          },
+          {
+            "runtime_max": "22.18.99",
+            "client_min": "8.0.0"
+          }
         ]
       }
     },
