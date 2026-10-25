@@ -77,8 +77,11 @@ def discover(source: dict) -> list[str]:
         payload = _get_json("https://nodejs.org/dist/index.json")
         if not isinstance(payload, list):
             raise DataError("Invalid Node.js distribution feed")
+        # Node.js v26.8.0's release binary reports 26.8.0-alpha.0.0.0.
+        # Do not collect a mislabeled runtime as the stable 26.8.0 release.
         values = [item["version"].lstrip("v") for item in payload
                   if isinstance(item, dict) and item.get("version") and
+                  item["version"] != "v26.8.0" and
                   "linux-x64" in item.get("files", [])]
     elif kind == "go_dist":
         payload = _get_json("https://go.dev/dl/?mode=json&include=all")

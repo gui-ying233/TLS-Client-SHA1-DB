@@ -23,15 +23,35 @@ def _command(template: list[str], replacements: dict[str, str]) -> list[str]:
         raise DataError(f"Invalid adapter command placeholder: {exc}") from exc
 
 
-def _run(command: list[str], root: Path, timeout: int, environment: dict) -> dict:
+def _run(command: list[str], root: Path, timeout: int, environment: dict, *, retry_diagnostics: bool = False) -> dict:
     process = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True,
                              timeout=timeout, check=False)
     if process.returncode != 0:
-        raise DataError(f"Adapter exited {process.returncode}; stderr={process.stderr[-1000:]!r}")
+        raise DataError(f"Adapter exited {process.returncode}; stderr={process.stderr[-2500:]!r}")
+    if retry_diagnostics and process.stderr.strip():
+        log.warning("Adapter retry diagnostics: %s", process.stderr[-2500:].strip())
     try:
         return json.loads(process.stdout)
     except json.JSONDecodeError as exc:
         raise DataError("Adapter stdout must be exactly one JSON document") from exc
+
+
+def _echo_shape(payload: object) -> dict:
+    """Print structural diagnostics only; never log response bodies or request headers."""
+    def keys(value: object) -> list[str]:
+        return sorted(str(key) for key in value)[:24] if isinstance(value, dict) else []
+
+    body = payload.get("echo", payload) if isinstance(payload, dict) else payload
+    http = body.get("http") if isinstance(body, dict) else None
+    tls = http.get("tls") if isinstance(http, dict) else None
+    return {
+        "body_type": type(body).__name__,
+        "body_keys": keys(body),
+        "http_type": type(http).__name__,
+        "http_keys": keys(http),
+        "tls_type": type(tls).__name__,
+        "tls_keys": keys(tls),
+    }
 
 
 def _require_environment(payload: dict, case: dict) -> dict:
@@ -137,10 +157,21 @@ def collect(root: Path, case: dict) -> dict | None:
         result = None
         for trial in range(retry + 1):
             try:
-                result = _run(command, root, timeout, runtime_env)
+                # Keep the first attempt quiet. On the retry, request safe HTTP
+                # metadata from adapters without changing the TLS connection.
+                probe_env = ({**runtime_env, "FPDB_DIAGNOSTIC_RETRY": "1"}
+                             if trial else runtime_env)
+                result = _run(command, root, timeout, probe_env,
+                              retry_diagnostics=bool(trial))
                 if not isinstance(result, dict):
                     raise DataError("Adapter output must be JSON object")
-                observed_row = extract_echo(result)
+                try:
+                    observed_row = extract_echo(result)
+                except DataError:
+                    if trial:
+                        log.warning("case=%s sample=%d retry Echo shape: %s",
+                                    case["id"], sample_index + 1, _echo_shape(result))
+                    raise
                 observed_env = _require_environment(result, case)
                 if resolved_environment is None:
                     resolved_environment = observed_env
