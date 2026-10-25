@@ -1,0 +1,606 @@
+{
+  "targets": [
+    {
+      "id": "env-debian13-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "debian13"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "debian13",
+          "requests",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-debian13-curl",
+      "language": "ubuntu",
+      "client": "curl",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "debian13"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "debian13",
+          "curl",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-ubuntu2604-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "ubuntu2604"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "ubuntu2604",
+          "requests",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-ubuntu2604-curl",
+      "language": "ubuntu",
+      "client": "curl",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "ubuntu2604"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "ubuntu2604",
+          "curl",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-alpine322-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "alpine322"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "alpine322",
+          "requests",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-alpine322-curl",
+      "language": "ubuntu",
+      "client": "curl",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "alpine322"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "alpine322",
+          "curl",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-debian13-curl-http1-control",
+      "language": "ubuntu",
+      "client": "curl",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "http1-explicit-control",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "debian13"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "debian13",
+          "curl-http1",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-ubuntu26-runner-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-26.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/native_prepare.sh"
+        ],
+        "probe": [
+          "python3",
+          "clients/environment/probe.py",
+          "requests",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-ubuntu26-runner-curl",
+      "language": "ubuntu",
+      "client": "curl",
+      "enabled": true,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-26.04",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/native_prepare.sh"
+        ],
+        "probe": [
+          "python3",
+          "clients/environment/probe.py",
+          "curl",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-macos-15-system-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "darwin-arm64",
+      "runner": "macos-15",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/macos_prepare.sh",
+          "system"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/macos_run.sh",
+          "system",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-macos-15-homebrew-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "darwin-arm64",
+      "runner": "macos-15",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/macos_prepare.sh",
+          "homebrew"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/macos_run.sh",
+          "homebrew",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-macos-15-intel-system-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "darwin-x86_64",
+      "runner": "macos-15-intel",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/macos_prepare.sh",
+          "system"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/macos_run.sh",
+          "system",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-macos-15-intel-homebrew-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "darwin-x86_64",
+      "runner": "macos-15-intel",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/macos_prepare.sh",
+          "homebrew"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/macos_run.sh",
+          "homebrew",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-macos-26-system-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "darwin-arm64",
+      "runner": "macos-26",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/macos_prepare.sh",
+          "system"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/macos_run.sh",
+          "system",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-macos-26-homebrew-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": true,
+      "revision": "1",
+      "platform": "darwin-arm64",
+      "runner": "macos-26",
+      "capture_profile": "native-default",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/macos_prepare.sh",
+          "homebrew"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/macos_run.sh",
+          "homebrew",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-control-openssl36-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": false,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "source-build-control",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "openssl36"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "openssl36",
+          "requests",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "env-control-libressl283-requests",
+      "language": "python",
+      "client": "requests",
+      "enabled": false,
+      "revision": "1",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "capture_profile": "source-build-control",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/environment/docker_prepare.sh",
+          "libressl283"
+        ],
+        "probe": [
+          "bash",
+          "clients/environment/docker_run.sh",
+          "libressl283",
+          "requests",
+          "{endpoint}"
+        ]
+      }
+    }
+  ]
+}

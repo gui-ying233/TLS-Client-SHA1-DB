@@ -1,0 +1,17 @@
+FROM debian:13
+RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates curl build-essential pkg-config wget xz-utils zlib1g-dev libbz2-dev \
+    libffi-dev libsqlite3-dev libreadline-dev liblzma-dev && rm -rf /var/lib/apt/lists/*
+WORKDIR /tmp/build
+RUN curl -fsSLo openssl.tar.gz https://www.openssl.org/source/openssl-3.6.0.tar.gz && \
+    tar -xzf openssl.tar.gz && cd openssl-3.6.0 && \
+    ./Configure --prefix=/opt/openssl36 --openssldir=/opt/openssl36/ssl no-tests && \
+    make -j2 && make install_sw
+RUN curl -fsSLo python.tar.xz https://www.python.org/ftp/python/3.14.8/Python-3.14.8.tar.xz && \
+    tar -xf python.tar.xz && cd Python-3.14.8 && \
+    ./configure --prefix=/opt/cpython --with-openssl=/opt/openssl36 --with-openssl-rpath=auto && \
+    make -j2 && make install
+RUN /opt/cpython/bin/python3 -m pip install --disable-pip-version-check 'requests==2.32.5'
+COPY probe.py /fpdb-probe.py
+ENV PATH=/opt/cpython/bin:$PATH FPDB_IMAGE_LABEL=control-openssl36-cpython3148
+WORKDIR /

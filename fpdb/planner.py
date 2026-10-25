@@ -12,6 +12,12 @@ def load_config(root: Path) -> dict:
     config = read_json(root / "config.json")
     if config.get("schema_version") != 1 or not isinstance(config.get("targets"), list):
         raise DataError("Invalid config.json")
+    environments = root / "config.environments.json"
+    if environments.exists():
+        additional = read_json(environments)
+        if not isinstance(additional.get("targets"), list):
+            raise DataError("Invalid config.environments.json")
+        config["targets"].extend(additional["targets"])
     return config
 
 

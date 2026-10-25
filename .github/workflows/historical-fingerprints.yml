@@ -68,7 +68,7 @@ jobs:
         with:
           python-version: '3.13'
       - id: target-python
-        if: matrix.case.language == 'python'
+        if: matrix.case.language == 'python' && !startsWith(matrix.case.target, 'env-')
         continue-on-error: true
         uses: actions/setup-python@v5
         with:

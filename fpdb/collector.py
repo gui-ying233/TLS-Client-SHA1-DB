@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from fpdb.core import DataError, FIELDS, compact, extract_echo, record_identity, digest
+from fpdb.evidence import extract_joint, merge_evidence
 from fpdb.planner import load_config
 
 log = logging.getLogger(__name__)
@@ -152,6 +153,7 @@ def collect(root: Path, case: dict) -> dict | None:
 
     command = _command(adapter["probe"], replacements)
     observed = []
+    joint_samples = []
     resolved_environment = None
     for sample_index in range(expanded):
         result = None
@@ -173,10 +175,13 @@ def collect(root: Path, case: dict) -> dict | None:
                                     case["id"], sample_index + 1, _echo_shape(result))
                     raise
                 observed_env = _require_environment(result, case)
+                if target.get("capture_profile"):
+                    observed_env["capture_profile"] = target["capture_profile"]
                 if resolved_environment is None:
                     resolved_environment = observed_env
                 elif resolved_environment != observed_env:
                     raise DataError("Environment changed within one sampling run")
+                joint_samples.append({**extract_joint(result), "count": 1})
                 observed.append(observed_row)
                 break
             except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
@@ -190,6 +195,9 @@ def collect(root: Path, case: dict) -> dict | None:
     observations = compact(observed,
         unique_limit=int(sampling["max_unique_per_field"]),
         combination_limit=int(sampling["max_combinations"]))
+    # This independent, bounded sample store retains real joint triples and
+    # metadata even if compact() must suppress an unstable index column.
+    evidence, lost = merge_evidence([], joint_samples)
     identity = record_identity(case, resolved_environment)
     return {
         "schema_version": 1,
@@ -197,4 +205,6 @@ def collect(root: Path, case: dict) -> dict | None:
         "record_id": digest(identity),
         "identity": identity,
         "observations": observations,
+        "evidence": evidence,
+        "evidence_truncated": lost,
     }

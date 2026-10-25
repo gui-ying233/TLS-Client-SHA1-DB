@@ -11,6 +11,7 @@ from fpdb.core import ROOT, DataError, save_json
 from fpdb.planner import plan
 from fpdb.collector import collect
 from fpdb.persistence import persist
+from fpdb.lookup import lookup
 
 
 def main() -> int:
@@ -29,6 +30,12 @@ def main() -> int:
     c.add_argument("--output-dir", type=Path, default=Path("outbox"))
     s = subs.add_parser("persist")
     s.add_argument("--inbox", type=Path, default=Path("inbox"))
+    q = subs.add_parser("lookup", help="Rank candidates using co-observed SHA-1 values")
+    q.add_argument("--ciphers", help="tlsClientCiphersSha1")
+    q.add_argument("--extensions", help="tlsClientExtensionsSha1")
+    q.add_argument("--extensions-le", help="tlsClientExtensionsSha1Le")
+    q.add_argument("--limit", type=int, default=100)
+    q.add_argument("--require-all", action="store_true", help="Only return complete joint matches")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     root = args.root.resolve()
@@ -59,6 +66,13 @@ def main() -> int:
         elif args.command == "persist":
             changed, processed = persist(root, args.inbox.resolve())
             print(f"artifacts={processed} changed_records={changed}")
+        elif args.command == "lookup":
+            supplied = {field: value for field, value in (
+                ("tlsClientCiphersSha1", args.ciphers),
+                ("tlsClientExtensionsSha1", args.extensions),
+                ("tlsClientExtensionsSha1Le", args.extensions_le)) if value}
+            print(json.dumps({"supplied": supplied, "candidates": lookup(root, supplied, args.limit, require_all=args.require_all)},
+                             ensure_ascii=False, indent=2))
     except (OSError, ValueError, KeyError) as exc:
         parser.error(str(exc))
     return 0
