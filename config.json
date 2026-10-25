@@ -371,10 +371,7 @@
           "{client_version}",
           "{endpoint}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "java-httpclient",
@@ -412,10 +409,7 @@
           "javac",
           "clients/java/Probe.java"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "java-urlconnection",
@@ -454,10 +448,7 @@
           "javac",
           "clients/java/Probe.java"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "php-stream",
@@ -491,10 +482,7 @@
           "{client_version}",
           "{endpoint}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "php-curl",
@@ -528,10 +516,7 @@
           "{client_version}",
           "{endpoint}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "rust-reqwest-rustls",
@@ -568,10 +553,7 @@
           "{runtime_version}",
           "{client}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "rust-reqwest-native",
@@ -608,10 +590,7 @@
           "{runtime_version}",
           "{client}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "ubuntu-curl",
@@ -641,10 +620,7 @@
           "{client_version}",
           "{endpoint}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "ubuntu-wget",
@@ -674,10 +650,7 @@
           "{client_version}",
           "{endpoint}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "ubuntu-openssl",
@@ -707,10 +680,7 @@
           "{client_version}",
           "{endpoint}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "perl-io-socket-ssl",
@@ -739,10 +709,7 @@
           "{client_version}",
           "{endpoint}"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "dotnet-httpclient",
@@ -783,10 +750,7 @@
           "net{runtime_version}",
           "--nologo"
         ]
-      },
-      "recheck_modes": [
-        "historical"
-      ]
+      }
     },
     {
       "id": "c-libcurl",
@@ -808,9 +772,6 @@
           "system"
         ]
       },
-      "recheck_modes": [
-        "historical"
-      ],
       "adapter": {
         "prepare": [
           "gcc",
@@ -824,6 +785,521 @@
         ],
         "probe": [
           "clients/system/curl_probe",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "dart-httpclient",
+      "language": "dart",
+      "client": "httpclient",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.9.4",
+          "stable"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "dart",
+          "clients/dart/probe.dart",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "erlang-httpc",
+      "language": "erlang",
+      "client": "httpc",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "27",
+          "28"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "escript",
+          "clients/erlang/probe.escript",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "cpp-boost-beast",
+      "language": "cpp",
+      "client": "boost-beast",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/cpp/fpdb-cpp",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/cpp/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "ruby-http",
+      "language": "ruby",
+      "client": "http",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.2",
+          "3.3",
+          "3.4",
+          "3.5"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "5.3.1"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "ruby",
+          "clients/ruby/http_probe.rb",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "gem",
+          "install",
+          "http",
+          "-v",
+          "{client_version}",
+          "--no-document"
+        ]
+      }
+    },
+    {
+      "id": "perl-lwp",
+      "language": "perl",
+      "client": "lwp",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "perl",
+          "clients/perl/lwp_probe.pl",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "java-okhttp",
+      "language": "java",
+      "client": "okhttp",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "11",
+          "17",
+          "21",
+          "25"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "4.12.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "bash",
+          "clients/java/okhttp/run.sh",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/java/okhttp/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "php-guzzle",
+      "language": "php",
+      "client": "guzzle",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "8.1",
+          "8.2",
+          "8.3",
+          "8.4",
+          "8.5"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "7.9.3"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "php",
+          "clients/php-guzzle/probe.php",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "composer",
+          "install",
+          "--working-dir=clients/php-guzzle",
+          "--no-interaction",
+          "--no-progress",
+          "--prefer-dist",
+          "--no-scripts"
+        ]
+      }
+    },
+    {
+      "id": "go-resty",
+      "language": "go",
+      "client": "resty",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.23.5",
+          "1.24.3",
+          "1.25.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "2.16.5"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/resty/fpdb-resty",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/go/resty/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "dotnet-restsharp",
+      "language": "dotnet",
+      "client": "restsharp",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "8.0",
+          "9.0",
+          "10.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "112.1.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "dotnet",
+          "clients/dotnet-restsharp/bin/Release/net{runtime_version}/FpdbRestSharp.dll",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "dotnet",
+          "build",
+          "clients/dotnet-restsharp/FpdbRestSharp.csproj",
+          "-c",
+          "Release",
+          "-f",
+          "net{runtime_version}",
+          "--nologo"
+        ]
+      }
+    },
+    {
+      "id": "go-colly",
+      "language": "go",
+      "client": "colly",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.24.3",
+          "1.25.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "2.2.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/colly/fpdb-colly",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/go/colly/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "go-fasthttp",
+      "language": "go",
+      "client": "fasthttp",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.24.3",
+          "1.25.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "1.65.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/fasthttp/fpdb-fasthttp",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/go/fasthttp/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "go-req",
+      "language": "go",
+      "client": "req",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.24.3",
+          "1.25.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "3.53.0"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/req/fpdb-req",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/go/req/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "go-retryablehttp",
+      "language": "go",
+      "client": "retryablehttp",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.24.3",
+          "1.25.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "0.7.8"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/retryablehttp/fpdb-retryablehttp",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/go/retryablehttp/prepare.sh"
+        ]
+      }
+    },
+    {
+      "id": "ruby-mechanize",
+      "language": "ruby",
+      "client": "mechanize",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.2",
+          "3.3",
+          "3.4",
+          "3.5"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "2.14.1"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "ruby",
+          "clients/ruby/mechanize_probe.rb",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "gem",
+          "install",
+          "mechanize",
+          "-v",
+          "{client_version}",
+          "--no-document"
+        ]
+      }
+    },
+    {
+      "id": "perl-www-mechanize",
+      "language": "perl",
+      "client": "www-mechanize",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "perl",
+          "clients/perl/mechanize_probe.pl",
           "{client_version}",
           "{endpoint}"
         ]

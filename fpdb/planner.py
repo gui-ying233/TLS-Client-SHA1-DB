@@ -118,10 +118,40 @@ def plan(root: Path, *, mode: str, target_filter: str = "", seed: str = "0",
             cases.append(case)
     if target_filter and target_filter not in target_ids:
         raise DataError(f"Unknown or disabled target {target_filter}")
-    if mode == "incremental":
-        cases.sort(key=lambda case: (case["target"], sort_key(case["runtime_version"])), reverse=True)
-    else:
-        # Changing seed each scheduled run fairly rotates through missing cases,
-        # so repeated failures cannot permanently block a fixed-size first page.
-        cases.sort(key=lambda case: hashlib.sha256(f"{seed}:{case['id']}".encode()).hexdigest())
-    return cases[:limit]
+    if target_filter or mode == "full":
+        if mode == "incremental":
+            cases.sort(key=lambda case: sort_key(case["runtime_version"]), reverse=True)
+        else:
+            cases.sort(key=lambda case: hashlib.sha256(f"{seed}:{case['id']}".encode()).hexdigest())
+        return cases[:limit]
+
+    # Allocate a round-robin slot to each language, then each implementation.
+    # A long Node/Python version history must not monopolize a limited matrix.
+    from collections import defaultdict, deque
+    grouped = defaultdict(lambda: defaultdict(list))
+    for case in cases:
+        grouped[case["language"]][case["target"]].append(case)
+    per_language = {}
+    for language, targets in grouped.items():
+        queues = {}
+        for name, items in targets.items():
+            if mode == "incremental":
+                items.sort(key=lambda item: sort_key(item["runtime_version"]), reverse=True)
+            else:
+                items.sort(key=lambda item: hashlib.sha256(f"{seed}:{item['id']}".encode()).hexdigest())
+            queues[name] = deque(items)
+        result = deque()
+        while any(queues.values()):
+            for name in sorted(queues, key=lambda key: hashlib.sha256(f"{seed}:{key}".encode()).hexdigest()):
+                if queues[name]:
+                    result.append(queues[name].popleft())
+        per_language[language] = result
+
+    ordered = []
+    while any(per_language.values()) and len(ordered) < limit:
+        for language in sorted(per_language, key=lambda key: hashlib.sha256(f"{seed}:{key}".encode()).hexdigest()):
+            if per_language[language]:
+                ordered.append(per_language[language].popleft())
+                if len(ordered) >= limit:
+                    break
+    return ordered

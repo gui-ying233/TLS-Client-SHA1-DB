@@ -107,10 +107,23 @@ jobs:
         continue-on-error: true
         with:
           dotnet-version: ${{ matrix.case.runtime_version }}.x
+      - uses: dart-lang/setup-dart@v1
+        continue-on-error: true
+        if: matrix.case.language == 'dart'
+        with:
+          sdk: ${{ matrix.case.runtime_version }}
+      - uses: erlef/setup-beam@v1
+        continue-on-error: true
+        if: matrix.case.language == 'erlang'
+        with:
+          otp-version: ${{ matrix.case.runtime_version }}
+      - name: Install C++ Boost.Beast / OpenSSL headers
+        if: matrix.case.language == 'cpp'
+        run: sudo apt-get update -qq && sudo apt-get install -y libboost-dev libssl-dev
       - name: Install Perl TLS dependencies
         if: matrix.case.language == 'perl'
         continue-on-error: true
-        run: sudo apt-get update -qq && sudo apt-get install -y libio-socket-ssl-perl libjson-pp-perl
+        run: sudo apt-get update -qq && sudo apt-get install -y libio-socket-ssl-perl libjson-pp-perl libwww-perl liblwp-protocol-https-perl libwww-mechanize-perl
       - name: Install libcurl development headers
         if: matrix.case.language == 'c'
         continue-on-error: true

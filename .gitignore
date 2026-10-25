@@ -7,6 +7,7 @@ matrix.json
 
 # Native probes / language install caches
 clients/go/fpdb-go
+clients/go/*/fpdb-*
 clients/system/curl_probe
 clients/java/*.class
 clients/node/node_modules/
