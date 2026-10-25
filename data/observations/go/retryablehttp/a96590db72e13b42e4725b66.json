@@ -1,0 +1,34 @@
+{
+  "case_id": "5579442e76f7e24154944b9b",
+  "identity": {
+    "client": "retryablehttp",
+    "client_version": "0.7.8",
+    "environment": {
+      "arch": "amd64",
+      "dependencies": {
+        "go-retryablehttp": "0.7.8"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.25.0",
+      "tls_backend": {
+        "name": "crypto/tls",
+        "version": "go1.25.0"
+      }
+    },
+    "language": "go",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.25.0",
+    "target": "go-retryablehttp"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "QrF6UadKW3vtNOqdNqbd4frxxxE=",
+      "tlsClientExtensionsSha1": "4bG1Y8rLaQO7Zz8LsR9/kLSZA1k=",
+      "tlsClientExtensionsSha1Le": "pMUsb7QtBZ73yrr4pkFYSqVzFlU="
+    }
+  ],
+  "record_id": "a96590db72e13b42e4725b66",
+  "schema_version": 1
+}

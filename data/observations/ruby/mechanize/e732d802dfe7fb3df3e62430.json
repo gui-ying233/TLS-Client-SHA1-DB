@@ -1,0 +1,34 @@
+{
+  "case_id": "a86684cc1482d3a350fd4369",
+  "identity": {
+    "client": "mechanize",
+    "client_version": "2.14.1",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "mechanize": "2.14.1"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.4.12",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "ruby",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.4",
+    "target": "ruby-mechanize"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "Yl7WDL8Xw09Eclbj8V7V38uOtKI=",
+      "tlsClientExtensionsSha1Le": "vlz2cGiBV2TDrx84982h+m6uWMY="
+    }
+  ],
+  "record_id": "e732d802dfe7fb3df3e62430",
+  "schema_version": 1
+}

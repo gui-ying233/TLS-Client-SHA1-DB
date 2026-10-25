@@ -1,0 +1,34 @@
+{
+  "case_id": "c8638cbd612c0248ee6bb656",
+  "identity": {
+    "client": "resty",
+    "client_version": "2.16.5",
+    "environment": {
+      "arch": "amd64",
+      "dependencies": {
+        "resty": "2.16.5"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.25.0",
+      "tls_backend": {
+        "name": "crypto/tls",
+        "version": "go1.25.0"
+      }
+    },
+    "language": "go",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.25.0",
+    "target": "go-resty"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "QrF6UadKW3vtNOqdNqbd4frxxxE=",
+      "tlsClientExtensionsSha1": "VmypJ9I6O+wlbe1dI9qycuZ4Ywg=",
+      "tlsClientExtensionsSha1Le": "i+zMiC3iuMzkwC9CUcQV4FcnRkg="
+    }
+  ],
+  "record_id": "2e423280f091f6ed8da17721",
+  "schema_version": 1
+}

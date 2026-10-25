@@ -1,0 +1,34 @@
+{
+  "case_id": "31d90c667174972569413a74",
+  "identity": {
+    "client": "okhttp",
+    "client_version": "4.12.0",
+    "environment": {
+      "arch": "amd64",
+      "dependencies": {
+        "okhttp": "4.12.0"
+      },
+      "os": "Linux",
+      "runtime_resolved_version": "21.0.12.1",
+      "tls_backend": {
+        "name": "JSSE",
+        "version": "21.0.12.1+1-LTS"
+      }
+    },
+    "language": "java",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "21",
+    "target": "java-okhttp"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "r1GNOxiwv27KXp9CCk7DwSCBbII=",
+      "tlsClientExtensionsSha1": "tQG5D/p21Hizl69RDK3b9LGBHVw=",
+      "tlsClientExtensionsSha1Le": "ebmH5a8X2/WhmbvoTbCaDcuyP44="
+    }
+  ],
+  "record_id": "8dd52988bd209d65bc02275a",
+  "schema_version": 1
+}

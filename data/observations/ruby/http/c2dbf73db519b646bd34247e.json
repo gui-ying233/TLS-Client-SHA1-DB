@@ -1,0 +1,34 @@
+{
+  "case_id": "b3f96c45e70695f7182b4de9",
+  "identity": {
+    "client": "http",
+    "client_version": "5.3.1",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "http": "5.3.1"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.2.11",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "ruby",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.2",
+    "target": "ruby-http"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "Yl7WDL8Xw09Eclbj8V7V38uOtKI=",
+      "tlsClientExtensionsSha1Le": "vlz2cGiBV2TDrx84982h+m6uWMY="
+    }
+  ],
+  "record_id": "c2dbf73db519b646bd34247e",
+  "schema_version": 1
+}

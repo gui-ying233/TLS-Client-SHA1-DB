@@ -1,0 +1,34 @@
+{
+  "case_id": "f3b0d8e33c99323f7066338a",
+  "identity": {
+    "client": "colly",
+    "client_version": "2.2.0",
+    "environment": {
+      "arch": "amd64",
+      "dependencies": {
+        "colly": "2.2.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.25.0",
+      "tls_backend": {
+        "name": "crypto/tls",
+        "version": "go1.25.0"
+      }
+    },
+    "language": "go",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.25.0",
+    "target": "go-colly"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "QrF6UadKW3vtNOqdNqbd4frxxxE=",
+      "tlsClientExtensionsSha1": "4bG1Y8rLaQO7Zz8LsR9/kLSZA1k=",
+      "tlsClientExtensionsSha1Le": "pMUsb7QtBZ73yrr4pkFYSqVzFlU="
+    }
+  ],
+  "record_id": "1a99b1c933e23a0923e0c574",
+  "schema_version": 1
+}

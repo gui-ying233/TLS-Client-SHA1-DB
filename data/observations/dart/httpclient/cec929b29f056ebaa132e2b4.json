@@ -1,0 +1,31 @@
+{
+  "case_id": "cc69c4ece0cb8d6513df4826",
+  "identity": {
+    "client": "httpclient",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64",
+      "os": "linux",
+      "runtime_resolved_version": "3.9.4",
+      "tls_backend": {
+        "name": "dart:io SecureSocket",
+        "version": "3.9.4"
+      }
+    },
+    "language": "dart",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.9.4",
+    "target": "dart-httpclient"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "Z5hJp4rGfwSOBwFfibDtLAP5rkI=",
+      "tlsClientExtensionsSha1": "IDS2jshLLK/HGrjct4bpWAlzt4s=",
+      "tlsClientExtensionsSha1Le": "f0GI4lWgjQCmrfuxp8ErVr/D19M="
+    }
+  ],
+  "record_id": "cec929b29f056ebaa132e2b4",
+  "schema_version": 1
+}

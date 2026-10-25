@@ -1,0 +1,34 @@
+{
+  "case_id": "6ce741f7157ab1e69a01bbc3",
+  "identity": {
+    "client": "fasthttp",
+    "client_version": "1.65.0",
+    "environment": {
+      "arch": "amd64",
+      "dependencies": {
+        "fasthttp": "1.65.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.24.3",
+      "tls_backend": {
+        "name": "crypto/tls",
+        "version": "go1.24.3"
+      }
+    },
+    "language": "go",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.24.3",
+    "target": "go-fasthttp"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "QrF6UadKW3vtNOqdNqbd4frxxxE=",
+      "tlsClientExtensionsSha1": "aWVCohOefx9sYmnLzIkGYW/Cb9M=",
+      "tlsClientExtensionsSha1Le": "G5t+uwtBmY9hJOvSdB/+WgzrvyI="
+    }
+  ],
+  "record_id": "2cc2061651a7d78082d1eb4a",
+  "schema_version": 1
+}

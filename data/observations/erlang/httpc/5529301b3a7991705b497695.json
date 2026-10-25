@@ -1,0 +1,31 @@
+{
+  "case_id": "e4b85423f7657625eddfe9a1",
+  "identity": {
+    "client": "httpc",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64-pc-linux-gnu",
+      "os": "linux",
+      "runtime_resolved_version": "27",
+      "tls_backend": {
+        "name": "OTP ssl",
+        "version": "11.2.12.14"
+      }
+    },
+    "language": "erlang",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "27",
+    "target": "erlang-httpc"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "5jSHH5mODVJ2jSJSKvyhMlmoPnU=",
+      "tlsClientExtensionsSha1": "qljKW4Th/sTVbn0YYpYZzQ/KzEE=",
+      "tlsClientExtensionsSha1Le": "G24sFbYu6jAsPEktPvHDjmR9uhY="
+    }
+  ],
+  "record_id": "5529301b3a7991705b497695",
+  "schema_version": 1
+}
