@@ -1,0 +1,34 @@
+{
+  "case_id": "e91e44f6bde52edeeeac9456",
+  "identity": {
+    "client": "wget",
+    "client_version": "system",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "wget": "GNU Wget 1.21.4 built on linux-gnu."
+      },
+      "os": "linux",
+      "runtime_resolved_version": "24.04",
+      "tls_backend": {
+        "name": "OPENSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)"
+      }
+    },
+    "language": "ubuntu",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "system",
+    "target": "ubuntu-wget"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "4rub1TWb873iWBi4CL+Pp7GtUOg=",
+      "tlsClientExtensionsSha1": "r4LbdAkYlCvgy307Rh7AnowAfig=",
+      "tlsClientExtensionsSha1Le": "lrjVvXnzqHFwGxOuaM2uQw+KV4w="
+    }
+  ],
+  "record_id": "ecffaef5618bff47d3e075d8",
+  "schema_version": 1
+}
