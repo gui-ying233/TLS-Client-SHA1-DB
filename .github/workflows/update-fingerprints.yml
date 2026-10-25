@@ -1,0 +1,161 @@
+name: TLS-Client-SHA1-DB update
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Optional target ID (empty means all enabled targets)'
+        required: false
+        type: string
+      recheck:
+        description: 'Re-test already recorded configurations'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has_work: ${{ steps.matrix.outputs.has_work }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - id: matrix
+        name: Discover and plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TARGET: ${{ inputs.target || '' }}
+          RECHECK: ${{ inputs.recheck || false }}
+          MODE: incremental
+          SEED: ${{ github.run_number }}
+        run: |
+          ARGS=(--mode "$MODE" --target "$TARGET" --seed "$SEED" --output matrix.json)
+          if [[ "$RECHECK" == 'true' ]]; then ARGS+=(--recheck); fi
+          python -m fpdb.cli plan "${ARGS[@]}"
+
+  collect:
+    needs: plan
+    if: needs.plan.outputs.has_work == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ${{ matrix.case.runner }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - id: control-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - id: target-python
+        if: matrix.case.language == 'python'
+        continue-on-error: true
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.case.runtime_version }}
+      - uses: actions/setup-node@v4
+        if: matrix.case.language == 'node'
+        continue-on-error: true
+        with:
+          node-version: ${{ matrix.case.runtime_version }}
+      - uses: actions/setup-go@v5
+        if: matrix.case.language == 'go'
+        continue-on-error: true
+        with:
+          go-version: ${{ matrix.case.runtime_version }}
+      - uses: ruby/setup-ruby@v1
+        if: matrix.case.language == 'ruby'
+        continue-on-error: true
+        with:
+          ruby-version: ${{ matrix.case.runtime_version }}
+      - uses: actions/setup-java@v4
+        if: matrix.case.language == 'java'
+        continue-on-error: true
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.case.runtime_version }}
+      - uses: shivammathur/setup-php@v2
+        if: matrix.case.language == 'php'
+        continue-on-error: true
+        with:
+          php-version: ${{ matrix.case.runtime_version }}
+          extensions: curl, openssl
+          coverage: none
+      - uses: actions/setup-dotnet@v4
+        if: matrix.case.language == 'dotnet'
+        continue-on-error: true
+        with:
+          dotnet-version: ${{ matrix.case.runtime_version }}.x
+      - name: Install Perl TLS dependencies
+        if: matrix.case.language == 'perl'
+        continue-on-error: true
+        run: sudo apt-get update -qq && sudo apt-get install -y libio-socket-ssl-perl libjson-pp-perl
+      - name: Install libcurl development headers
+        if: matrix.case.language == 'c'
+        continue-on-error: true
+        run: sudo apt-get update -qq && sudo apt-get install -y libcurl4-openssl-dev
+      - name: Collect native HTTP client TLS fingerprints
+        env:
+          FPDB_CASE_JSON: ${{ toJSON(matrix.case) }}
+          FPDB_PYTHON_BIN: ${{ steps.target-python.outputs.python-path }}
+        run: '"${{ steps.control-python.outputs.python-path }}" -m fpdb.cli collect --output-dir outbox'
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: fingerprint-${{ matrix.case.id }}
+          path: outbox/
+          if-no-files-found: error
+          retention-days: 7
+
+  persist:
+    needs: [plan, collect]
+    if: needs.plan.outputs.has_work == 'true' && needs.collect.result == 'success'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    # Shared across both workflows: only one writer at any time.
+    concurrency:
+      group: fingerprint-db-writer-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Download result artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fingerprint-*
+          path: inbox/
+          merge-multiple: true
+      - name: Merge into latest default branch and publish
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git pull --ff-only origin "$DEFAULT_BRANCH"
+          python -m fpdb.cli persist --inbox inbox/
+          if [[ -d data ]]; then git add -A -- data/; fi
+          if git diff --cached --quiet; then
+            echo 'No fingerprint changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(fingerprints): update TLS observations'
+          git push origin "HEAD:$DEFAULT_BRANCH"

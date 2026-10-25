@@ -1,0 +1,796 @@
+{
+  "schema_version": 1,
+  "endpoint": "https://echo.yuaner.tw/",
+  "sampling": {
+    "initial_handshakes": 5,
+    "expanded_handshakes": 10,
+    "max_unique_per_field": 5,
+    "max_combinations": 16,
+    "timeout_seconds": 30,
+    "retry_per_handshake": 1,
+    "prepare_timeout_seconds": 1500
+  },
+  "execution": {
+    "batch_size": 80,
+    "active_runtime_count": 3,
+    "max_matrix_size": 200
+  },
+  "profiles": {
+    "incremental": {
+      "enabled": true
+    },
+    "historical": {
+      "enabled": true
+    },
+    "full": {
+      "enabled": false
+    }
+  },
+  "targets": [
+    {
+      "language": "python",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "runtime_versions": {
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
+      },
+      "enabled": true,
+      "revision": "1",
+      "id": "python-urllib",
+      "client": "urllib",
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/probe.py",
+          "urllib",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "language": "python",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "runtime_versions": {
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
+      },
+      "enabled": true,
+      "revision": "1",
+      "id": "python-requests",
+      "client": "requests",
+      "client_versions": {
+        "type": "pypi",
+        "package": "requests",
+        "min_version": "2.20.0"
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/probe.py",
+          "requests",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "{python_bin}",
+          "-m",
+          "pip",
+          "install",
+          "--disable-pip-version-check",
+          "--no-input",
+          "requests=={client_version}"
+        ]
+      }
+    },
+    {
+      "language": "python",
+      "platform": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "runtime_versions": {
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
+      },
+      "enabled": true,
+      "revision": "1",
+      "id": "python-httpx",
+      "client": "httpx",
+      "client_versions": {
+        "type": "pypi",
+        "package": "httpx",
+        "min_version": "0.20.0"
+      },
+      "adapter": {
+        "probe": [
+          "{python_bin}",
+          "clients/python/probe.py",
+          "httpx",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "{python_bin}",
+          "-m",
+          "pip",
+          "install",
+          "--disable-pip-version-check",
+          "--no-input",
+          "httpx=={client_version}"
+        ]
+      }
+    },
+    {
+      "id": "node-https",
+      "language": "node",
+      "client": "https",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "node",
+          "clients/node/probe.cjs",
+          "https",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "node-fetch",
+      "language": "node",
+      "client": "fetch",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "node",
+          "clients/node/probe.cjs",
+          "fetch",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "node-undici",
+      "language": "node",
+      "client": "undici",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "npm",
+        "package": "undici",
+        "min_version": "6.0.0"
+      },
+      "adapter": {
+        "probe": [
+          "node",
+          "clients/node/probe.cjs",
+          "undici",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "npm",
+          "install",
+          "--no-audit",
+          "--no-fund",
+          "--ignore-scripts",
+          "--no-save",
+          "--prefix",
+          "clients/node",
+          "undici@{client_version}"
+        ]
+      }
+    },
+    {
+      "id": "node-axios",
+      "language": "node",
+      "client": "axios",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "npm",
+        "package": "axios",
+        "min_version": "1.0.0"
+      },
+      "adapter": {
+        "probe": [
+          "node",
+          "clients/node/probe.cjs",
+          "axios",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "npm",
+          "install",
+          "--no-audit",
+          "--no-fund",
+          "--ignore-scripts",
+          "--no-save",
+          "--prefix",
+          "clients/node",
+          "axios@{client_version}"
+        ]
+      }
+    },
+    {
+      "id": "go-http",
+      "language": "go",
+      "client": "net-http",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "go_dist",
+        "min_version": "1.22.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/go/fpdb-go",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "go",
+          "build",
+          "-o",
+          "clients/go/fpdb-go",
+          "clients/go/probe.go"
+        ]
+      }
+    },
+    {
+      "id": "ruby-net-http",
+      "language": "ruby",
+      "client": "net-http",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "3.2",
+          "3.3",
+          "3.4",
+          "3.5"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "ruby",
+          "clients/ruby/probe.rb",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "java-httpclient",
+      "language": "java",
+      "client": "httpclient",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "11",
+          "17",
+          "21",
+          "25"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "java",
+          "-cp",
+          "clients/java",
+          "Probe",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "javac",
+          "clients/java/Probe.java"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "java-urlconnection",
+      "language": "java",
+      "client": "urlconnection",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "11",
+          "17",
+          "21",
+          "25"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "java",
+          "-cp",
+          "clients/java",
+          "Probe",
+          "{client_version}",
+          "{endpoint}",
+          "urlconnection"
+        ],
+        "prepare": [
+          "javac",
+          "clients/java/Probe.java"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "php-stream",
+      "language": "php",
+      "client": "stream",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "8.1",
+          "8.2",
+          "8.3",
+          "8.4",
+          "8.5"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "php",
+          "clients/php/probe.php",
+          "stream",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "php-curl",
+      "language": "php",
+      "client": "curl",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "8.1",
+          "8.2",
+          "8.3",
+          "8.4",
+          "8.5"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "php",
+          "clients/php/probe.php",
+          "curl",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "rust-reqwest-rustls",
+      "language": "rust",
+      "client": "reqwest-rustls",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.90.0",
+          "stable"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "0.12.28"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/rust/target/release/fpdb-probe",
+          "{client}",
+          "{client_version}",
+          "{endpoint}",
+          "{runtime_version}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/rust/prepare.sh",
+          "{runtime_version}",
+          "{client}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "rust-reqwest-native",
+      "language": "rust",
+      "client": "reqwest-native",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "1.90.0",
+          "stable"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "0.12.28"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "clients/rust/target/release/fpdb-probe",
+          "{client}",
+          "{client_version}",
+          "{endpoint}",
+          "{runtime_version}"
+        ],
+        "prepare": [
+          "bash",
+          "clients/rust/prepare.sh",
+          "{runtime_version}",
+          "{client}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "ubuntu-curl",
+      "language": "ubuntu",
+      "client": "curl",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "python3",
+          "clients/system/probe.py",
+          "curl",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "ubuntu-wget",
+      "language": "ubuntu",
+      "client": "wget",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "python3",
+          "clients/system/probe.py",
+          "wget",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "ubuntu-openssl",
+      "language": "ubuntu",
+      "client": "openssl",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "python3",
+          "clients/system/probe.py",
+          "openssl",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "perl-io-socket-ssl",
+      "language": "perl",
+      "client": "io-socket-ssl",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "perl",
+          "clients/perl/probe.pl",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "dotnet-httpclient",
+      "language": "dotnet",
+      "client": "httpclient",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "8.0",
+          "9.0",
+          "10.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "dotnet",
+          "clients/dotnet/bin/Release/net{runtime_version}/Fpdb.dll",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "dotnet",
+          "build",
+          "clients/dotnet/Fpdb.csproj",
+          "-c",
+          "Release",
+          "-f",
+          "net{runtime_version}",
+          "--nologo"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ]
+    },
+    {
+      "id": "c-libcurl",
+      "language": "c",
+      "client": "libcurl",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "recheck_modes": [
+        "historical"
+      ],
+      "adapter": {
+        "prepare": [
+          "gcc",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "clients/system/curl_probe.c",
+          "-o",
+          "clients/system/curl_probe",
+          "-lcurl"
+        ],
+        "probe": [
+          "clients/system/curl_probe",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    }
+  ]
+}

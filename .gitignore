@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+inbox/
+outbox/
+matrix.json
+*.tmp
+
+# Native probes / language install caches
+clients/go/fpdb-go
+clients/system/curl_probe
+clients/java/*.class
+clients/node/node_modules/
+clients/node/package-lock.json
+clients/rust/target/
+clients/rust/Cargo.lock
+clients/dotnet/bin/
+clients/dotnet/obj/
