@@ -48,7 +48,10 @@ async function read() {
     } finally {await dispatcher.close();}
   }
   if (client === 'axios') {
-    const axios=require('axios');
+    // Axios 1.1.0 exports its CommonJS client under `default`.
+    const axiosModule=require('axios');
+    const axios=typeof axiosModule.get === 'function' ? axiosModule : axiosModule.default;
+    if (typeof axios?.get !== 'function') throw Error('Unsupported axios module export');
     try {
       // Response compression is not part of the TLS ClientHello fingerprint.
       // Avoid old axios versions' Brotli decompression failures.
