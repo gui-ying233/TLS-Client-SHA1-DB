@@ -1,0 +1,32 @@
+{
+  "case_id": "ddcf0363d0e82108f27478c4",
+  "identity": {
+    "client": "reqwest-rustls",
+    "client_version": "0.12.28",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "reqwest": "0.12.28"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.99.1",
+      "tls_backend": {
+        "name": "rustls",
+        "version": "0.23.46"
+      }
+    },
+    "language": "rust",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "stable",
+    "target": "rust-reqwest-rustls"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA="
+    }
+  ],
+  "record_id": "e6caa0e366023cedaae6edf7",
+  "schema_version": 1
+}

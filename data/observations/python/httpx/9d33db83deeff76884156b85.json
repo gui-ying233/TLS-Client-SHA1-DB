@@ -1,0 +1,38 @@
+{
+  "case_id": "2685023a92a9e281287b074a",
+  "identity": {
+    "client": "httpx",
+    "client_version": "0.28.1",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {
+        "anyio": "4.15.1",
+        "certifi": "2026.10.23",
+        "h11": "0.16.0",
+        "httpcore": "1.0.9",
+        "httpx": "0.28.1"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.10.8",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "python",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.10.8",
+    "target": "python-httpx"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "PPJlK7s0reMX4JkzHIaXBcX3W2k=",
+      "tlsClientExtensionsSha1": "eBrZDr0YocoC2Wfqz/18YVTvEQE=",
+      "tlsClientExtensionsSha1Le": "dC4haEKQu51afM2H7tInG8zYGBw="
+    }
+  ],
+  "record_id": "9d33db83deeff76884156b85",
+  "schema_version": 1
+}
