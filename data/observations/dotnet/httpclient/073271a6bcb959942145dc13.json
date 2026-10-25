@@ -1,0 +1,31 @@
+{
+  "case_id": "b223b68e6b92051ace6f78f1",
+  "identity": {
+    "client": "httpclient",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "X64",
+      "os": "Unix",
+      "runtime_resolved_version": "9.0.21",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)"
+      }
+    },
+    "language": "dotnet",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "9.0",
+    "target": "dotnet-httpclient"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "rGiVREcCOsYD9VVEaVPWPr1Nu4E=",
+      "tlsClientExtensionsSha1": "6UmmQWg0gpYIt7ep+vuv2QF/rhs=",
+      "tlsClientExtensionsSha1Le": "tpNgogukEbYEUcG68uYBBoax0Rw="
+    }
+  ],
+  "record_id": "073271a6bcb959942145dc13",
+  "schema_version": 1
+}
