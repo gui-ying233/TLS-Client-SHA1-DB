@@ -76,6 +76,7 @@ jobs:
         continue-on-error: true
         with:
           go-version: ${{ matrix.case.runtime_version }}
+          cache: false  # Go modules are inside clients/go/*/, not the repository root.
       - uses: ruby/setup-ruby@v1
         if: matrix.case.language == 'ruby'
         continue-on-error: true
@@ -99,6 +100,65 @@ jobs:
         continue-on-error: true
         with:
           dotnet-version: ${{ matrix.case.runtime_version }}.x
+      # Cache *downloads and compiler objects*, never fingerprint observations,
+      # complete probe executables or mutable system TLS libraries.
+      # GitHub Actions caches are immutable and shared by both collection workflows.
+      - name: Cache pip wheels
+        if: matrix.case.language == 'python' && (matrix.case.target == 'python-aiohttp' || matrix.case.target == 'python-pycurl' || matrix.case.target == 'python-tornado' || matrix.case.target == 'python-scrapy' || matrix.case.target == 'python-urllib3')
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.target }}-${{ matrix.case.client_version }}
+          restore-keys: |
+            pip-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
+      - name: Cache npm tarballs
+        if: matrix.case.language == 'node' && (matrix.case.target == 'node-axios' || matrix.case.target == 'node-undici')
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.target }}-${{ matrix.case.client_version }}
+          restore-keys: |
+            npm-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
+      - name: Cache Go modules and compiler objects
+        if: matrix.case.language == 'go'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.target }}-${{ matrix.case.client_version }}-${{ hashFiles('clients/go/**/go.mod') }}
+          restore-keys: |
+            go-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
+      - name: Cache Maven dependencies
+        if: matrix.case.target == 'java-okhttp'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-v1-${{ runner.os }}-${{ hashFiles('clients/java/okhttp/pom.xml') }}
+      - name: Cache Composer downloads
+        if: matrix.case.target == 'php-guzzle'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/composer
+            ~/.composer/cache
+          key: composer-v1-${{ runner.os }}-${{ matrix.case.client_version }}-${{ hashFiles('clients/php-guzzle/composer.json') }}
+      - name: Cache NuGet packages
+        if: matrix.case.language == 'dotnet'
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-v1-${{ runner.os }}-${{ matrix.case.target }}-${{ hashFiles('clients/dotnet/**/*.csproj', 'clients/dotnet-restsharp/**/*.csproj') }}
+      - name: Cache Cargo source downloads
+        if: matrix.case.language == 'rust'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.client }}-${{ hashFiles('clients/rust/Cargo.toml') }}
+          restore-keys: |
+            cargo-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
       - uses: dart-lang/setup-dart@v1
         continue-on-error: true
         if: matrix.case.language == 'dart'
