@@ -6,6 +6,7 @@ from pathlib import Path
 from fpdb.core import (DataError, columns, digest, merge_observations,
                        read_json, record_path, save_json)
 from fpdb.planner import load_config
+from fpdb.index import build as build_index
 
 
 def _check_record(record: dict) -> None:
@@ -46,6 +47,7 @@ def persist(root: Path, inbox: Path) -> tuple[int, int]:
         if not path.exists() or read_json(path) != fresh:
             save_json(path, fresh)
             changed += 1
+    build_index(root)
     return changed, len(files)
 
 
