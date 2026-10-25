@@ -1,0 +1,32 @@
+{
+  "case_id": "76e9488e592cd54768dd462b",
+  "identity": {
+    "client": "stream",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {},
+      "os": "Linux",
+      "runtime_resolved_version": "8.3.36",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "php",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "8.3",
+    "target": "php-stream"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "3/VO+hOzwdLvYnVUZjVwP0VZn9U=",
+      "tlsClientExtensionsSha1": "cZTfz0G33jxhytWCjEfVzVcI6Z8=",
+      "tlsClientExtensionsSha1Le": "y3JKXe94tRJ0uCBnpApIPh1u0IQ="
+    }
+  ],
+  "record_id": "3c6a7a0b96a4debef0e73a66",
+  "schema_version": 1
+}
