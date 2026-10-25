@@ -1,0 +1,49 @@
+{
+  "case_id": "e58974766c10ffd9083a80e1",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "EPPWGkMwL/+VHBbDlFeYFF2S3W0=",
+      "tlsClientExtensionsSha1": "GQ5kluei/Xx6OAJyC5ndcoWOJLE=",
+      "tlsClientExtensionsSha1Le": "JE5+bfgPv1p5fbM9YkCylMeVxAg=",
+      "tlsClientHelloLength": 1525,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "requests",
+    "client_version": "system",
+    "environment": {
+      "arch": "arm64",
+      "capture_profile": "native-default",
+      "dependencies": {
+        "requests": "2.32.5",
+        "urllib3": "2.8.0"
+      },
+      "image": "macOS-15.7.9-arm64-arm-64bit-Mach-O",
+      "os": "darwin",
+      "runtime_resolved_version": "3.14.7",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.6.4 25 Aug 2026"
+      }
+    },
+    "language": "python",
+    "platform": "darwin-arm64",
+    "revision": "1",
+    "runner": "macos-15",
+    "runtime_version": "system",
+    "target": "env-macos-15-homebrew-requests"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "EPPWGkMwL/+VHBbDlFeYFF2S3W0=",
+      "tlsClientExtensionsSha1": "GQ5kluei/Xx6OAJyC5ndcoWOJLE=",
+      "tlsClientExtensionsSha1Le": "JE5+bfgPv1p5fbM9YkCylMeVxAg="
+    }
+  ],
+  "record_id": "6045a2029a167c3efeef9e76",
+  "schema_version": 1
+}
