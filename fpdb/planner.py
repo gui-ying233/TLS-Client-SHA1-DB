@@ -94,7 +94,8 @@ def _pairs(target: dict, mode: str, active_runtime_count: int) -> list[tuple[str
 
 
 def plan(root: Path, *, mode: str, target_filter: str = "", seed: str = "0",
-         recheck: bool = False, batch_size: int | None = None) -> list[dict]:
+         recheck: bool = False, batch_size: int | None = None,
+         group_size: int = 1) -> list[dict]:
     config = load_config(root)
     if not config["profiles"].get(mode, {}).get("enabled", False):
         raise DataError(f"Profile {mode!r} is disabled in config.json")
@@ -103,6 +104,8 @@ def plan(root: Path, *, mode: str, target_filter: str = "", seed: str = "0",
     limit = int(batch_size if batch_size is not None else config["execution"]["batch_size"])
     if not (1 <= limit <= max_matrix_size):
         raise DataError(f"batch_size must be between 1 and {max_matrix_size}")
+    if not (1 <= group_size <= 16):
+        raise DataError("group_size must be between 1 and 16")
     completed = completed_case_ids(root) if not recheck else set()
     seen = set()
     cases = []
@@ -124,6 +127,9 @@ def plan(root: Path, *, mode: str, target_filter: str = "", seed: str = "0",
             cases.append(case)
     if target_filter and target_filter not in target_ids:
         raise DataError(f"Unknown or disabled target {target_filter}")
+    if group_size > 1:
+        return _grouped_order(cases, mode=mode, seed=seed, limit=limit,
+                              group_size=group_size)
     if target_filter or mode == "full":
         if mode == "incremental":
             cases.sort(key=lambda case: sort_key(case["runtime_version"]), reverse=True)
@@ -161,3 +167,84 @@ def plan(root: Path, *, mode: str, target_filter: str = "", seed: str = "0",
                 if len(ordered) >= limit:
                     break
     return ordered
+
+
+def _grouped_order(cases: list[dict], *, mode: str, seed: str,
+                   limit: int, group_size: int) -> list[dict]:
+    """Choose whole runtime/target batches before consuming the case budget.
+
+    Round-robin across languages and targets, not individual versions. A
+    saturated language can use remaining slots without forcing one runner per
+    case. Only Node/Python adapters are approved for multi-case execution.
+    """
+    from collections import defaultdict, deque
+
+    clusters = defaultdict(list)
+    for case in cases:
+        key = (case["language"], case["target"], case["runner"],
+               case["runtime_version"], case["platform"])
+        clusters[key].append(case)
+
+    by_language = defaultdict(lambda: defaultdict(list))
+    for key, items in clusters.items():
+        if mode == "full":
+            # Keep nearby client versions together, but shuffle runtime batches.
+            items.sort(key=lambda item: sort_key(item["client_version"]), reverse=True)
+        else:
+            items.sort(key=lambda item: (sort_key(item["runtime_version"]),
+                                         sort_key(item["client_version"])), reverse=True)
+        by_language[key[0]][key[1]].append((key, deque(items)))
+
+    def rank(value: object) -> str:
+        return hashlib.sha256(f"{seed}:{value}".encode()).hexdigest()
+
+    queues = {}
+    for language, targets in by_language.items():
+        queues[language] = {}
+        for target, chunks in targets.items():
+            if mode == "incremental":
+                chunks.sort(key=lambda chunk: sort_key(chunk[0][3]), reverse=True)
+            else:
+                chunks.sort(key=lambda chunk: rank(chunk[0]))
+            queues[language][target] = deque(chunk for _, chunk in chunks)
+
+    language_order = sorted(queues, key=rank)
+    target_order = {lang: deque(sorted(queues[lang], key=rank)) for lang in queues}
+    ordered = []
+    while len(ordered) < limit and any(target_order.values()):
+        for language in language_order:
+            if not target_order[language]:
+                continue
+            target = target_order[language].popleft()
+            groups = queues[language][target]
+            current = groups.popleft()
+            size = group_size if language in ("node", "python") else 1
+            for _ in range(min(size, len(current), limit - len(ordered))):
+                ordered.append(current.popleft())
+            if current:
+                groups.append(current)
+            if groups:
+                target_order[language].append(target)
+            if len(ordered) == limit:
+                break
+    return ordered
+
+
+def batchify(cases: list[dict], group_size: int) -> list[dict]:
+    """Preserve selected order and expose a representative for runner setup."""
+    batches = []
+    for case in cases:
+        key = (case["language"], case["target"], case["runner"],
+               case["runtime_version"], case["platform"])
+        max_items = group_size if case["language"] in ("node", "python") else 1
+        previous = batches[-1] if batches else None
+        if previous:
+            representative = previous["case"]
+            previous_key = (representative["language"], representative["target"],
+                            representative["runner"], representative["runtime_version"],
+                            representative["platform"])
+        if previous and previous_key == key and len(previous["cases"]) < max_items:
+            previous["cases"].append(case)
+        else:
+            batches.append({"case": case, "cases": [case]})
+    return batches

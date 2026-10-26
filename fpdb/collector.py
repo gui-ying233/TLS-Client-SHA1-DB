@@ -94,7 +94,7 @@ def _require_environment(payload: dict, case: dict) -> dict:
     return environment
 
 
-def collect(root: Path, case: dict) -> dict | None:
+def collect(root: Path, case: dict, *, overrides: dict[str, str] | None = None) -> dict | None:
     config = load_config(root)
     target = next((target for target in config["targets"] if target["id"] == case["target"] and target.get("enabled")), None)
     if not target:
@@ -117,6 +117,10 @@ def collect(root: Path, case: dict) -> dict | None:
     replacements = {key: str(val) for key, val in case.items() if isinstance(val, (str, int, float))}
     replacements["endpoint"] = config["endpoint"]
     replacements["python_bin"] = os.environ.get("FPDB_PYTHON_BIN") or sys.executable
+    replacements["node_dir"] = "clients/node"
+    replacements["node_probe"] = "clients/node/probe.cjs"
+    if overrides:
+        replacements.update(overrides)
     adapter = target["adapter"]
     runtime_env = os.environ.copy()
     runtime_env.update({"FPDB_ENDPOINT": config["endpoint"], "FPDB_TARGET": case["target"]})

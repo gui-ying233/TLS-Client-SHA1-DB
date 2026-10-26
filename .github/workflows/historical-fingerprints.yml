@@ -2,13 +2,13 @@ name: TLS-Client-SHA1-DB historical
 
 on:
   schedule:
-    - cron: '41 3 * * *'
+    - cron: '41 3 * * 0'
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Historical or full cross-product (full requires policy opt-in)'
+        description: 'Representative history (scheduled) or manual full cross-product'
         required: true
-        default: full
+        default: historical
         type: choice
         options:
           - historical
@@ -44,10 +44,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TARGET: ${{ inputs.target || '' }}
           RECHECK: ${{ inputs.recheck || false }}
-          MODE: ${{ inputs.mode || 'full' }}
+          MODE: ${{ inputs.mode || 'historical' }}
           SEED: ${{ github.run_number }}
         run: |
-          ARGS=(--mode "$MODE" --target "$TARGET" --seed "$SEED" --output matrix.json)
+          ARGS=(--mode "$MODE" --target "$TARGET" --seed "$SEED" --output matrix.json --group-size 8)
           if [[ "$RECHECK" == 'true' ]]; then ARGS+=(--recheck); fi
           python -m fpdb.cli plan "${ARGS[@]}"
 
@@ -190,9 +190,9 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y libcurl4-openssl-dev
       - name: Collect native HTTP client TLS fingerprints
         env:
-          FPDB_CASE_JSON: ${{ toJSON(matrix.case) }}
+          FPDB_CASES_JSON: ${{ toJSON(matrix.cases) }}
           FPDB_PYTHON_BIN: ${{ steps.target-python.outputs.python-path }}
-        run: '"${{ steps.control-python.outputs.python-path }}" -m fpdb.cli collect --output-dir outbox'
+        run: '"${{ steps.control-python.outputs.python-path }}" -m fpdb.cli collect-batch --output-dir outbox'
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:

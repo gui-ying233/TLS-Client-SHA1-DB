@@ -107,6 +107,10 @@
           {
             "runtime_min": "3.15.0",
             "client_max": "2.24.99"
+          },
+          {
+            "runtime": "3.12.7",
+            "client": "2.22.0"
           }
         ]
       }
@@ -155,6 +159,10 @@
           {
             "runtime_min": "3.15.0",
             "client_max": "0.25.99"
+          },
+          {
+            "runtime_min": "3.13.0",
+            "client_max": "0.21.0"
           }
         ]
       }
@@ -235,7 +243,7 @@
       "adapter": {
         "probe": [
           "node",
-          "clients/node/probe.cjs",
+          "{node_probe}",
           "undici",
           "{client_version}",
           "{endpoint}"
@@ -248,7 +256,7 @@
           "--ignore-scripts",
           "--no-save",
           "--prefix",
-          "clients/node",
+          "{node_dir}",
           "undici@{client_version}"
         ]
       },
@@ -290,7 +298,7 @@
       "adapter": {
         "probe": [
           "node",
-          "clients/node/probe.cjs",
+          "{node_probe}",
           "axios",
           "{client_version}",
           "{endpoint}"
@@ -303,7 +311,7 @@
           "--ignore-scripts",
           "--no-save",
           "--prefix",
-          "clients/node",
+          "{node_dir}",
           "axios@{client_version}"
         ]
       }
