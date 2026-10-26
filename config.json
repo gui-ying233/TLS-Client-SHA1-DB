@@ -11,7 +11,7 @@
     "prepare_timeout_seconds": 1500
   },
   "execution": {
-    "batch_size": 80,
+    "batch_size": 100,
     "active_runtime_count": 3,
     "max_matrix_size": 200
   },
@@ -23,7 +23,7 @@
       "enabled": true
     },
     "full": {
-      "enabled": false
+      "enabled": true
     }
   },
   "targets": [

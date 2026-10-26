@@ -2,13 +2,13 @@ name: TLS-Client-SHA1-DB historical
 
 on:
   schedule:
-    - cron: '41 3 * * 0'
+    - cron: '41 3 * * *'
   workflow_dispatch:
     inputs:
       mode:
         description: 'Historical or full cross-product (full requires policy opt-in)'
         required: true
-        default: historical
+        default: full
         type: choice
         options:
           - historical
@@ -44,7 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TARGET: ${{ inputs.target || '' }}
           RECHECK: ${{ inputs.recheck || false }}
-          MODE: ${{ inputs.mode || 'historical' }}
+          MODE: ${{ inputs.mode || 'full' }}
           SEED: ${{ github.run_number }}
         run: |
           ARGS=(--mode "$MODE" --target "$TARGET" --seed "$SEED" --output matrix.json)
