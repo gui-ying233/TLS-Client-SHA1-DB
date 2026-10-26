@@ -279,7 +279,7 @@
           "clients/environment/native_prepare.sh"
         ],
         "probe": [
-          "python3",
+          "/usr/bin/python3",
           "clients/environment/probe.py",
           "requests",
           "{endpoint}"

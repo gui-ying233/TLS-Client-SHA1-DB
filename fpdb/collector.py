@@ -123,7 +123,8 @@ def collect(root: Path, case: dict) -> dict | None:
     # The collector uses its own control Python. Each Python probe (and pip
     # prepare command) must resolve libpython from the selected target build,
     # not from the control interpreter's LD_LIBRARY_PATH.
-    if case["language"] == "python" and sys.platform == "linux":
+    if (case["language"] == "python" and sys.platform == "linux"
+            and not case["target"].startswith("env-")):
         target_python = Path(replacements["python_bin"]).resolve()
         runtime_env["LD_LIBRARY_PATH"] = str(target_python.parent.parent / "lib")
     # Avoid accidental proxy-based TLS termination. Adapter may opt into a proxy
