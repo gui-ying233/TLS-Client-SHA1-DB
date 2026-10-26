@@ -89,25 +89,29 @@ def main() -> int:
             successes = 0
             for case in cases:
                 overrides = {}
-                with tempfile.TemporaryDirectory(prefix="fpdb-case-") as directory:
-                    workspace = Path(directory)
-                    if case["language"] == "python" and not case["target"].startswith("env-"):
-                        interpreter = os.environ.get("FPDB_PYTHON_BIN")
-                        if not interpreter:
-                            raise DataError("Missing selected Python interpreter")
-                        if len(cases) > 1:
-                            venv = workspace / "venv"
-                            subprocess.run([interpreter, "-m", "venv", str(venv)],
-                                           cwd=root, check=True, timeout=180)
-                            overrides["python_bin"] = str(venv / "bin" / "python")
-                    if case["language"] == "node" and case["target"] in ("node-axios", "node-undici"):
-                        # Install each package graph beside its own probe script;
-                        # avoid cross-version module resolution on shared runners.
-                        probe = workspace / "probe.cjs"
-                        shutil.copyfile(root / "clients/node/probe.cjs", probe)
-                        overrides["node_dir"] = str(workspace)
-                        overrides["node_probe"] = str(probe)
-                    record = collect(root, case, overrides=overrides)
+                try:
+                    with tempfile.TemporaryDirectory(prefix="fpdb-case-") as directory:
+                        workspace = Path(directory)
+                        if case["language"] == "python" and not case["target"].startswith("env-"):
+                            interpreter = os.environ.get("FPDB_PYTHON_BIN")
+                            if not interpreter:
+                                raise OSError("Selected Python interpreter is unavailable")
+                            if len(cases) > 1:
+                                venv = workspace / "venv"
+                                subprocess.run([interpreter, "-m", "venv", str(venv)],
+                                               cwd=root, check=True, timeout=180)
+                                overrides["python_bin"] = str(venv / "bin" / "python")
+                        if case["language"] == "node" and case["target"] in ("node-axios", "node-undici"):
+                            # Each version gets a fresh package graph and probe.
+                            probe = workspace / "probe.cjs"
+                            shutil.copyfile(root / "clients/node/probe.cjs", probe)
+                            overrides["node_dir"] = str(workspace)
+                            overrides["node_probe"] = str(probe)
+                        record = collect(root, case, overrides=overrides)
+                except (OSError, subprocess.CalledProcessError,
+                        subprocess.TimeoutExpired) as exc:
+                    logging.warning("case=%s environment setup failed: %s", case["id"], exc)
+                    record = None
                 args.output_dir.mkdir(parents=True, exist_ok=True)
                 if record is None:
                     (args.output_dir / (case["id"] + ".skip")).touch()
