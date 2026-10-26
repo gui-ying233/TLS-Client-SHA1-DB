@@ -1,0 +1,46 @@
+{
+  "case_id": "dc486099aca1d2149470703a",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ=",
+      "tlsClientHelloLength": 378,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "oxc-js",
+    "client_version": "1.0.1",
+    "environment": {
+      "arch": "x64",
+      "dependencies": {
+        "@oxc-node/cli": "1.0.1"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "20.20.0",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.0.17"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "20.20.0",
+    "target": "node-oxc-js"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ="
+    }
+  ],
+  "record_id": "cc90de721d885c913f66481c",
+  "schema_version": 1
+}
