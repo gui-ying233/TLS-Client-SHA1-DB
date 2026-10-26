@@ -1,7 +1,7 @@
 """Discover missing combinations, keeping selection policy separate from GitHub Actions."""
 from __future__ import annotations
 
-import hashlib
+from collections import defaultdict, deque
 from pathlib import Path
 
 from fpdb.core import DataError, digest, read_json
@@ -45,22 +45,35 @@ def _case(target: dict, runtime: str, client: str) -> dict:
     return case
 
 
-def job_batches(cases: list[dict], max_cases: int = 8) -> list[dict]:
-    """Reuse one runner/toolchain for compatible cases without mixing runtimes."""
-    jobs = []
+def job_batches(cases: list[dict], max_cases: int = 8, max_jobs: int | None = None) -> list[dict]:
+    """Fill compatible runtime batches first, then stop at the Job budget."""
     groups = {}
     for case in cases:
         key = (case["runner"], case["platform"], case["language"],
                case["runtime_version"],
                case["language"] == "python" and case["target"].startswith("env-"))
-        group = groups.setdefault(key, [])
-        if not group or len(group[-1]["cases"]) >= max_cases:
-            job = {"case": case, "cases": []}
-            group.append(job)
-            jobs.append(job)
-        group[-1]["cases"].append(case)
-    for job in jobs:
-        job["id"] = digest([case["id"] for case in job["cases"]])
+        groups.setdefault(key, []).append(case)
+
+    per_language = defaultdict(list)
+    for key, items in groups.items():
+        per_language[key[2]].append(items)
+    # Largest compatible groups first. Stable ties keep the discovery/version order.
+    queues = {language: deque(sorted(buckets, key=lambda items: -len(items)))
+              for language, buckets in per_language.items()}
+    jobs = []
+    while any(queues.values()) and (max_jobs is None or len(jobs) < max_jobs):
+        for language in sorted(queues):
+            if not queues[language]:
+                continue
+            items = queues[language][0]
+            batch = items[:max_cases]
+            del items[:max_cases]
+            if not items:
+                queues[language].popleft()
+            jobs.append({"case": batch[0], "cases": batch,
+                         "id": digest([case["id"] for case in batch])})
+            if max_jobs is not None and len(jobs) >= max_jobs:
+                break
     return jobs
 
 
@@ -112,7 +125,7 @@ def _pairs(target: dict, mode: str, active_runtime_count: int) -> list[tuple[str
     raise DataError(f"Unknown mode {mode!r}")
 
 
-def plan(root: Path, *, mode: str, target_filter: str = "", seed: str = "0",
+def plan(root: Path, *, mode: str, target_filter: str = "",
          recheck: bool = False, batch_size: int | None = None) -> list[dict]:
     config = load_config(root)
     if not config["profiles"].get(mode, {}).get("enabled", False):
@@ -143,40 +156,7 @@ def plan(root: Path, *, mode: str, target_filter: str = "", seed: str = "0",
             cases.append(case)
     if target_filter and target_filter not in target_ids:
         raise DataError(f"Unknown or disabled target {target_filter}")
-    if target_filter or mode == "full":
-        if mode == "incremental":
-            cases.sort(key=lambda case: sort_key(case["runtime_version"]), reverse=True)
-        else:
-            cases.sort(key=lambda case: hashlib.sha256(f"{seed}:{case['id']}".encode()).hexdigest())
-        return cases[:limit]
-
-    # Allocate a round-robin slot to each language, then each implementation.
-    # A long Node/Python version history must not monopolize a limited matrix.
-    from collections import defaultdict, deque
-    grouped = defaultdict(lambda: defaultdict(list))
-    for case in cases:
-        grouped[case["language"]][case["target"]].append(case)
-    per_language = {}
-    for language, targets in grouped.items():
-        queues = {}
-        for name, items in targets.items():
-            if mode == "incremental":
-                items.sort(key=lambda item: sort_key(item["runtime_version"]), reverse=True)
-            else:
-                items.sort(key=lambda item: hashlib.sha256(f"{seed}:{item['id']}".encode()).hexdigest())
-            queues[name] = deque(items)
-        result = deque()
-        while any(queues.values()):
-            for name in sorted(queues, key=lambda key: hashlib.sha256(f"{seed}:{key}".encode()).hexdigest()):
-                if queues[name]:
-                    result.append(queues[name].popleft())
-        per_language[language] = result
-
-    ordered = []
-    while any(per_language.values()) and len(ordered) < limit:
-        for language in sorted(per_language, key=lambda key: hashlib.sha256(f"{seed}:{key}".encode()).hexdigest()):
-            if per_language[language]:
-                ordered.append(per_language[language].popleft())
-                if len(ordered) >= limit:
-                    break
-    return ordered
+    # batch_size now limits runner Jobs, not individual fingerprint cases.
+    # Select from all pending combinations so reuse never leaves the matrix half empty.
+    jobs = job_batches(cases, max_jobs=limit)
+    return [case for job in jobs for case in job["cases"]]

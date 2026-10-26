@@ -23,8 +23,7 @@ def main() -> int:
     p = subs.add_parser("plan")
     p.add_argument("--mode", required=True, choices=["incremental", "historical", "full"])
     p.add_argument("--target", default="")
-    p.add_argument("--seed", default="0")
-    p.add_argument("--batch-size", type=int)
+    p.add_argument("--batch-size", type=int, help="Maximum collection Jobs (up to 8 cases each)")
     p.add_argument("--recheck", action="store_true")
     p.add_argument("--output", type=Path, default=Path("matrix.json"))
     c = subs.add_parser("collect")
@@ -44,7 +43,7 @@ def main() -> int:
     root = args.root.resolve()
     try:
         if args.command == "plan":
-            cases = plan(root, mode=args.mode, target_filter=args.target, seed=args.seed,
+            cases = plan(root, mode=args.mode, target_filter=args.target,
                          recheck=args.recheck, batch_size=args.batch_size)
             jobs = job_batches(cases)
             matrix = {"include": jobs}
@@ -54,7 +53,7 @@ def main() -> int:
                 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as stream:
                     stream.write("matrix=" + json.dumps(matrix, separators=(",", ":")) + "\n")
                     stream.write("has_work=" + ("true" if cases else "false") + "\n")
-            print(f"planned={len(cases)} jobs={len(jobs)} mode={args.mode}")
+            print(f"planned_cases={len(cases)} jobs={len(jobs)} mode={args.mode}")
         elif args.command == "collect":
             cases = json.loads(os.environ[args.cases_env] if args.cases_env else os.environ[args.case_env])
             if args.cases_env:
@@ -64,12 +63,18 @@ def main() -> int:
                 cases = [cases]
             for case in cases:
                 try:
-                    if args.cases_env and case["language"] == "python" and not case["target"].startswith("env-"):
+                    if (args.cases_env and case["language"] == "python"
+                            and not case["target"].startswith("env-")
+                            and case["target"] != "python-urllib"):
                         # Isolate pip dependencies between versions sharing a runner.
                         python = os.environ["FPDB_PYTHON_BIN"]
                         with tempfile.TemporaryDirectory(prefix="fpdb-venv-") as venv:
-                            subprocess.run([python, "-m", "venv", venv], check=True,
-                                           capture_output=True, text=True)
+                            venv_env = os.environ.copy()
+                            venv_env["LD_LIBRARY_PATH"] = str(Path(python).resolve().parent.parent / "lib")
+                            prepared = subprocess.run([python, "-m", "venv", venv], env=venv_env,
+                                                      capture_output=True, text=True)
+                            if prepared.returncode:
+                                raise DataError(f"venv failed: {prepared.stderr[-1000:]}")
                             os.environ["FPDB_PYTHON_BIN"] = str(Path(venv) / "bin" / "python")
                             try:
                                 record = collect(root, case)
@@ -87,6 +92,7 @@ def main() -> int:
                     # A failed case must not prevent the other cases from being persisted.
                     args.output_dir.mkdir(parents=True, exist_ok=True)
                     (args.output_dir / (case["id"] + ".skip")).touch()
+                    print(f"::warning::Case {case['id']} skipped")
                     print(f"skipped={case['id']}")
                 else:
                     path = args.output_dir.resolve() / (case["id"] + ".json")

@@ -45,9 +45,8 @@ jobs:
           TARGET: ${{ inputs.target || '' }}
           RECHECK: ${{ inputs.recheck || false }}
           MODE: ${{ inputs.mode || 'full' }}
-          SEED: ${{ github.run_number }}
         run: |
-          ARGS=(--mode "$MODE" --target "$TARGET" --seed "$SEED" --output matrix.json)
+          ARGS=(--mode "$MODE" --target "$TARGET" --output matrix.json)
           if [[ "$RECHECK" == 'true' ]]; then ARGS+=(--recheck); fi
           python -m fpdb.cli plan "${ARGS[@]}"
 
