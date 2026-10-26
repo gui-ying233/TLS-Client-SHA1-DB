@@ -1,0 +1,46 @@
+{
+  "case_id": "ad40ab8934029fea5e5e1a5d",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "NRKhbDZKs+zPlf1Pm5T18FiD2+I=",
+      "tlsClientExtensionsSha1Le": "AqDMNWQA9LuWuOWnZCifOIOfT6Y=",
+      "tlsClientHelloLength": 363,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "axios",
+    "client_version": "1.13.6",
+    "environment": {
+      "arch": "x64",
+      "dependencies": {
+        "axios": "1.13.6"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "20.20.1",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.0.19"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "20.20.1",
+    "target": "node-axios"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "NRKhbDZKs+zPlf1Pm5T18FiD2+I=",
+      "tlsClientExtensionsSha1Le": "AqDMNWQA9LuWuOWnZCifOIOfT6Y="
+    }
+  ],
+  "record_id": "bada267eb5400937fbe77ce0",
+  "schema_version": 1
+}

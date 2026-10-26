@@ -1,0 +1,46 @@
+{
+  "case_id": "b6444bbe2aa32ec6c0beea88",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ=",
+      "tlsClientHelloLength": 378,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "undici",
+    "client_version": "6.20.1",
+    "environment": {
+      "arch": "x64",
+      "dependencies": {
+        "undici": "6.20.1"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "22.9.0",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.0.13+quic"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "22.9.0",
+    "target": "node-undici"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ="
+    }
+  ],
+  "record_id": "13d4bbaf9222e23e27452911",
+  "schema_version": 1
+}
