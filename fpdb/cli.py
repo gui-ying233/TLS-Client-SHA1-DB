@@ -102,6 +102,9 @@ def main() -> int:
                     save_json(path, record)
                     print(f"collected={case['id']} path={path}")
             print(f"batch_summary collected={collected} skipped={skipped}")
+            if args.cases_env and not collected:
+                logging.error("All %d cases in this batch were skipped", skipped)
+                return 1
         elif args.command == "persist":
             changed, processed = persist(root, args.inbox.resolve())
             print(f"artifacts={processed} changed_records={changed}")

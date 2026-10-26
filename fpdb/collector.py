@@ -70,7 +70,8 @@ def _require_environment(payload: dict, case: dict) -> dict:
         raise DataError("Adapter must report actual runtime_version")
     if requested_runtime not in ("system", "stable") and not (
         actual_runtime == requested_runtime or
-        (requested_runtime.count(".") < 2 and actual_runtime.startswith(requested_runtime + "."))
+        (requested_runtime.count(".") < 2 and actual_runtime.startswith(requested_runtime + ".")) or
+        (case["language"] == "deno" and actual_runtime.startswith(requested_runtime + "+"))
     ):
         raise DataError(f"Adapter runtime_version={actual_runtime!r} differs from {requested_runtime!r}")
     if payload.get("client_version") != case["client_version"]:

@@ -195,6 +195,7 @@ jobs:
           FPDB_PYTHON_BIN: ${{ steps.target-python.outputs.python-path }}
         run: '"${{ steps.control-python.outputs.python-path }}" -m fpdb.cli collect --cases-env FPDB_CASES_JSON --output-dir outbox'
       - name: Upload result
+        if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: fingerprint-${{ matrix.id }}

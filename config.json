@@ -175,6 +175,7 @@
       },
       "adapter": {
         "probe": [
+          "node",
           "clients/js/node_modules/.bin/oxnode",
           "clients/js/probe.ts",
           "oxc-ts",
@@ -212,6 +213,7 @@
       },
       "adapter": {
         "probe": [
+          "node",
           "clients/js/node_modules/.bin/oxnode",
           "clients/js/probe.mjs",
           "oxc-js",

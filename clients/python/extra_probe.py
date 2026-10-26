@@ -38,6 +38,8 @@ def fetch(name, endpoint):
         curl = pycurl.Curl()
         try:
             curl.setopt(pycurl.URL, endpoint)
+            # Match the identifier used by the working LWP probe; keep pycurl's TLS stack.
+            curl.setopt(pycurl.USERAGENT, 'TLS-Client-SHA1-DB/1')
             curl.setopt(pycurl.HTTPHEADER, ['Accept: application/json', 'Connection: close'])
             curl.setopt(pycurl.PROXY, '')
             curl.setopt(pycurl.FOLLOWLOCATION, 0)
