@@ -104,21 +104,21 @@ jobs:
       # complete probe executables or mutable system TLS libraries.
       # GitHub Actions caches are immutable and shared by both collection workflows.
       - name: Cache pip wheels
-        if: matrix.case.language == 'python' && (matrix.case.target == 'python-aiohttp' || matrix.case.target == 'python-pycurl' || matrix.case.target == 'python-tornado' || matrix.case.target == 'python-scrapy' || matrix.case.target == 'python-urllib3')
+        if: matrix.case.language == 'python' && !startsWith(matrix.case.target, 'env-')
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.target }}-${{ matrix.case.client_version }}
+          key: pip-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ hashFiles('clients/python/*.py') }}
           restore-keys: |
-            pip-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
+            pip-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-
       - name: Cache npm tarballs
-        if: matrix.case.language == 'node' && (matrix.case.target == 'node-axios' || matrix.case.target == 'node-undici')
+        if: matrix.case.language == 'node'
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: npm-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.target }}-${{ matrix.case.client_version }}
+          key: npm-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}
           restore-keys: |
-            npm-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
+            npm-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-
       - name: Cache Go modules and compiler objects
         if: matrix.case.language == 'go'
         uses: actions/cache@v4
@@ -126,29 +126,29 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-          key: go-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.target }}-${{ matrix.case.client_version }}-${{ hashFiles('clients/go/**/go.mod') }}
+          key: go-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ hashFiles('clients/go/**/go.mod') }}
           restore-keys: |
-            go-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
+            go-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-
       - name: Cache Maven dependencies
-        if: matrix.case.target == 'java-okhttp'
+        if: matrix.case.language == 'java'
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: maven-v1-${{ runner.os }}-${{ hashFiles('clients/java/okhttp/pom.xml') }}
       - name: Cache Composer downloads
-        if: matrix.case.target == 'php-guzzle'
+        if: matrix.case.language == 'php'
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/composer
             ~/.composer/cache
-          key: composer-v1-${{ runner.os }}-${{ matrix.case.client_version }}-${{ hashFiles('clients/php-guzzle/composer.json') }}
+          key: composer-v2-${{ runner.os }}-${{ hashFiles('clients/php-guzzle/composer.json') }}
       - name: Cache NuGet packages
         if: matrix.case.language == 'dotnet'
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-v1-${{ runner.os }}-${{ matrix.case.target }}-${{ hashFiles('clients/dotnet/**/*.csproj', 'clients/dotnet-restsharp/**/*.csproj') }}
+          key: nuget-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ hashFiles('clients/dotnet/**/*.csproj', 'clients/dotnet-restsharp/**/*.csproj') }}
       - name: Cache Cargo source downloads
         if: matrix.case.language == 'rust'
         uses: actions/cache@v4
@@ -156,9 +156,9 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: cargo-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ matrix.case.client }}-${{ hashFiles('clients/rust/Cargo.toml') }}
+          key: cargo-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-${{ hashFiles('clients/rust/Cargo.toml') }}
           restore-keys: |
-            cargo-v1-${{ runner.os }}-${{ matrix.case.runtime_version }}-
+            cargo-v2-${{ runner.os }}-${{ matrix.case.runtime_version }}-
       - uses: dart-lang/setup-dart@v1
         continue-on-error: true
         if: matrix.case.language == 'dart'
@@ -182,13 +182,13 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y libcurl4-openssl-dev
       - name: Collect native HTTP client TLS fingerprints
         env:
-          FPDB_CASE_JSON: ${{ toJSON(matrix.case) }}
+          FPDB_CASES_JSON: ${{ toJSON(matrix.cases) }}
           FPDB_PYTHON_BIN: ${{ steps.target-python.outputs.python-path }}
-        run: '"${{ steps.control-python.outputs.python-path }}" -m fpdb.cli collect --output-dir outbox'
+        run: '"${{ steps.control-python.outputs.python-path }}" -m fpdb.cli collect --cases-env FPDB_CASES_JSON --output-dir outbox'
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:
-          name: fingerprint-${{ matrix.case.id }}
+          name: fingerprint-${{ matrix.id }}
           path: outbox/
           if-no-files-found: error
           retention-days: 7

@@ -45,6 +45,25 @@ def _case(target: dict, runtime: str, client: str) -> dict:
     return case
 
 
+def job_batches(cases: list[dict], max_cases: int = 8) -> list[dict]:
+    """Reuse one runner/toolchain for compatible cases without mixing runtimes."""
+    jobs = []
+    groups = {}
+    for case in cases:
+        key = (case["runner"], case["platform"], case["language"],
+               case["runtime_version"],
+               case["language"] == "python" and case["target"].startswith("env-"))
+        group = groups.setdefault(key, [])
+        if not group or len(group[-1]["cases"]) >= max_cases:
+            job = {"case": case, "cases": []}
+            group.append(job)
+            jobs.append(job)
+        group[-1]["cases"].append(case)
+    for job in jobs:
+        job["id"] = digest([case["id"] for case in job["cases"]])
+    return jobs
+
+
 def _matches_range(pair: tuple[str, str], constraint: dict) -> bool:
     runtime, client = pair
     for key, value in (("runtime", runtime), ("client", client)):

@@ -5,10 +5,12 @@ import argparse
 import json
 import logging
 import os
+import subprocess
+import tempfile
 from pathlib import Path
 
 from fpdb.core import ROOT, DataError, save_json
-from fpdb.planner import plan
+from fpdb.planner import job_batches, plan
 from fpdb.collector import collect
 from fpdb.persistence import persist
 from fpdb.lookup import lookup
@@ -27,6 +29,7 @@ def main() -> int:
     p.add_argument("--output", type=Path, default=Path("matrix.json"))
     c = subs.add_parser("collect")
     c.add_argument("--case-env", default="FPDB_CASE_JSON")
+    c.add_argument("--cases-env", help="Environment variable containing a JSON case array")
     c.add_argument("--output-dir", type=Path, default=Path("outbox"))
     s = subs.add_parser("persist")
     s.add_argument("--inbox", type=Path, default=Path("inbox"))
@@ -43,26 +46,52 @@ def main() -> int:
         if args.command == "plan":
             cases = plan(root, mode=args.mode, target_filter=args.target, seed=args.seed,
                          recheck=args.recheck, batch_size=args.batch_size)
-            matrix = {"include": [{"case": case} for case in cases]}
+            jobs = job_batches(cases)
+            matrix = {"include": jobs}
             output = args.output.resolve()
             save_json(output, matrix)
             if os.getenv("GITHUB_OUTPUT"):
                 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as stream:
                     stream.write("matrix=" + json.dumps(matrix, separators=(",", ":")) + "\n")
                     stream.write("has_work=" + ("true" if cases else "false") + "\n")
-            print(f"planned={len(cases)} mode={args.mode}")
+            print(f"planned={len(cases)} jobs={len(jobs)} mode={args.mode}")
         elif args.command == "collect":
-            case = json.loads(os.environ[args.case_env])
-            record = collect(root, case)
-            if record is None:
-                # Keep an ephemeral artifact so the merge job also works if all cases fail.
-                args.output_dir.mkdir(parents=True, exist_ok=True)
-                (args.output_dir / (case["id"] + ".skip")).touch()
-                print(f"skipped={case['id']}")
+            cases = json.loads(os.environ[args.cases_env] if args.cases_env else os.environ[args.case_env])
+            if args.cases_env:
+                if not isinstance(cases, list) or not cases:
+                    raise DataError("Batch must contain at least one case")
             else:
-                path = args.output_dir.resolve() / (case["id"] + ".json")
-                save_json(path, record)
-                print(f"collected={case['id']} path={path}")
+                cases = [cases]
+            for case in cases:
+                try:
+                    if args.cases_env and case["language"] == "python" and not case["target"].startswith("env-"):
+                        # Isolate pip dependencies between versions sharing a runner.
+                        python = os.environ["FPDB_PYTHON_BIN"]
+                        with tempfile.TemporaryDirectory(prefix="fpdb-venv-") as venv:
+                            subprocess.run([python, "-m", "venv", venv], check=True,
+                                           capture_output=True, text=True)
+                            os.environ["FPDB_PYTHON_BIN"] = str(Path(venv) / "bin" / "python")
+                            try:
+                                record = collect(root, case)
+                            finally:
+                                os.environ["FPDB_PYTHON_BIN"] = python
+                    else:
+                        record = collect(root, case)
+                except (OSError, ValueError, KeyError, subprocess.CalledProcessError,
+                        subprocess.TimeoutExpired) as exc:
+                    if not args.cases_env:
+                        raise
+                    logging.error("case=%s failed: %s", case.get("id"), exc)
+                    record = None
+                if record is None:
+                    # A failed case must not prevent the other cases from being persisted.
+                    args.output_dir.mkdir(parents=True, exist_ok=True)
+                    (args.output_dir / (case["id"] + ".skip")).touch()
+                    print(f"skipped={case['id']}")
+                else:
+                    path = args.output_dir.resolve() / (case["id"] + ".json")
+                    save_json(path, record)
+                    print(f"collected={case['id']} path={path}")
         elif args.command == "persist":
             changed, processed = persist(root, args.inbox.resolve())
             print(f"artifacts={processed} changed_records={changed}")
