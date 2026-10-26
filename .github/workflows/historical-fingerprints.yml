@@ -78,6 +78,16 @@ jobs:
         continue-on-error: true
         with:
           node-version: ${{ matrix.case.runtime_version }}
+      - uses: oven-sh/setup-bun@v2
+        if: matrix.case.language == 'bun'
+        continue-on-error: true
+        with:
+          bun-version: ${{ matrix.case.runtime_version }}
+      - uses: denoland/setup-deno@v2
+        if: matrix.case.language == 'deno'
+        continue-on-error: true
+        with:
+          deno-version: ${{ matrix.case.runtime_version }}
       - uses: actions/setup-go@v5
         if: matrix.case.language == 'go'
         continue-on-error: true

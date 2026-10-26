@@ -28,6 +28,338 @@
   },
   "targets": [
     {
+      "id": "node-javascript",
+      "language": "node",
+      "client": "js",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "node",
+          "clients/js/probe.mjs",
+          "js",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "node-typescript",
+      "language": "node",
+      "client": "ts",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "22.18.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "node",
+          "clients/js/probe.ts",
+          "ts",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "node-tsx-ts",
+      "language": "node",
+      "client": "tsx-ts",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "npm",
+        "package": "tsx"
+      },
+      "adapter": {
+        "probe": [
+          "clients/js/node_modules/.bin/tsx",
+          "clients/js/probe.ts",
+          "tsx-ts",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "npm",
+          "install",
+          "--no-audit",
+          "--no-fund",
+          "--ignore-scripts",
+          "--no-save",
+          "--prefix",
+          "clients/js",
+          "tsx@{client_version}"
+        ]
+      }
+    },
+    {
+      "id": "node-tsx-js",
+      "language": "node",
+      "client": "tsx-js",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "npm",
+        "package": "tsx"
+      },
+      "adapter": {
+        "probe": [
+          "clients/js/node_modules/.bin/tsx",
+          "clients/js/probe.mjs",
+          "tsx-js",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "npm",
+          "install",
+          "--no-audit",
+          "--no-fund",
+          "--ignore-scripts",
+          "--no-save",
+          "--prefix",
+          "clients/js",
+          "tsx@{client_version}"
+        ]
+      }
+    },
+    {
+      "id": "node-oxc-ts",
+      "language": "node",
+      "client": "oxc-ts",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "npm",
+        "package": "@oxc-node/cli"
+      },
+      "adapter": {
+        "probe": [
+          "clients/js/node_modules/.bin/oxnode",
+          "clients/js/probe.ts",
+          "oxc-ts",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "npm",
+          "install",
+          "--no-audit",
+          "--no-fund",
+          "--ignore-scripts",
+          "--no-save",
+          "--prefix",
+          "clients/js",
+          "@oxc-node/cli@{client_version}"
+        ]
+      }
+    },
+    {
+      "id": "node-oxc-js",
+      "language": "node",
+      "client": "oxc-js",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "node_dist",
+        "min_version": "20.0.0"
+      },
+      "client_versions": {
+        "type": "npm",
+        "package": "@oxc-node/cli"
+      },
+      "adapter": {
+        "probe": [
+          "clients/js/node_modules/.bin/oxnode",
+          "clients/js/probe.mjs",
+          "oxc-js",
+          "{client_version}",
+          "{endpoint}"
+        ],
+        "prepare": [
+          "npm",
+          "install",
+          "--no-audit",
+          "--no-fund",
+          "--ignore-scripts",
+          "--no-save",
+          "--prefix",
+          "clients/js",
+          "@oxc-node/cli@{client_version}"
+        ]
+      }
+    },
+    {
+      "id": "bun-js",
+      "language": "bun",
+      "client": "js",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "github_releases",
+        "repo": "oven-sh/bun",
+        "tag_prefix": "bun-v",
+        "max_pages": 2,
+        "min_version": "1.2.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "bun",
+          "clients/js/probe.mjs",
+          "js",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "bun-ts",
+      "language": "bun",
+      "client": "ts",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "github_releases",
+        "repo": "oven-sh/bun",
+        "tag_prefix": "bun-v",
+        "max_pages": 2,
+        "min_version": "1.2.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "bun",
+          "clients/js/probe.ts",
+          "ts",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "deno-js",
+      "language": "deno",
+      "client": "js",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "github_releases",
+        "repo": "denoland/deno",
+        "tag_prefix": "v",
+        "max_pages": 2,
+        "min_version": "2.0.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "deno",
+          "run",
+          "--allow-net",
+          "clients/js/probe.mjs",
+          "js",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "deno-ts",
+      "language": "deno",
+      "client": "ts",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "github_releases",
+        "repo": "denoland/deno",
+        "tag_prefix": "v",
+        "max_pages": 2,
+        "min_version": "2.0.0"
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "deno",
+          "run",
+          "--allow-net",
+          "clients/js/probe.ts",
+          "ts",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
       "language": "python",
       "platform": "linux-x86_64",
       "runner": "ubuntu-24.04",
@@ -107,6 +439,10 @@
           {
             "runtime_min": "3.15.0",
             "client_max": "2.24.99"
+          },
+          {
+            "runtime_min": "3.14.0",
+            "client_max": "2.29.99"
           }
         ]
       }
@@ -1592,7 +1928,6 @@
       "runtime_versions": {
         "type": "static",
         "versions": [
-          "1.24.3",
           "1.25.0"
         ]
       },

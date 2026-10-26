@@ -127,6 +127,7 @@ def discover(source: dict) -> list[str]:
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo):
             raise DataError("github_releases repo must be owner/name")
         values = []
+        tag_prefix = source.get("tag_prefix", "")
         max_pages = min(max(int(source.get("max_pages", 3)), 1), 10)
         for page in range(1, max_pages + 1):
             releases = _get_json(f"https://api.github.com/repos/{repo}/releases?per_page=100&page={page}")
@@ -134,7 +135,11 @@ def discover(source: dict) -> list[str]:
                 raise DataError("Invalid GitHub Releases response")
             for release in releases:
                 if not release.get("draft") and not release.get("prerelease"):
-                    values.append(release["tag_name"])
+                    tag = release["tag_name"]
+                    if tag.startswith(tag_prefix):
+                        version = tag[len(tag_prefix):]
+                        if not tag_prefix or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+                            values.append(version)
             if len(releases) < 100:
                 break
     else:

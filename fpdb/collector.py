@@ -120,6 +120,9 @@ def collect(root: Path, case: dict) -> dict | None:
     adapter = target["adapter"]
     runtime_env = os.environ.copy()
     runtime_env.update({"FPDB_ENDPOINT": config["endpoint"], "FPDB_TARGET": case["target"]})
+    if case["language"] == "go":
+        # Do not silently recompile with a newer Go toolchain than the case claims.
+        runtime_env["GOTOOLCHAIN"] = "local"
     # The collector uses its own control Python. Each Python probe (and pip
     # prepare command) must resolve libpython from the selected target build,
     # not from the control interpreter's LD_LIBRARY_PATH.

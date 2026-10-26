@@ -61,6 +61,7 @@ def main() -> int:
                     raise DataError("Batch must contain at least one case")
             else:
                 cases = [cases]
+            collected = skipped = 0
             for case in cases:
                 try:
                     if (args.cases_env and case["language"] == "python"
@@ -89,15 +90,18 @@ def main() -> int:
                     logging.error("case=%s failed: %s", case.get("id"), exc)
                     record = None
                 if record is None:
+                    skipped += 1
                     # A failed case must not prevent the other cases from being persisted.
                     args.output_dir.mkdir(parents=True, exist_ok=True)
                     (args.output_dir / (case["id"] + ".skip")).touch()
                     print(f"::warning::Case {case['id']} skipped")
                     print(f"skipped={case['id']}")
                 else:
+                    collected += 1
                     path = args.output_dir.resolve() / (case["id"] + ".json")
                     save_json(path, record)
                     print(f"collected={case['id']} path={path}")
+            print(f"batch_summary collected={collected} skipped={skipped}")
         elif args.command == "persist":
             changed, processed = persist(root, args.inbox.resolve())
             print(f"artifacts={processed} changed_records={changed}")

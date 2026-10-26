@@ -1,0 +1,508 @@
+diff --git a/fpdb/versions.py b/fpdb/versions.py
+--- a/fpdb/versions.py
++++ b/fpdb/versions.py
+@@ -127,6 +127,7 @@
+         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo):
+             raise DataError("github_releases repo must be owner/name")
+         values = []
++        tag_prefix = source.get("tag_prefix", "")
+         max_pages = min(max(int(source.get("max_pages", 3)), 1), 10)
+         for page in range(1, max_pages + 1):
+             releases = _get_json(f"https://api.github.com/repos/{repo}/releases?per_page=100&page={page}")
+@@ -134,7 +135,11 @@
+                 raise DataError("Invalid GitHub Releases response")
+             for release in releases:
+                 if not release.get("draft") and not release.get("prerelease"):
+-                    values.append(release["tag_name"])
++                    tag = release["tag_name"]
++                    if tag.startswith(tag_prefix):
++                        version = tag[len(tag_prefix):]
++                        if not tag_prefix or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
++                            values.append(version)
+             if len(releases) < 100:
+                 break
+     else:
+diff --git a/fpdb/collector.py b/fpdb/collector.py
+--- a/fpdb/collector.py
++++ b/fpdb/collector.py
+@@ -121,3 +121,6 @@
+     runtime_env = os.environ.copy()
+     runtime_env.update({"FPDB_ENDPOINT": config["endpoint"], "FPDB_TARGET": case["target"]})
++    if case["language"] == "go":
++        # Do not silently recompile with a newer Go toolchain than the case claims.
++        runtime_env["GOTOOLCHAIN"] = "local"
+     # The collector uses its own control Python. Each Python probe (and pip
+diff --git a/clients/perl/lwp_probe.pl b/clients/perl/lwp_probe.pl
+--- a/clients/perl/lwp_probe.pl
++++ b/clients/perl/lwp_probe.pl
+@@ -7,5 +7,5 @@
+ my ($version, $endpoint) = @ARGV;
+ die "expected system" unless defined($version) && $version eq 'system';
+-my $agent = LWP::UserAgent->new(timeout => 25, max_redirect => 0, ssl_opts => {verify_hostname => 1});
++my $agent = LWP::UserAgent->new(agent => "TLS-Client-SHA1-DB/1", timeout => 25, max_redirect => 0, ssl_opts => {verify_hostname => 1});
+ my $request = HTTP::Request->new(GET => $endpoint);
+ $request->header('Accept' => 'application/json');
+diff --git a/config.json b/config.json
+--- a/config.json
++++ b/config.json
+@@ -29,4 +29,336 @@
+   "targets": [
+     {
++      "id": "node-javascript",
++      "language": "node",
++      "client": "js",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "node_dist",
++        "min_version": "20.0.0"
++      },
++      "client_versions": {
++        "type": "static",
++        "versions": [
++          "stdlib"
++        ]
++      },
++      "adapter": {
++        "probe": [
++          "node",
++          "clients/js/probe.mjs",
++          "js",
++          "{client_version}",
++          "{endpoint}"
++        ]
++      }
++    },
++    {
++      "id": "node-typescript",
++      "language": "node",
++      "client": "ts",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "node_dist",
++        "min_version": "22.18.0"
++      },
++      "client_versions": {
++        "type": "static",
++        "versions": [
++          "stdlib"
++        ]
++      },
++      "adapter": {
++        "probe": [
++          "node",
++          "clients/js/probe.ts",
++          "ts",
++          "{client_version}",
++          "{endpoint}"
++        ]
++      }
++    },
++    {
++      "id": "node-tsx-ts",
++      "language": "node",
++      "client": "tsx-ts",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "node_dist",
++        "min_version": "20.0.0"
++      },
++      "client_versions": {
++        "type": "npm",
++        "package": "tsx"
++      },
++      "adapter": {
++        "probe": [
++          "clients/js/node_modules/.bin/tsx",
++          "clients/js/probe.ts",
++          "tsx-ts",
++          "{client_version}",
++          "{endpoint}"
++        ],
++        "prepare": [
++          "npm",
++          "install",
++          "--no-audit",
++          "--no-fund",
++          "--ignore-scripts",
++          "--no-save",
++          "--prefix",
++          "clients/js",
++          "tsx@{client_version}"
++        ]
++      }
++    },
++    {
++      "id": "node-tsx-js",
++      "language": "node",
++      "client": "tsx-js",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "node_dist",
++        "min_version": "20.0.0"
++      },
++      "client_versions": {
++        "type": "npm",
++        "package": "tsx"
++      },
++      "adapter": {
++        "probe": [
++          "clients/js/node_modules/.bin/tsx",
++          "clients/js/probe.mjs",
++          "tsx-js",
++          "{client_version}",
++          "{endpoint}"
++        ],
++        "prepare": [
++          "npm",
++          "install",
++          "--no-audit",
++          "--no-fund",
++          "--ignore-scripts",
++          "--no-save",
++          "--prefix",
++          "clients/js",
++          "tsx@{client_version}"
++        ]
++      }
++    },
++    {
++      "id": "node-oxc-ts",
++      "language": "node",
++      "client": "oxc-ts",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "node_dist",
++        "min_version": "20.0.0"
++      },
++      "client_versions": {
++        "type": "npm",
++        "package": "@oxc-node/cli"
++      },
++      "adapter": {
++        "probe": [
++          "clients/js/node_modules/.bin/oxnode",
++          "clients/js/probe.ts",
++          "oxc-ts",
++          "{client_version}",
++          "{endpoint}"
++        ],
++        "prepare": [
++          "npm",
++          "install",
++          "--no-audit",
++          "--no-fund",
++          "--ignore-scripts",
++          "--no-save",
++          "--prefix",
++          "clients/js",
++          "@oxc-node/cli@{client_version}"
++        ]
++      }
++    },
++    {
++      "id": "node-oxc-js",
++      "language": "node",
++      "client": "oxc-js",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "node_dist",
++        "min_version": "20.0.0"
++      },
++      "client_versions": {
++        "type": "npm",
++        "package": "@oxc-node/cli"
++      },
++      "adapter": {
++        "probe": [
++          "clients/js/node_modules/.bin/oxnode",
++          "clients/js/probe.mjs",
++          "oxc-js",
++          "{client_version}",
++          "{endpoint}"
++        ],
++        "prepare": [
++          "npm",
++          "install",
++          "--no-audit",
++          "--no-fund",
++          "--ignore-scripts",
++          "--no-save",
++          "--prefix",
++          "clients/js",
++          "@oxc-node/cli@{client_version}"
++        ]
++      }
++    },
++    {
++      "id": "bun-js",
++      "language": "bun",
++      "client": "js",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "github_releases",
++        "repo": "oven-sh/bun",
++        "tag_prefix": "bun-v",
++        "max_pages": 2,
++        "min_version": "1.2.0"
++      },
++      "client_versions": {
++        "type": "static",
++        "versions": [
++          "stdlib"
++        ]
++      },
++      "adapter": {
++        "probe": [
++          "bun",
++          "clients/js/probe.mjs",
++          "js",
++          "{client_version}",
++          "{endpoint}"
++        ]
++      }
++    },
++    {
++      "id": "bun-ts",
++      "language": "bun",
++      "client": "ts",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "github_releases",
++        "repo": "oven-sh/bun",
++        "tag_prefix": "bun-v",
++        "max_pages": 2,
++        "min_version": "1.2.0"
++      },
++      "client_versions": {
++        "type": "static",
++        "versions": [
++          "stdlib"
++        ]
++      },
++      "adapter": {
++        "probe": [
++          "bun",
++          "clients/js/probe.ts",
++          "ts",
++          "{client_version}",
++          "{endpoint}"
++        ]
++      }
++    },
++    {
++      "id": "deno-js",
++      "language": "deno",
++      "client": "js",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "github_releases",
++        "repo": "denoland/deno",
++        "tag_prefix": "v",
++        "max_pages": 2,
++        "min_version": "2.0.0"
++      },
++      "client_versions": {
++        "type": "static",
++        "versions": [
++          "stdlib"
++        ]
++      },
++      "adapter": {
++        "probe": [
++          "deno",
++          "run",
++          "--allow-net",
++          "clients/js/probe.mjs",
++          "js",
++          "{client_version}",
++          "{endpoint}"
++        ]
++      }
++    },
++    {
++      "id": "deno-ts",
++      "language": "deno",
++      "client": "ts",
++      "enabled": true,
++      "revision": "1",
++      "runner": "ubuntu-24.04",
++      "platform": "linux-x86_64",
++      "runtime_versions": {
++        "type": "github_releases",
++        "repo": "denoland/deno",
++        "tag_prefix": "v",
++        "max_pages": 2,
++        "min_version": "2.0.0"
++      },
++      "client_versions": {
++        "type": "static",
++        "versions": [
++          "stdlib"
++        ]
++      },
++      "adapter": {
++        "probe": [
++          "deno",
++          "run",
++          "--allow-net",
++          "clients/js/probe.ts",
++          "ts",
++          "{client_version}",
++          "{endpoint}"
++        ]
++      }
++    },
++    {
+       "language": "python",
+       "platform": "linux-x86_64",
+@@ -108,5 +440,9 @@
+             "runtime_min": "3.15.0",
+             "client_max": "2.24.99"
++          },
++          {
++            "runtime_min": "3.14.0",
++            "client_max": "2.29.99"
+           }
+         ]
+       }
+@@ -1595,4 +1931,3 @@
+-          "1.24.3",
+           "1.25.0"
+         ]
+       },
+diff --git a/.github/workflows/historical-fingerprints.yml b/.github/workflows/historical-fingerprints.yml
+--- a/.github/workflows/historical-fingerprints.yml
++++ b/.github/workflows/historical-fingerprints.yml
+@@ -78,4 +78,14 @@
+         continue-on-error: true
+         with:
+           node-version: ${{ matrix.case.runtime_version }}
++      - uses: oven-sh/setup-bun@v2
++        if: matrix.case.language == 'bun'
++        continue-on-error: true
++        with:
++          bun-version: ${{ matrix.case.runtime_version }}
++      - uses: denoland/setup-deno@v2
++        if: matrix.case.language == 'deno'
++        continue-on-error: true
++        with:
++          deno-version: ${{ matrix.case.runtime_version }}
+       - uses: actions/setup-go@v5
+diff --git a/.github/workflows/update-fingerprints.yml b/.github/workflows/update-fingerprints.yml
+--- a/.github/workflows/update-fingerprints.yml
++++ b/.github/workflows/update-fingerprints.yml
+@@ -70,4 +70,14 @@
+         continue-on-error: true
+         with:
+           node-version: ${{ matrix.case.runtime_version }}
++      - uses: oven-sh/setup-bun@v2
++        if: matrix.case.language == 'bun'
++        continue-on-error: true
++        with:
++          bun-version: ${{ matrix.case.runtime_version }}
++      - uses: denoland/setup-deno@v2
++        if: matrix.case.language == 'deno'
++        continue-on-error: true
++        with:
++          deno-version: ${{ matrix.case.runtime_version }}
+       - uses: actions/setup-go@v5
+diff --git a/fpdb/cli.py b/fpdb/cli.py
+--- a/fpdb/cli.py
++++ b/fpdb/cli.py
+@@ -64,3 +64,4 @@
++            collected = skipped = 0
+             for case in cases:
+                 try:
+                     if (args.cases_env and case["language"] == "python"
+@@ -91,3 +92,4 @@
+                 if record is None:
++                    skipped += 1
+                     # A failed case must not prevent the other cases from being persisted.
+                     args.output_dir.mkdir(parents=True, exist_ok=True)
+@@ -97,5 +99,7 @@
+                 else:
++                    collected += 1
+                     path = args.output_dir.resolve() / (case["id"] + ".json")
+                     save_json(path, record)
+                     print(f"collected={case['id']} path={path}")
++            print(f"batch_summary collected={collected} skipped={skipped}")
+         elif args.command == "persist":
+diff --git a/clients/js/probe.ts b/clients/js/probe.ts
+new file mode 100644
+--- /dev/null
++++ b/clients/js/probe.ts
+@@ -0,0 +1,4 @@
++// A genuine TypeScript entrypoint for native Node, tsx, Bun, Deno and Oxc.
++const source: string = 'typescript';
++void source;
++await import('./probe.mjs');
+diff --git a/clients/js/probe.mjs b/clients/js/probe.mjs
+new file mode 100644
+--- /dev/null
++++ b/clients/js/probe.mjs
+@@ -0,0 +1,38 @@
++// One process performs one HTTP request (and therefore a fresh TLS handshake).
++const deno = typeof globalThis.Deno !== 'undefined';
++const bun = !deno && typeof globalThis.Bun !== 'undefined';
++const runtime = deno ? 'deno' : bun ? 'bun' : 'node';
++const args = deno ? Deno.args : process.argv.slice(2);
++const [client, expected, endpoint] = args;
++if (!client || !expected || !endpoint?.startsWith('https://')) {
++  throw new Error('Usage: probe.[mjs|ts] CLIENT VERSION HTTPS_URL');
++}
++
++const runtimeVersion = deno ? Deno.version.deno : bun ? Bun.version : process.versions.node;
++const dependencies = {};
++let actual = 'stdlib';
++if (client.startsWith('tsx-') || client.startsWith('oxc-')) {
++  if (runtime !== 'node') throw new Error('tsx and Oxc require Node.js');
++  const pkg = client.startsWith('tsx-') ? 'tsx' : '@oxc-node/cli';
++  const { readFileSync } = await import('node:fs');
++  actual = JSON.parse(readFileSync(new URL(`./node_modules/${pkg}/package.json`, import.meta.url), 'utf8')).version;
++  dependencies[pkg] = actual;
++}
++if (actual !== expected) throw new Error(`Client version mismatch ${actual} != ${expected}`);
++
++const backend = deno ? { name: 'rustls', version: 'bundled' }
++  : bun ? { name: 'BoringSSL', version: 'bundled' }
++  : { name: 'OpenSSL', version: process.versions.openssl };
++const os = deno ? Deno.build.os : process.platform;
++const arch = deno ? Deno.build.arch : process.arch;
++const response = await fetch(endpoint, {
++  headers: { Accept: 'application/json' },
++  redirect: 'manual',
++  signal: AbortSignal.timeout(25000),
++});
++if (!response.ok) throw new Error(`HTTP ${response.status}`);
++const echo = await response.json();
++console.log(JSON.stringify({
++  runtime_version: runtimeVersion, client_version: actual,
++  environment: { os, arch, tls_backend: backend, dependencies }, echo,
++}));

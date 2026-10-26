@@ -6,7 +6,7 @@ use Net::SSLeay;
 use Config;
 my ($version, $endpoint) = @ARGV;
 die "expected system" unless defined($version) && $version eq 'system';
-my $agent = LWP::UserAgent->new(timeout => 25, max_redirect => 0, ssl_opts => {verify_hostname => 1});
+my $agent = LWP::UserAgent->new(agent => "TLS-Client-SHA1-DB/1", timeout => 25, max_redirect => 0, ssl_opts => {verify_hostname => 1});
 my $request = HTTP::Request->new(GET => $endpoint);
 $request->header('Accept' => 'application/json');
 $request->header('Connection' => 'close');
