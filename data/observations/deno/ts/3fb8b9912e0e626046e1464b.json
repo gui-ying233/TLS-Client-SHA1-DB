@@ -1,0 +1,123 @@
+{
+  "case_id": "7c659db71ddb7afd314dfccc",
+  "evidence": [
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "/IXOmTVULIfvTuLCqL2vj4qv0TE=",
+      "tlsClientExtensionsSha1Le": "VjTAXlS2C1fqGX+Dnq9O5FKx7og=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "3IeWqPJnQvKhR4ZXqnPupBndnlA=",
+      "tlsClientExtensionsSha1Le": "MchDI8GNNroqE3aHF75wN1rq0kE=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "K7ivlTbkbucZ00UlgrhmrIgOAhI=",
+      "tlsClientExtensionsSha1Le": "1+u7pWiZ0QZhcUJfGYRu1roNn4g=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "O/6+WVX1VnP+0SNM+PXSchUXsj0=",
+      "tlsClientExtensionsSha1Le": "9Hu0az0mPjstCxWVBOonhxez9uU=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "W4mGq6xBbYmxqPlGofdlZ8rEv/8=",
+      "tlsClientExtensionsSha1Le": "QhU0utv4u9uC8wbXKL08X4gKDQI=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "dCpkYmwF+daCQVUHrdfVpD89JAA=",
+      "tlsClientExtensionsSha1Le": "9livhCWxXLGvUkttzGESj+8K2+I=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "fD97gy7e3dn3F1JMehyDkUQ3nUg=",
+      "tlsClientExtensionsSha1Le": "9GJS5I8z7d0OzoTCvZoCl9TxIxE=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "gUWVTBuaszN0IMKCHp0xUaduyrI=",
+      "tlsClientExtensionsSha1Le": "Nf8HwG0v3uJYQnN0k1NMbRgV1V8=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "n3YNtJCwWwaoUtOmV770AmvaT/8=",
+      "tlsClientExtensionsSha1Le": "vAyuTzVdSZv1F9ViTPd6DsGhJps=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsCipher": "AEAD-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "w5yhnBPpiF4IzR7+lTtydPeldTE=",
+      "tlsClientExtensionsSha1Le": "+ALhZtX2ZMb2djo+d4p+W746ogI=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "ts",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64",
+      "dependencies": {},
+      "os": "linux",
+      "runtime_resolved_version": "2.6.10",
+      "tls_backend": {
+        "name": "rustls",
+        "version": "bundled"
+      }
+    },
+    "language": "deno",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "2.6.10",
+    "target": "deno-ts"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA="
+    }
+  ],
+  "record_id": "3fb8b9912e0e626046e1464b",
+  "schema_version": 1
+}
