@@ -83,11 +83,26 @@ jobs:
         continue-on-error: true
         with:
           bun-version: ${{ matrix.case.runtime_version }}
-      - uses: denoland/setup-deno@v2
+      - name: Install exact Deno release
         if: matrix.case.language == 'deno'
-        continue-on-error: true
-        with:
-          deno-version: ${{ matrix.case.runtime_version }}
+        env:
+          DENO_VERSION: ${{ matrix.case.runtime_version }}
+        run: |
+          asset=deno-x86_64-unknown-linux-gnu.zip
+          url="https://github.com/denoland/deno/releases/download/v${DENO_VERSION}"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$asset" "$url/$asset"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/deno.sha256" "$url/$asset.sha256sum"
+          expected="$(awk '{print $1}' "$RUNNER_TEMP/deno.sha256")"
+          actual="$(sha256sum "$RUNNER_TEMP/$asset" | awk '{print $1}')"
+          [[ "$actual" == "$expected" ]] || { echo '::error::Deno archive checksum mismatch'; exit 1; }
+          mkdir -p "$RUNNER_TEMP/deno-exact"
+          unzip -q -o "$RUNNER_TEMP/$asset" -d "$RUNNER_TEMP/deno-exact"
+          actual="$("$RUNNER_TEMP/deno-exact/deno" --version | awk 'NR==1 {print $2}')"
+          [[ "$actual" == "$DENO_VERSION" || "$actual" == "$DENO_VERSION"+* ]] || {
+            echo "::error::Deno binary version $actual differs from $DENO_VERSION"
+            exit 1
+          }
+          echo "$RUNNER_TEMP/deno-exact" >> "$GITHUB_PATH"
       - uses: actions/setup-go@v5
         if: matrix.case.language == 'go'
         continue-on-error: true

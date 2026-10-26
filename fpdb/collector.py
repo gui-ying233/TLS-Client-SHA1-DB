@@ -1,6 +1,7 @@
 """Execute adapter commands. Each probe subprocess must create one NEW TLS connection."""
 from __future__ import annotations
 
+import errno
 import json
 import logging
 import os
@@ -25,8 +26,24 @@ def _command(template: list[str], replacements: dict[str, str]) -> list[str]:
 
 
 def _run(command: list[str], root: Path, timeout: int, environment: dict, *, retry_diagnostics: bool = False) -> dict:
-    process = subprocess.run(command, cwd=root, env=environment, capture_output=True, text=True,
-                             timeout=timeout, check=False)
+    is_oxnode = Path(command[0]).name == "oxnode"
+    if is_oxnode:
+        # Older oxnode releases resolve their Node loader from the working directory.
+        workdir = root / "clients/js"
+        environment = {**environment, "FPDB_ROOT": str(root)}
+        command = [str((root / command[0]).resolve()),
+                   str((root / command[1]).resolve()), *command[2:]]
+    else:
+        workdir = root
+    try:
+        process = subprocess.run(command, cwd=workdir, env=environment, capture_output=True, text=True,
+                                 timeout=timeout, check=False)
+    except OSError as exc:
+        if exc.errno != errno.ENOEXEC or not is_oxnode:
+            raise
+        # Versions before 0.0.33 shipped a JavaScript executable without a shebang.
+        process = subprocess.run(["node", *command], cwd=workdir, env=environment,
+                                 capture_output=True, text=True, timeout=timeout, check=False)
     if process.returncode != 0:
         raise DataError(f"Adapter exited {process.returncode}; stderr={process.stderr[-2500:]!r}")
     if retry_diagnostics and process.stderr.strip():

@@ -175,7 +175,6 @@
       },
       "adapter": {
         "probe": [
-          "node",
           "clients/js/node_modules/.bin/oxnode",
           "clients/js/probe.ts",
           "oxc-ts",
@@ -213,7 +212,6 @@
       },
       "adapter": {
         "probe": [
-          "node",
           "clients/js/node_modules/.bin/oxnode",
           "clients/js/probe.mjs",
           "oxc-js",
@@ -1233,8 +1231,7 @@
         "versions": [
           "3.2",
           "3.3",
-          "3.4",
-          "3.5"
+          "3.4"
         ]
       },
       "client_versions": {
@@ -1587,8 +1584,7 @@
         "versions": [
           "3.2",
           "3.3",
-          "3.4",
-          "3.5"
+          "3.4"
         ]
       },
       "client_versions": {

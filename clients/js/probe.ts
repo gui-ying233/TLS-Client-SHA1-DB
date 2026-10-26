@@ -19,7 +19,7 @@ async function main() {
     if (runtime !== 'node') throw new Error('tsx and Oxc require Node.js');
     const pkg = client.startsWith('tsx-') ? 'tsx' : '@oxc-node/cli';
     const { readFileSync } = await import('node:fs');
-    actual = JSON.parse(readFileSync(`clients/js/node_modules/${pkg}/package.json`, 'utf8')).version;
+    actual = JSON.parse(readFileSync(`${process.env.FPDB_ROOT || process.cwd()}/clients/js/node_modules/${pkg}/package.json`, 'utf8')).version;
     dependencies[pkg] = actual;
   }
   if (actual !== expected) throw new Error(`Client version mismatch ${actual} != ${expected}`);
