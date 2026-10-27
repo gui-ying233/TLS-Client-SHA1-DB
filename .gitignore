@@ -5,6 +5,7 @@ outbox/
 matrix.json
 *.tmp
 *.patch
+.fpdb-local/
 
 # Native probes / language install caches
 clients/go/fpdb-go

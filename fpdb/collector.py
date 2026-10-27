@@ -207,7 +207,12 @@ def collect(root: Path, case: dict) -> dict | None:
                                     case["id"], sample_index + 1, _echo_shape(result))
                     raise
                 observed_env = _require_environment(result, case)
-                if target.get("capture_profile"):
+                local_profile = runtime_env.get("FPDB_CAPTURE_PROFILE")
+                if local_profile:
+                    # Docker captures must never merge into the GH-hosted runner's identity.
+                    observed_env["capture_profile"] = local_profile + (
+                        ":" + target["capture_profile"] if target.get("capture_profile") else "")
+                elif target.get("capture_profile"):
                     observed_env["capture_profile"] = target["capture_profile"]
                 elif runtime_env.get("FPDB_LOCAL_CA"):
                     # Historical records remain untouched; only new captures get this provenance.
