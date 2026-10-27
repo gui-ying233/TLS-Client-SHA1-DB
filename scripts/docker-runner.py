@@ -6,6 +6,7 @@ commits, synthetic fingerprint data, or changes to old observations occur here.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -15,7 +16,10 @@ import subprocess
 import sys
 import tarfile
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import nullcontext
 from pathlib import Path
+from threading import Lock
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -24,6 +28,28 @@ from fpdb.planner import load_config, plan
 from fpdb.persistence import persist
 STATE = ROOT / '.fpdb-local'
 NODE_BASE = Path('/cache/node')
+_LOCKS: dict[str, Lock] = {}
+_LOCKS_GUARD = Lock()
+
+
+def resource_lock(key: str) -> Lock:
+    # The lock table itself is protected: two workers must get the same lock.
+    with _LOCKS_GUARD:
+        return _LOCKS.setdefault(key, Lock())
+
+
+def probe_lock(target: dict):
+    # npm --prefix overwrites a shared node_modules tree; hold the lock through
+    # both installation AND the TLS probe so package versions cannot change.
+    prepare = target.get('adapter', {}).get('prepare', [])
+    if '--prefix' in prepare:
+        index = prepare.index('--prefix') + 1
+        if index < len(prepare):
+            return resource_lock('npm:' + prepare[index])
+    # The OpenSSL builder writes to a shared RUNNER_TEMP prefix.
+    if target['id'] == 'openssl355-urllib3-ciphers':
+        return resource_lock('openssl:3.5.5')
+    return nullcontext()
 
 
 def run(args: list[str], *, env: dict | None = None) -> None:
@@ -107,17 +133,20 @@ def collect_one(case: dict, target: dict, inbox: Path) -> bool:
     language, version = case['language'], case['runtime_version']
     env = os.environ.copy()
     if language == 'node':
-        node = node_binary(version)
+        with resource_lock('node:' + version):
+            node = node_binary(version)
         env['PATH'] = str(node.parent) + os.pathsep + env.get('PATH', '')
     elif language == 'python':
-        env['FPDB_PYTHON_BIN'] = str(python_binary(version))
+        with resource_lock('python:' + version):
+            env['FPDB_PYTHON_BIN'] = str(python_binary(version))
     elif case['target'] not in {'openssl355-urllib3-ciphers', 'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}:
         raise ValueError('Unsupported local Docker target')
     # Explicit case identity is always verified again by fpdb.collector.
     env['FPDB_CASES_JSON'] = json.dumps([case], separators=(',', ':'))
-    code = subprocess.run([sys.executable, '-m', 'fpdb.cli', 'collect',
-                           '--cases-env', 'FPDB_CASES_JSON', '--output-dir', str(inbox)],
-                          cwd=ROOT, env=env, check=False).returncode
+    with probe_lock(target):
+        code = subprocess.run([sys.executable, '-m', 'fpdb.cli', 'collect',
+                               '--cases-env', 'FPDB_CASES_JSON', '--output-dir', str(inbox)],
+                              cwd=ROOT, env=env, check=False).returncode
     if code:
         print(f'FAILED case={case["id"]} target={target["id"]}', flush=True)
     return code == 0 and (inbox / (case['id'] + '.json')).is_file()
@@ -130,6 +159,7 @@ def main() -> int:
     parser.add_argument('--mode', choices=('incremental', 'historical', 'full'), default='incremental')
     parser.add_argument('--jobs', type=int, default=4, help='Planner batch budget (1..200)')
     parser.add_argument('--max-cases', type=int, default=32, help='Maximum cases per local invocation')
+    parser.add_argument('--parallel', type=int, default=1, help='Concurrent Case workers (1..16; default 1)')
     parser.add_argument('--recheck', action='store_true', help='Explicitly repeat already collected cases')
     parser.add_argument('--list-targets', action='store_true')
     args = parser.parse_args()
@@ -147,8 +177,17 @@ def main() -> int:
         parser.error('Supply --target or --all-supported (see --list-targets)')
     if not 1 <= args.jobs <= 200 or not 1 <= args.max_cases <= 2000:
         parser.error('--jobs must be 1..200 and --max-cases must be 1..2000')
+    if not 1 <= args.parallel <= 16:
+        parser.error('--parallel must be 1..16')
     inbox = STATE / 'inbox'
     inbox.mkdir(parents=True, exist_ok=True)
+    # Never let two separate Docker invocations mutate the same inbox/data tree.
+    # In-process threads share this lock and persist only after all workers end.
+    run_lock = (STATE / 'docker-runner.lock').open('a+')
+    try:
+        fcntl.flock(run_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        parser.error('Another Docker collector is using this checkout; finish it first')
     # Recover a previous interrupted invocation before planning to avoid duplicate samples.
     recovered = list(inbox.rglob('*.json'))
     if recovered:
@@ -181,17 +220,31 @@ def main() -> int:
             if len(work) >= args.max_cases:
                 break
         queues = next_queues
-    print(f'planned_cases={len(work)} targets={len(selected)} mode={args.mode}', flush=True)
+    print(f'planned_cases={len(work)} targets={len(selected)} mode={args.mode} parallel={args.parallel}', flush=True)
     succeeded, failed = 0, 0
-    for i, (target, case) in enumerate(work, start=1):
+
+    def worker(i: int, target: dict, case: dict) -> bool:
         print(f'[{i}/{len(work)}] {target["id"]} {case["runtime_version"]} / {case["client_version"]}', flush=True)
         try:
             ok = collect_one(case, target, inbox)
         except (OSError, ValueError, subprocess.CalledProcessError) as exc:
             print(f'FAILED setup case={case["id"]}: {exc}', file=sys.stderr, flush=True)
             ok = False
-        succeeded += ok
-        failed += not ok
+        print(f'[{i}/{len(work)}] {"OK" if ok else "FAILED"} case={case["id"]}', flush=True)
+        return ok
+
+    with ThreadPoolExecutor(max_workers=args.parallel) as pool:
+        tasks = [pool.submit(worker, i, target, case)
+                 for i, (target, case) in enumerate(work, start=1)]
+        for future in as_completed(tasks):
+            try:
+                ok = future.result()
+            except Exception as exc:
+                # Do not lose other successful artifacts due to one unexpected error.
+                print(f'FAILED unexpected worker error: {exc!r}', file=sys.stderr, flush=True)
+                ok = False
+            succeeded += bool(ok)
+            failed += not ok
     artifacts = list(inbox.rglob('*.json'))
     if artifacts:
         changed, processed = persist(ROOT, inbox)
