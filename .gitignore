@@ -12,6 +12,7 @@ clients/go/fpdb-go
 clients/go/*/fpdb-*
 clients/system/curl_probe
 clients/java/*.class
+clients/js/node_modules/
 clients/node/node_modules/
 clients/node/package-lock.json
 clients/rust/target/
