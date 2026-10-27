@@ -1,0 +1,49 @@
+{
+  "case_id": "f99ec817e910d04bb34aec9f",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "nMZAm8Fqkr+nlp+jRgWLiNTW07c=",
+      "tlsClientExtensionsSha1": "1eY97BUYYO8vDaTfHQywB1pcNdM=",
+      "tlsClientExtensionsSha1Le": "u4wtEMFQBY18l3BzHAvORm+KGRw=",
+      "tlsClientHelloLength": 1565,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "openssl",
+    "client_version": "system",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1:local-echo-openssl355-urllib3-12620-36",
+      "dependencies": {
+        "cipher_policy": "urllib3-1.26.20",
+        "openssl": "3.5.5"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "system",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)"
+      }
+    },
+    "language": "ubuntu",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "system",
+    "target": "openssl355-urllib3-ciphers"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "nMZAm8Fqkr+nlp+jRgWLiNTW07c=",
+      "tlsClientExtensionsSha1": "1eY97BUYYO8vDaTfHQywB1pcNdM=",
+      "tlsClientExtensionsSha1Le": "u4wtEMFQBY18l3BzHAvORm+KGRw="
+    }
+  ],
+  "record_id": "8963a2faa32a2358d7388936",
+  "schema_version": 1
+}

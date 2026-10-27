@@ -114,13 +114,22 @@ def _serve(certdir: Path) -> None:
 
 def _setup(certdir: Path) -> None:
     certdir.mkdir(parents=True, exist_ok=True)
+    # Explicit X.509 CA extensions are mandatory for recent Python/OpenSSL:
+    # an implicit self-signed certificate may be rejected as a CA without keyUsage.
     subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "2",
-                    "-subj", "/CN=FPDB ephemeral local CA", "-keyout", str(certdir / "ca.key"),
+                    "-subj", "/CN=FPDB ephemeral local CA",
+                    "-addext", "basicConstraints=critical,CA:TRUE",
+                    "-addext", "keyUsage=critical,keyCertSign,cRLSign",
+                    "-addext", "subjectKeyIdentifier=hash",
+                    "-keyout", str(certdir / "ca.key"),
                     "-out", str(certdir / "ca.crt")], check=True, capture_output=True)
     subprocess.run(["openssl", "req", "-newkey", "rsa:2048", "-nodes",
                     "-subj", f"/CN={HOST}", "-keyout", str(certdir / "server.key"),
                     "-out", str(certdir / "server.csr")], check=True, capture_output=True)
-    (certdir / "server.ext").write_text(f"subjectAltName=DNS:{HOST}\nextendedKeyUsage=serverAuth\n")
+    (certdir / "server.ext").write_text(
+        "basicConstraints=critical,CA:FALSE\n"
+        "keyUsage=critical,digitalSignature,keyEncipherment\n"
+        f"subjectAltName=DNS:{HOST}\nextendedKeyUsage=serverAuth\n")
     subprocess.run(["openssl", "x509", "-req", "-in", str(certdir / "server.csr"),
                     "-CA", str(certdir / "ca.crt"), "-CAkey", str(certdir / "ca.key"),
                     "-CAcreateserial", "-days", "2", "-out", str(certdir / "server.crt"),

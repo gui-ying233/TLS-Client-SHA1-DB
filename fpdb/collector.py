@@ -160,10 +160,24 @@ def collect(root: Path, case: dict) -> dict | None:
 
     prepare = adapter.get("prepare", [])
     if prepare:
+        prepare_command = _command(prepare, replacements)
+        prepare_input = None
+        # Windows Git checkouts may expose CRLF .sh scripts to a Linux Docker
+        # bind mount. Execute a LF-normalized copy over stdin; do not edit the
+        # user's checkout, and preserve positional arguments after the script.
+        if (prepare_command[0] == "bash" and len(prepare_command) >= 2
+                and prepare_command[1].endswith(".sh")):
+            script = root / prepare_command[1]
+            if script.is_file():
+                source = script.read_bytes()
+                if b"\r\n" in source:
+                    prepare_input = source.replace(b"\r\n", b"\n").decode("utf-8")
+                    prepare_command = ["bash", "-s", "--", *prepare_command[2:]]
+                    log.info("Running CRLF-normalized preparation script: %s", script)
         for trial in range(2):
             try:
-                prepared = subprocess.run(_command(prepare, replacements), cwd=root, env=runtime_env,
-                                          capture_output=True, text=True,
+                prepared = subprocess.run(prepare_command, input=prepare_input,
+                                          cwd=root, env=runtime_env, capture_output=True, text=True,
                                           timeout=int(sampling.get("prepare_timeout_seconds", 900)), check=False)
                 if prepared.returncode:
                     raise DataError(f"prepare exited {prepared.returncode}: {prepared.stderr[-1000:]}")
