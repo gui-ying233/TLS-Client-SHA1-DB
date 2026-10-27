@@ -10,6 +10,10 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
  let builder=builder.use_rustls_tls();
  #[cfg(feature="native")]
  let builder=builder.use_native_tls();
+ // Bundled rustls roots do not include the per-run test certificate.
+ let builder=if let Ok(path)=env::var("FPDB_LOCAL_CA") {
+  builder.add_root_certificate(reqwest::Certificate::from_pem(&std::fs::read(path)?)?)
+ }else{builder};
  let c=builder.build()?;
  let body=c.get(&args[3]).header("Accept","application/json").header("Connection","close").send()?.error_for_status()?.text()?;
  let echo:Value=serde_json::from_str(&body)?;

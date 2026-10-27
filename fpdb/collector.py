@@ -185,6 +185,16 @@ def collect(root: Path, case: dict) -> dict | None:
                 # metadata from adapters without changing the TLS connection.
                 probe_env = ({**runtime_env, "FPDB_DIAGNOSTIC_RETRY": "1"}
                              if trial else runtime_env)
+                local_ca = probe_env.get("FPDB_LOCAL_CA")
+                if local_ca:
+                    probe_env.update({"SSL_CERT_FILE": local_ca, "CURL_CA_BUNDLE": local_ca,
+                                      "NODE_EXTRA_CA_CERTS": local_ca, "DENO_CERT": local_ca})
+                    store = str(Path(local_ca).with_name("java-truststore.jks"))
+                    if Path(store).exists():
+                        probe_env["JAVA_TOOL_OPTIONS"] = (
+                            probe_env.get("JAVA_TOOL_OPTIONS", "") +
+                            " -Djavax.net.ssl.trustStore=" + store +
+                            " -Djavax.net.ssl.trustStorePassword=changeit").strip()
                 result = _run(command, root, timeout, probe_env,
                               retry_diagnostics=bool(trial))
                 if not isinstance(result, dict):
@@ -199,6 +209,9 @@ def collect(root: Path, case: dict) -> dict | None:
                 observed_env = _require_environment(result, case)
                 if target.get("capture_profile"):
                     observed_env["capture_profile"] = target["capture_profile"]
+                elif runtime_env.get("FPDB_LOCAL_CA"):
+                    # Historical records remain untouched; only new captures get this provenance.
+                    observed_env["capture_profile"] = "local-echo-fpdb-v1"
                 if resolved_environment is None:
                     resolved_environment = observed_env
                 elif resolved_environment != observed_env:

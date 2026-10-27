@@ -3,6 +3,7 @@ import asyncio
 import importlib.metadata
 import io
 import json
+import os
 import platform
 import ssl
 import sys
@@ -13,7 +14,9 @@ HEADERS = {'Accept': 'application/json', 'Connection': 'close'}
 def fetch(name, endpoint):
     if name == 'urllib3':
         import urllib3
-        pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25))
+        ca = os.environ.get('FPDB_LOCAL_CA')
+        pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25),
+                                   **({'ca_certs': ca} if ca else {}))
         try:
             response = pool.request('GET', endpoint, headers=HEADERS, redirect=False, retries=False)
             if not 200 <= response.status < 300:
@@ -26,7 +29,9 @@ def fetch(name, endpoint):
         import aiohttp
         async def do_request():
             timeout = aiohttp.ClientTimeout(total=25)
-            async with aiohttp.ClientSession(timeout=timeout, trust_env=False) as session:
+            local_ca = os.environ.get('FPDB_LOCAL_CA')
+            connector = aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=local_ca)) if local_ca else None
+            async with aiohttp.ClientSession(timeout=timeout, trust_env=False, connector=connector) as session:
                 async with session.get(endpoint, headers=HEADERS, allow_redirects=False) as response:
                     response.raise_for_status()
                     return await response.json(content_type=None)
@@ -38,6 +43,8 @@ def fetch(name, endpoint):
         curl = pycurl.Curl()
         try:
             curl.setopt(pycurl.URL, endpoint)
+            if os.environ.get('FPDB_LOCAL_CA'):
+                curl.setopt(pycurl.CAINFO, os.environ['FPDB_LOCAL_CA'])
             # Match the identifier used by the working LWP probe; keep pycurl's TLS stack.
             curl.setopt(pycurl.USERAGENT, 'TLS-Client-SHA1-DB/1')
             curl.setopt(pycurl.HTTPHEADER, ['Accept: application/json', 'Connection: close'])
@@ -61,7 +68,8 @@ def fetch(name, endpoint):
             client = AsyncHTTPClient(force_instance=True)
             try:
                 request = HTTPRequest(endpoint, method='GET', headers=HEADERS,
-                                      request_timeout=25, follow_redirects=False)
+                                      request_timeout=25, follow_redirects=False,
+                                      ca_certs=os.environ.get('FPDB_LOCAL_CA'))
                 response = await client.fetch(request, raise_error=True)
                 return json.loads(response.body)
             finally:

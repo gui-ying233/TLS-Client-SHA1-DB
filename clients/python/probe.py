@@ -19,12 +19,14 @@ def get_echo(client, endpoint):
         import requests
         with requests.Session() as session:
             session.trust_env = False
-            response = session.get(endpoint, headers=headers, timeout=25)
+            response = session.get(endpoint, headers=headers, timeout=25,
+                                   verify=__import__('os').environ.get('FPDB_LOCAL_CA', True))
             response.raise_for_status()
             return response.json()
     if client == "httpx":
         import httpx
-        with httpx.Client(trust_env=False, http2=False, timeout=25) as session:
+        with httpx.Client(trust_env=False, http2=False, timeout=25,
+                          verify=__import__('os').environ.get('FPDB_LOCAL_CA', True)) as session:
             response = session.get(endpoint, headers=headers)
             response.raise_for_status()
             return response.json()

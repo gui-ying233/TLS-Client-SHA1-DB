@@ -27,7 +27,8 @@ def main():
         with requests.Session() as session:
             session.trust_env = False
             response = session.get(endpoint, headers={'Accept': 'application/json', 'Connection': 'close'},
-                                   timeout=25, allow_redirects=False)
+                                   timeout=25, allow_redirects=False,
+                                   verify=os.environ.get('FPDB_LOCAL_CA', True))
             response.raise_for_status()
             echo = response.json()
         version = requests.__version__
@@ -41,6 +42,8 @@ def main():
                '--header', 'Connection: close']
         if kind == 'curl-http1':
             cmd += ['--http1.1']
+        if os.environ.get('FPDB_LOCAL_CA'):
+            cmd += ['--cacert', os.environ['FPDB_LOCAL_CA']]
         cmd += [endpoint]
         echo = json.loads(subprocess.check_output(cmd, text=True, timeout=30))
         version_text = subprocess.check_output(['curl', '--version'], text=True).splitlines()[0]

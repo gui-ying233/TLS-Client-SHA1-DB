@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "endpoint": "https://echo.yuaner.tw/",
+  "endpoint": "https://echo.fpdb.test:18443/",
   "sampling": {
     "initial_handshakes": 5,
     "expanded_handshakes": 10,
@@ -27,6 +27,70 @@
     }
   },
   "targets": [
+    {
+      "id": "node-openssl-default-ciphers",
+      "language": "node",
+      "client": "js",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "capture_profile": "local-echo-openssl-default-31",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "22.16.0"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "stdlib"
+        ]
+      },
+      "adapter": {
+        "probe": [
+          "node",
+          "clients/forensic/node_default.cjs",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "openssl355-urllib3-ciphers",
+      "language": "ubuntu",
+      "client": "openssl",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "capture_profile": "local-echo-openssl355-urllib3-12620-36",
+      "runtime_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "client_versions": {
+        "type": "static",
+        "versions": [
+          "system"
+        ]
+      },
+      "adapter": {
+        "prepare": [
+          "bash",
+          "clients/forensic/build_openssl355.sh"
+        ],
+        "probe": [
+          "python3",
+          "clients/forensic/openssl_urllib3.py",
+          "{client_version}",
+          "{endpoint}"
+        ]
+      }
+    },
     {
       "id": "node-javascript",
       "language": "node",

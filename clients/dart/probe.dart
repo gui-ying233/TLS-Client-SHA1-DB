@@ -7,7 +7,10 @@ Future<void> main(List<String> args) async {
   }
   final sdk = Platform.version.split(' ').first;
   final arch = (await Process.run('uname', ['-m'])).stdout.toString().trim();
-  final client = HttpClient()
+  final context = SecurityContext.defaultContext;
+  final caPath = Platform.environment['FPDB_LOCAL_CA'];
+  if (caPath != null) context.setTrustedCertificates(caPath);
+  final client = HttpClient(context: context)
     ..connectionTimeout = const Duration(seconds: 25)
     ..idleTimeout = Duration.zero
     ..findProxy = ((uri) => 'DIRECT');
