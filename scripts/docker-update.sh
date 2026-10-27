@@ -26,10 +26,13 @@ else
   host_uid="$(id -u)"
   host_gid="$(id -g)"
 fi
+# A Windows checkout can convert bind-mounted .sh files to CRLF. Keep an
+# LF-only copy of the entrypoint in the cache; do not modify the checkout.
+tr -d '\r' < "$repo/scripts/docker-entrypoint.sh" > "$cache/docker-entrypoint.sh"
 MSYS_NO_PATHCONV=1 docker run --rm --init --platform linux/amd64 \
   --add-host echo.fpdb.test:127.0.0.1 \
   --mount "type=bind,source=$repo_host,target=/repo" \
   --mount "type=bind,source=$cache_host,target=/cache" \
-  --workdir /repo \
+  --workdir /repo --entrypoint /bin/bash \
   -e "FPDB_UID=$host_uid" -e "FPDB_GID=$host_gid" \
-  "${extra[@]}" "$image" "$@"
+  "${extra[@]}" "$image" /cache/docker-entrypoint.sh "$@"
