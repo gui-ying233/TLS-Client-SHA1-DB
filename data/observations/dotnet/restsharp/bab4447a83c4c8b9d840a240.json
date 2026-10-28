@@ -1,0 +1,48 @@
+{
+  "case_id": "7edb4a567351a79f998a6571",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "rGiVREcCOsYD9VVEaVPWPr1Nu4E=",
+      "tlsClientExtensionsSha1": "6UmmQWg0gpYIt7ep+vuv2QF/rhs=",
+      "tlsClientExtensionsSha1Le": "tpNgogukEbYEUcG68uYBBoax0Rw=",
+      "tlsClientHelloLength": 278,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "restsharp",
+    "client_version": "114.1.0",
+    "environment": {
+      "arch": "X64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "RestSharp": "114.1.0"
+      },
+      "os": "Unix",
+      "runtime_resolved_version": "8.0.33",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)"
+      }
+    },
+    "language": "dotnet",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "8.0",
+    "target": "dotnet-restsharp"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "rGiVREcCOsYD9VVEaVPWPr1Nu4E=",
+      "tlsClientExtensionsSha1": "6UmmQWg0gpYIt7ep+vuv2QF/rhs=",
+      "tlsClientExtensionsSha1Le": "tpNgogukEbYEUcG68uYBBoax0Rw="
+    }
+  ],
+  "record_id": "bab4447a83c4c8b9d840a240",
+  "schema_version": 1
+}
