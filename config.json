@@ -913,24 +913,26 @@
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "0.12.28"
-        ]
+        "type": "crates",
+        "package": "reqwest",
+        "min_version": "0.11.0",
+        "max_version": "0.13.999"
       },
       "adapter": {
         "probe": [
-          "clients/rust/target/release/fpdb-probe",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client}",
           "{client_version}",
           "{endpoint}",
           "{runtime_version}"
         ],
         "prepare": [
-          "bash",
-          "clients/rust/prepare.sh",
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
           "{runtime_version}",
-          "{client}"
+          "{id}"
         ]
       }
     },
@@ -950,24 +952,26 @@
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "0.12.28"
-        ]
+        "type": "crates",
+        "package": "reqwest",
+        "min_version": "0.11.0",
+        "max_version": "0.13.999"
       },
       "adapter": {
         "probe": [
-          "clients/rust/target/release/fpdb-probe",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client}",
           "{client_version}",
           "{endpoint}",
           "{runtime_version}"
         ],
         "prepare": [
-          "bash",
-          "clients/rust/prepare.sh",
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
           "{runtime_version}",
-          "{client}"
+          "{id}"
         ]
       }
     },
@@ -1347,21 +1351,27 @@
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "4.12.0"
-        ]
+        "type": "maven",
+        "group": "com.squareup.okhttp3",
+        "artifact": "okhttp",
+        "min_version": "3.12.0",
+        "max_version": "5.999.999"
       },
       "adapter": {
         "probe": [
-          "bash",
-          "clients/java/okhttp/run.sh",
+          "python3",
+          "clients/java/okhttp/run.py",
+          "{id}",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/java/okhttp/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1384,26 +1394,35 @@
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "7.9.3"
-        ]
+        "type": "packagist",
+        "package": "guzzlehttp/guzzle",
+        "min_version": "6.5.8",
+        "max_version": "8.999.999"
       },
       "adapter": {
         "probe": [
           "php",
           "clients/php-guzzle/probe.php",
+          "{id}",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "composer",
-          "install",
-          "--working-dir=clients/php-guzzle",
-          "--no-interaction",
-          "--no-progress",
-          "--prefer-dist",
-          "--no-scripts"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
+        ]
+      },
+      "compatibility": {
+        "exclude": [
+          {
+            "runtime_min": "8.0",
+            "client_min": "7.0.0",
+            "client_max": "7.1.99"
+          }
         ]
       }
     },
@@ -1420,24 +1439,28 @@
         "versions": [
           "1.23.5",
           "1.24.3",
-          "1.25.0"
+          "1.25.0",
+          "1.27.3"
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "2.16.5"
-        ]
+        "type": "go_proxy",
+        "package": "github.com/go-resty/resty/v2",
+        "min_version": "2.0.0"
       },
       "adapter": {
         "probe": [
-          "clients/go/resty/fpdb-resty",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/go/resty/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1458,27 +1481,25 @@
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "112.1.0"
-        ]
+        "type": "nuget",
+        "package": "RestSharp",
+        "min_version": "106.15.0",
+        "max_version": "114.999.999"
       },
       "adapter": {
         "probe": [
           "dotnet",
-          "clients/dotnet-restsharp/bin/Release/net{runtime_version}/FpdbRestSharp.dll",
+          ".fpdb-local/build/{id}/bin/FpdbRestSharp.dll",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "dotnet",
-          "build",
-          "clients/dotnet-restsharp/FpdbRestSharp.csproj",
-          "-c",
-          "Release",
-          "-f",
-          "net{runtime_version}",
-          "--nologo"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1494,24 +1515,28 @@
         "type": "static",
         "versions": [
           "1.24.3",
-          "1.25.0"
+          "1.25.0",
+          "1.27.3"
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "2.2.0"
-        ]
+        "type": "go_proxy",
+        "package": "github.com/gocolly/colly/v2",
+        "min_version": "2.0.0"
       },
       "adapter": {
         "probe": [
-          "clients/go/colly/fpdb-colly",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/go/colly/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1527,24 +1552,28 @@
         "type": "static",
         "versions": [
           "1.24.3",
-          "1.25.0"
+          "1.25.0",
+          "1.27.3"
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "1.65.0"
-        ]
+        "type": "go_proxy",
+        "package": "github.com/valyala/fasthttp",
+        "min_version": "1.40.0"
       },
       "adapter": {
         "probe": [
-          "clients/go/fasthttp/fpdb-fasthttp",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/go/fasthttp/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1560,24 +1589,28 @@
         "type": "static",
         "versions": [
           "1.24.3",
-          "1.25.0"
+          "1.25.0",
+          "1.27.3"
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "3.53.0"
-        ]
+        "type": "go_proxy",
+        "package": "github.com/imroc/req/v3",
+        "min_version": "3.53.0"
       },
       "adapter": {
         "probe": [
-          "clients/go/req/fpdb-req",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/go/req/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1593,24 +1626,28 @@
         "type": "static",
         "versions": [
           "1.24.3",
-          "1.25.0"
+          "1.25.0",
+          "1.27.3"
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "0.7.8"
-        ]
+        "type": "go_proxy",
+        "package": "github.com/hashicorp/go-retryablehttp",
+        "min_version": "0.7.0"
       },
       "adapter": {
         "probe": [
-          "clients/go/retryablehttp/fpdb-retryablehttp",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/go/retryablehttp/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1941,24 +1978,28 @@
       "runtime_versions": {
         "type": "static",
         "versions": [
-          "1.25.5"
+          "1.25.5",
+          "1.27.3"
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "0.2.17"
-        ]
+        "type": "go_proxy",
+        "package": "github.com/parnurzeal/gorequest",
+        "min_version": "0.2.16"
       },
       "adapter": {
         "probe": [
-          "clients/go/gorequest/fpdb-gorequest",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/go/gorequest/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     },
@@ -1973,24 +2014,28 @@
       "runtime_versions": {
         "type": "static",
         "versions": [
-          "1.25.0"
+          "1.25.0",
+          "1.27.3"
         ]
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "0.26.2"
-        ]
+        "type": "go_proxy",
+        "package": "github.com/carlmjohnson/requests",
+        "min_version": "0.20.0"
       },
       "adapter": {
         "probe": [
-          "clients/go/requests/fpdb-requests",
+          ".fpdb-local/build/{id}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
         "prepare": [
-          "bash",
-          "clients/go/requests/prepare.sh"
+          "python3",
+          "scripts/prepare-native.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{id}"
         ]
       }
     }

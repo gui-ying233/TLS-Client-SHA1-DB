@@ -1,0 +1,49 @@
+{
+  "case_id": "4bd42f7c721e3fb0dbadbce6",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "tlH5gnoC5Z1HF45J5OgHEi338V0=",
+      "tlsClientExtensionsSha1Le": "mRCkyUCRFDTLCNHGQsZNFhkU1/4=",
+      "tlsClientHelloLength": 508,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "guzzle",
+    "client_version": "7.4.3",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "guzzlehttp/guzzle": "7.4.3",
+        "libcurl": "8.5.0"
+      },
+      "os": "Linux",
+      "runtime_resolved_version": "8.3.6",
+      "tls_backend": {
+        "name": "libcurl/OpenSSL/3.0.13",
+        "version": "OpenSSL/3.0.13"
+      }
+    },
+    "language": "php",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "8.3",
+    "target": "php-guzzle"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "tlH5gnoC5Z1HF45J5OgHEi338V0=",
+      "tlsClientExtensionsSha1Le": "mRCkyUCRFDTLCNHGQsZNFhkU1/4="
+    }
+  ],
+  "record_id": "872399b8e4049a95690a32d9",
+  "schema_version": 1
+}

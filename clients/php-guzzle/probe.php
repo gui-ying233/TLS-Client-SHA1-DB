@@ -1,12 +1,15 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
-if ($argc !== 3) throw new RuntimeException('usage: probe.php 7.9.3 URL');
-[$script, $expected, $endpoint] = $argv;
-$actual = Composer\InstalledVersions::getPrettyVersion('guzzlehttp/guzzle');
+if ($argc !== 4 || !preg_match('/^[a-f0-9]{24}$/', $argv[1])) throw new RuntimeException('usage: probe.php CASE_ID VERSION URL');
+[$script, $caseId, $expected, $endpoint] = $argv;
+require __DIR__ . '/../../.fpdb-local/build/' . $caseId . '/vendor/autoload.php';
+$actual = ltrim(Composer\InstalledVersions::getPrettyVersion('guzzlehttp/guzzle'), 'v');
 if ($actual !== $expected) throw new RuntimeException("Guzzle $actual != $expected");
+$curlOptions = [CURLOPT_FRESH_CONNECT => true];
+// Guzzle 8 manages proxy options itself and rejects a raw CURLOPT_NOPROXY.
+if (version_compare($actual, '8.0.0', '<')) $curlOptions[CURLOPT_NOPROXY] = '*';
 $client = new GuzzleHttp\Client(['http_errors' => true, 'allow_redirects' => false,
     'timeout' => 25, 'proxy' => '', 'headers' => ['Accept' => 'application/json', 'Connection' => 'close'],
-    'curl' => [CURLOPT_NOPROXY => '*', CURLOPT_FRESH_CONNECT => true]]);
+    'curl' => $curlOptions]);
 $response = $client->get($endpoint);
 $echo = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 $curl = curl_version();

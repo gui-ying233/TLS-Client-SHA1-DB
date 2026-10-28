@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 )
 
-const clientVersion = "2.2.0"
+var clientVersion = dependencyVersion("github.com/gocolly/colly/v2")
+
 const depName = "colly"
 
 func output(body []byte) {
@@ -46,10 +48,16 @@ func main() {
 	uri := endpoint()
 	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true, TLSHandshakeTimeout: 20 * time.Second}
 	defer transport.CloseIdleConnections()
-	collector := colly.NewCollector(colly.MaxBodySize(1<<20), colly.IgnoreRobotsTxt(), colly.MaxRequests(1))
+	collector := colly.NewCollector(colly.MaxBodySize(1<<20), colly.IgnoreRobotsTxt())
 	collector.WithTransport(transport)
 	collector.SetRedirectHandler(func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse })
+	requestCount := 0
 	collector.OnRequest(func(r *colly.Request) {
+		requestCount++
+		if requestCount > 1 {
+			r.Abort()
+			panic("probe attempted more than one request")
+		}
 		r.Headers.Set("Accept", "application/json")
 		r.Headers.Set("Connection", "close")
 	})
@@ -71,4 +79,20 @@ func main() {
 		panic(fmt.Sprintf("HTTP %d", status))
 	}
 	output(body)
+}
+
+func dependencyVersion(module string) string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("missing Go build information")
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == module {
+			if dep.Replace != nil {
+				panic("unexpected replaced client module")
+			}
+			return strings.TrimPrefix(dep.Version, "v")
+		}
+	}
+	panic("client dependency missing from Go build information: " + module)
 }

@@ -42,6 +42,8 @@ class VersionSource(TypedDict):
     platform_version: NotRequired[str]
     arch: NotRequired[str]
     package: NotRequired[str]
+    group: NotRequired[str]
+    artifact: NotRequired[str]
     repo: NotRequired[str]
     tag_prefix: NotRequired[str]
     max_pages: NotRequired[int]

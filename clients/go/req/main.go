@@ -6,11 +6,13 @@ import (
 	"github.com/imroc/req/v3"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 )
 
-const clientVersion = "3.53.0"
+var clientVersion = dependencyVersion("github.com/imroc/req/v3")
+
 const depName = "req"
 
 func output(body []byte) {
@@ -53,4 +55,20 @@ func main() {
 		panic(fmt.Sprintf("HTTP %d", response.GetStatusCode()))
 	}
 	output(response.Bytes())
+}
+
+func dependencyVersion(module string) string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("missing Go build information")
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == module {
+			if dep.Replace != nil {
+				panic("unexpected replaced client module")
+			}
+			return strings.TrimPrefix(dep.Version, "v")
+		}
+	}
+	panic("client dependency missing from Go build information: " + module)
 }

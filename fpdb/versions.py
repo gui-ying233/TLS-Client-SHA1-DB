@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import json
+from functools import cache
 import os
 import re
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from typing import Literal, TypeAlias, cast
 
 from fpdb.core import DataError, json_object
@@ -33,6 +35,12 @@ def _get_json(url: str) -> JSONValue:
         return cast(JSONValue, json.load(response))
 
 
+def _get_text(url: str) -> str:
+    request = urllib.request.Request(url, headers={"User-Agent": "TLS-Client-SHA1-DB/1"})
+    with urllib.request.urlopen(request, timeout=25) as response:
+        return response.read().decode("utf-8")
+
+
 def _select(data: JSONValue, path: str) -> JSONValue:
     current = data
     if not path:
@@ -52,6 +60,52 @@ def discover(source: VersionSource) -> list[str]:
     kind = source.get("type")
     if kind == "static":
         values = list(source.get("versions", []))
+    elif kind == "go_proxy":
+        package = _source_text(source, "package")
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+", package) or ".." in package:
+            raise DataError("Invalid Go module path")
+        escaped = "".join("!" + char.lower() if char.isupper() else char for char in package)
+        values = [version.removeprefix("v") for version in
+                  _get_text(f"https://proxy.golang.org/{escaped}/@v/list").splitlines()]
+    elif kind == "maven":
+        group, artifact = _source_text(source, "group"), _source_text(source, "artifact")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*", group) or not re.fullmatch(r"[A-Za-z0-9_-]+", artifact):
+            raise DataError("Invalid Maven coordinates")
+        url = f"https://repo.maven.apache.org/maven2/{group.replace('.', '/')}/{artifact}/maven-metadata.xml"
+        try:
+            metadata = ET.fromstring(_get_text(url))
+        except ET.ParseError as exc:
+            raise DataError("Invalid Maven metadata") from exc
+        values = [entry.text for entry in metadata.findall("./versioning/versions/version") if entry.text]
+    elif kind == "packagist":
+        package = _source_text(source, "package")
+        if not re.fullmatch(r"[a-z0-9_.-]+/[a-z0-9_.-]+", package):
+            raise DataError("Invalid Packagist package")
+        payload = json_object(_get_json(f"https://repo.packagist.org/p2/{package}.json"))
+        packages = json_object(payload["packages"])
+        entries = packages[package]
+        if not isinstance(entries, list):
+            raise DataError("Invalid Packagist versions")
+        values = [json_object(entry)["version"] for entry in entries]
+    elif kind == "crates":
+        package = _source_text(source, "package")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", package):
+            raise DataError("Invalid crate name")
+        payload = json_object(_get_json(f"https://crates.io/api/v1/crates/{package}"))
+        entries = payload["versions"]
+        if not isinstance(entries, list):
+            raise DataError("Invalid crate versions")
+        values = [entry["num"] for item in entries
+                  if not (entry := json_object(item)).get("yanked", False)]
+    elif kind == "nuget":
+        package = _source_text(source, "package")
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+", package):
+            raise DataError("Invalid NuGet package")
+        payload = json_object(_get_json(f"https://api.nuget.org/v3-flatcontainer/{package.lower()}/index.json"))
+        entries = payload["versions"]
+        if not isinstance(entries, list):
+            raise DataError("Invalid NuGet versions")
+        values = entries
     elif kind == "json_url":
         url = _source_text(source, "url")
         if not url.startswith("https://"):
@@ -155,6 +209,9 @@ def discover(source: VersionSource) -> list[str]:
     if not all(isinstance(v, str) for v in values):
         raise DataError("Version source must return string versions")
     versions = cast(list[str], values)
+    if kind in {"go_proxy", "maven", "packagist", "crates", "nuget"}:
+        versions = [version.removeprefix("v") for version in versions
+                    if re.fullmatch(r"v?[0-9]+(?:\.[0-9]+){1,3}", version)]
     minimum = source.get("min_version")
     maximum = source.get("max_version")
 
@@ -176,11 +233,31 @@ def _files(entry: dict[str, JSONValue]) -> list[JSONValue]:
     return files
 
 
-def _source_text(source: VersionSource, key: Literal["url", "package", "repo"]) -> str:
+def _source_text(source: VersionSource, key: Literal["url", "package", "repo", "group", "artifact"]) -> str:
     value = source.get(key)
     if value is None:
         raise DataError(f"Version source requires {key}")
     return value
+
+
+def minimum_runtime(source: VersionSource, client_version: str) -> str | None:
+    """Read a Go module's declared minimum instead of guessing a toolchain."""
+    if source["type"] != "go_proxy":
+        return None
+    package = _source_text(source, "package")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+", package) or ".." in package:
+        raise DataError("Invalid Go module path")
+    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){2}", client_version):
+        raise DataError("Invalid Go module version")
+    return _go_minimum(package, client_version)
+
+
+@cache
+def _go_minimum(package: str, client_version: str) -> str | None:
+    escaped = "".join("!" + char.lower() if char.isupper() else char for char in package)
+    manifest = _get_text(f"https://proxy.golang.org/{escaped}/@v/v{client_version}.mod")
+    match = re.search(r"(?m)^go\s+([0-9]+\.[0-9]+(?:\.[0-9]+)?)\s*(?://[^\n]*)?$", manifest)
+    return match.group(1) if match else None
 
 
 def _feed_version(entry: dict[str, JSONValue]) -> str:

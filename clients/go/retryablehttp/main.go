@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 )
 
-const clientVersion = "0.7.8"
+var clientVersion = dependencyVersion("github.com/hashicorp/go-retryablehttp")
+
 const depName = "go-retryablehttp"
 
 func output(body []byte) {
@@ -72,4 +74,20 @@ func main() {
 		panic(err)
 	}
 	output(body)
+}
+
+func dependencyVersion(module string) string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("missing Go build information")
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == module {
+			if dep.Replace != nil {
+				panic("unexpected replaced client module")
+			}
+			return strings.TrimPrefix(dep.Version, "v")
+		}
+	}
+	panic("client dependency missing from Go build information: " + module)
 }

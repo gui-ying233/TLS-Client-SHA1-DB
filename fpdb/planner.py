@@ -7,7 +7,7 @@ from typing import cast
 
 from fpdb.core import DataError, digest, json_array, json_object, read_json
 from fpdb.schema import Case, CaseIdentity, Config, Job, Target
-from fpdb.versions import discover, sort_key
+from fpdb.versions import discover, minimum_runtime, sort_key
 
 
 def load_config(root: Path) -> Config:
@@ -100,8 +100,12 @@ def _compatible(pair: tuple[str, str], target: Target) -> bool:
     rules = target.get("compatibility", {})
     includes = rules.get("include", [])
     excludes = rules.get("exclude", [])
-    return (not includes or any(_matches_range(pair, rule) for rule in includes)) and not any(
+    matches = (not includes or any(_matches_range(pair, rule) for rule in includes)) and not any(
         _matches_range(pair, rule) for rule in excludes)
+    if not matches:
+        return False
+    required = minimum_runtime(target["client_versions"], pair[1])
+    return required is None or sort_key(pair[0]) >= sort_key(required)
 
 
 def _pairs(target: Target, mode: str, active_runtime_count: int) -> list[tuple[str, str]]:

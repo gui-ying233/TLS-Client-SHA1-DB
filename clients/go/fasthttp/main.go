@@ -6,11 +6,13 @@ import (
 	"github.com/valyala/fasthttp"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 )
 
-const clientVersion = "1.65.0"
+var clientVersion = dependencyVersion("github.com/valyala/fasthttp")
+
 const depName = "fasthttp"
 
 func output(body []byte) {
@@ -59,4 +61,20 @@ func main() {
 		panic(fmt.Sprintf("HTTP %d", response.StatusCode()))
 	}
 	output(response.Body())
+}
+
+func dependencyVersion(module string) string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("missing Go build information")
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == module {
+			if dep.Replace != nil {
+				panic("unexpected replaced client module")
+			}
+			return strings.TrimPrefix(dep.Version, "v")
+		}
+	}
+	panic("client dependency missing from Go build information: " + module)
 }

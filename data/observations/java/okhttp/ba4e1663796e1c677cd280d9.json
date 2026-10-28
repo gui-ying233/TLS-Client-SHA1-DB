@@ -1,0 +1,48 @@
+{
+  "case_id": "bc9384b230e83a66b3206a92",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "r1GNOxiwv27KXp9CCk7DwSCBbII=",
+      "tlsClientExtensionsSha1": "tQG5D/p21Hizl69RDK3b9LGBHVw=",
+      "tlsClientExtensionsSha1Le": "ebmH5a8X2/WhmbvoTbCaDcuyP44=",
+      "tlsClientHelloLength": 416,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "okhttp",
+    "client_version": "3.12.1",
+    "environment": {
+      "arch": "amd64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "okhttp": "3.12.1"
+      },
+      "os": "Linux",
+      "runtime_resolved_version": "21.0.12.1",
+      "tls_backend": {
+        "name": "JSSE",
+        "version": "21.0.12.1+1-1-24.04.4-Ubuntu"
+      }
+    },
+    "language": "java",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "21",
+    "target": "java-okhttp"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "r1GNOxiwv27KXp9CCk7DwSCBbII=",
+      "tlsClientExtensionsSha1": "tQG5D/p21Hizl69RDK3b9LGBHVw=",
+      "tlsClientExtensionsSha1Le": "ebmH5a8X2/WhmbvoTbCaDcuyP44="
+    }
+  ],
+  "record_id": "ba4e1663796e1c677cd280d9",
+  "schema_version": 1
+}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func main() {
-	const version = "0.2.17"
+	version := dependencyVersion("github.com/parnurzeal/gorequest")
 	if len(os.Args) != 3 || os.Args[1] != version || !strings.HasPrefix(os.Args[2], "https://") {
 		panic("usage: fpdb-gorequest 0.2.17 HTTPS_URL")
 	}
@@ -44,4 +45,20 @@ func main() {
 	if err := json.NewEncoder(os.Stdout).Encode(payload); err != nil {
 		panic(err)
 	}
+}
+
+func dependencyVersion(module string) string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("missing Go build information")
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == module {
+			if dep.Replace != nil {
+				panic("unexpected replaced client module")
+			}
+			return strings.TrimPrefix(dep.Version, "v")
+		}
+	}
+	panic("client dependency missing from Go build information: " + module)
 }
