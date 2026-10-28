@@ -1691,18 +1691,17 @@
       "runner": "ubuntu-24.04",
       "platform": "linux-x86_64",
       "runtime_versions": {
-        "type": "static",
-        "versions": [
-          "3.11",
-          "3.12",
-          "3.13"
-        ]
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "2.8.0"
-        ]
+        "type": "pypi",
+        "package": "urllib3",
+        "min_version": "1.26.0"
       },
       "adapter": {
         "probe": [
@@ -1732,18 +1731,17 @@
       "runner": "ubuntu-24.04",
       "platform": "linux-x86_64",
       "runtime_versions": {
-        "type": "static",
-        "versions": [
-          "3.11",
-          "3.12",
-          "3.13"
-        ]
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "3.14.5"
-        ]
+        "type": "pypi",
+        "package": "aiohttp",
+        "min_version": "3.8.0"
       },
       "adapter": {
         "probe": [
@@ -1773,18 +1771,17 @@
       "runner": "ubuntu-24.04",
       "platform": "linux-x86_64",
       "runtime_versions": {
-        "type": "static",
-        "versions": [
-          "3.11",
-          "3.12",
-          "3.13"
-        ]
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "7.48.0"
-        ]
+        "type": "pypi",
+        "package": "pycurl",
+        "min_version": "7.43.0"
       },
       "adapter": {
         "probe": [
@@ -1814,18 +1811,17 @@
       "runner": "ubuntu-24.04",
       "platform": "linux-x86_64",
       "runtime_versions": {
-        "type": "static",
-        "versions": [
-          "3.11",
-          "3.12",
-          "3.13"
-        ]
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "6.6"
-        ]
+        "type": "pypi",
+        "package": "tornado",
+        "min_version": "6.0"
       },
       "adapter": {
         "probe": [
@@ -1855,18 +1851,17 @@
       "runner": "ubuntu-24.04",
       "platform": "linux-x86_64",
       "runtime_versions": {
-        "type": "static",
-        "versions": [
-          "3.11",
-          "3.12",
-          "3.13"
-        ]
+        "type": "python_manifest",
+        "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+        "platform": "linux",
+        "platform_version": "24.04",
+        "arch": "x64",
+        "min_version": "3.8.0"
       },
       "client_versions": {
-        "type": "static",
-        "versions": [
-          "2.19.0"
-        ]
+        "type": "pypi",
+        "package": "scrapy",
+        "min_version": "2.0.0"
       },
       "adapter": {
         "probe": [

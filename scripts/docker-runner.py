@@ -103,7 +103,7 @@ def node_binary(version: str) -> Path:
 
 
 def python_binary(version: str) -> Path:
-    if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version):
+    if not re.fullmatch(r'[0-9]+\.[0-9]+(?:\.[0-9]+)?', version):
         raise ValueError('Invalid Python version')
     run(['uv', 'python', 'install', '--no-config', version])
     path = subprocess.check_output(
@@ -112,7 +112,7 @@ def python_binary(version: str) -> Path:
         raise ValueError('UV did not provide a Python interpreter')
     actual = subprocess.check_output(
         [path, '-c', 'import platform; print(platform.python_version())'], text=True).strip()
-    if actual != version:
+    if not (actual == version or (version.count('.') == 1 and actual.startswith(version + '.'))):
         raise ValueError(f'Python runtime {actual} != {version}')
     return Path(path)
 
