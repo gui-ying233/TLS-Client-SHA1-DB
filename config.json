@@ -1703,6 +1703,11 @@
         "package": "urllib3",
         "min_version": "1.26.0"
       },
+      "compatibility": {
+        "exclude": [
+          {"runtime_min": "3.12.0", "client_max": "1.26.4"}
+        ]
+      },
       "adapter": {
         "probe": [
           "{python_bin}",
