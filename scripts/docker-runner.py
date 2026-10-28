@@ -46,9 +46,6 @@ def probe_lock(target: dict):
         index = prepare.index('--prefix') + 1
         if index < len(prepare):
             return resource_lock('npm:' + prepare[index])
-    # The OpenSSL builder writes to a shared RUNNER_TEMP prefix.
-    if target['id'] == 'openssl355-urllib3-ciphers':
-        return resource_lock('openssl:3.5.5')
     return nullcontext()
 
 
@@ -126,7 +123,7 @@ def supported(target: dict) -> bool:
     if target.get('language') in ('node', 'python') and not target['id'].startswith('env-'):
         return True
     return target['id'] in {
-        'openssl355-urllib3-ciphers', 'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}
+        'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}
 
 
 def collect_one(case: dict, target: dict, inbox: Path) -> bool:
@@ -139,7 +136,7 @@ def collect_one(case: dict, target: dict, inbox: Path) -> bool:
     elif language == 'python':
         with resource_lock('python:' + version):
             env['FPDB_PYTHON_BIN'] = str(python_binary(version))
-    elif case['target'] not in {'openssl355-urllib3-ciphers', 'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}:
+    elif case['target'] not in {'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}:
         raise ValueError('Unsupported local Docker target')
     # Explicit case identity is always verified again by fpdb.collector.
     env['FPDB_CASES_JSON'] = json.dumps([case], separators=(',', ':'))
@@ -162,7 +159,18 @@ def main() -> int:
     parser.add_argument('--parallel', type=int, default=1, help='Concurrent Case workers (1..16; default 1)')
     parser.add_argument('--recheck', action='store_true', help='Explicitly repeat already collected cases')
     parser.add_argument('--list-targets', action='store_true')
+    parser.add_argument('--reindex', action='store_true', help='Rebuild index from remaining observations')
     args = parser.parse_args()
+    if args.reindex:
+        STATE.mkdir(parents=True, exist_ok=True)
+        with (STATE / 'docker-runner.lock').open('a+') as maintenance_lock:
+            try:
+                fcntl.flock(maintenance_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                parser.error('Another Docker collector is using this checkout; finish it first')
+            from fpdb.index import build as build_index
+            print('index_changed=' + str(build_index(ROOT)).lower())
+        return 0
     config = load_config(ROOT)
     targets = [t for t in config['targets'] if t.get('enabled') and supported(t)]
     if args.list_targets:
