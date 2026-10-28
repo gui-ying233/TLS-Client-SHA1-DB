@@ -1705,7 +1705,9 @@
       },
       "compatibility": {
         "exclude": [
-          {"runtime_min": "3.12.0", "client_max": "1.26.4"}
+          {"runtime_min": "3.12.0", "client_max": "1.26.4"},
+          {"runtime": "3.11.0"},
+          {"runtime": "3.11.2"}
         ]
       },
       "adapter": {
