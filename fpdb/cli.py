@@ -8,12 +8,33 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import cast
 
-from fpdb.core import ROOT, DataError, save_json
+from fpdb.core import ROOT, DataError, json_array, json_object, save_json
 from fpdb.planner import job_batches, plan
 from fpdb.collector import collect
 from fpdb.persistence import persist
 from fpdb.lookup import lookup
+from fpdb.schema import Case, JSONValue
+
+
+class Arguments(argparse.Namespace):
+    root: Path
+    command: str
+    mode: str
+    target: str
+    batch_size: int | None
+    recheck: bool
+    output: Path
+    case_env: str
+    cases_env: str | None
+    output_dir: Path
+    inbox: Path
+    ciphers: str | None
+    extensions: str | None
+    extensions_le: str | None
+    limit: int
+    require_all: bool
 
 
 def main() -> int:
@@ -38,7 +59,7 @@ def main() -> int:
     q.add_argument("--extensions-le", help="tlsClientExtensionsSha1Le")
     q.add_argument("--limit", type=int, default=100)
     q.add_argument("--require-all", action="store_true", help="Only return complete joint matches")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=Arguments())
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     root = args.root.resolve()
     try:
@@ -55,12 +76,14 @@ def main() -> int:
                     stream.write("has_work=" + ("true" if cases else "false") + "\n")
             print(f"planned_cases={len(cases)} jobs={len(jobs)} mode={args.mode}")
         elif args.command == "collect":
-            cases = json.loads(os.environ[args.cases_env] if args.cases_env else os.environ[args.case_env])
+            payload = cast(JSONValue, json.loads(
+                os.environ[args.cases_env] if args.cases_env else os.environ[args.case_env]))
             if args.cases_env:
-                if not isinstance(cases, list) or not cases:
+                if not isinstance(payload, list) or not payload:
                     raise DataError("Batch must contain at least one case")
+                cases = [cast(Case, json_object(item)) for item in json_array(payload)]
             else:
-                cases = [cases]
+                cases = [cast(Case, json_object(payload))]
             collected = skipped = 0
             for case in cases:
                 try:

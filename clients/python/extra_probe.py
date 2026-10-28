@@ -1,4 +1,6 @@
 """Probe genuine Python HTTP libraries; one process = one HTTPS request."""
+from __future__ import annotations
+
 import asyncio
 import importlib.metadata
 import io
@@ -7,16 +9,19 @@ import os
 import platform
 import ssl
 import sys
+from typing import AsyncIterator, ClassVar
 
 HEADERS = {'Accept': 'application/json', 'Connection': 'close'}
 
 
-def fetch(name, endpoint):
+def fetch(name: str, endpoint: str) -> object:
     if name == 'urllib3':
         import urllib3
         ca = os.environ.get('FPDB_LOCAL_CA')
-        pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25),
-                                   **({'ca_certs': ca} if ca else {}))
+        if ca:
+            pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25), ca_certs=ca)
+        else:
+            pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25))
         try:
             response = pool.request('GET', endpoint, headers=HEADERS, redirect=False, retries=False)
             if not 200 <= response.status < 300:
@@ -27,7 +32,7 @@ def fetch(name, endpoint):
 
     if name == 'aiohttp':
         import aiohttp
-        async def do_request():
+        async def aiohttp_request() -> object:
             timeout = aiohttp.ClientTimeout(total=25)
             local_ca = os.environ.get('FPDB_LOCAL_CA')
             connector = aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=local_ca)) if local_ca else None
@@ -35,7 +40,7 @@ def fetch(name, endpoint):
                 async with session.get(endpoint, headers=HEADERS, allow_redirects=False) as response:
                     response.raise_for_status()
                     return await response.json(content_type=None)
-        return asyncio.run(do_request())
+        return asyncio.run(aiohttp_request())
 
     if name == 'pycurl':
         import pycurl
@@ -64,7 +69,7 @@ def fetch(name, endpoint):
 
     if name == 'tornado':
         from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-        async def do_request():
+        async def tornado_request() -> object:
             client = AsyncHTTPClient(force_instance=True)
             try:
                 request = HTTPRequest(endpoint, method='GET', headers=HEADERS,
@@ -74,25 +79,29 @@ def fetch(name, endpoint):
                 return json.loads(response.body)
             finally:
                 client.close()
-        return asyncio.run(do_request())
+        return asyncio.run(tornado_request())
 
     if name == 'scrapy':
         import scrapy
         from scrapy.crawler import CrawlerProcess
+        from scrapy.http import Response, TextResponse
+        from twisted.python.failure import Failure
         class OneRequest(scrapy.Spider):
             name = 'fpdb-single-probe'
-            result = None
-            failure = None
-            async def start(self):
+            result: ClassVar[object | None] = None
+            failure: ClassVar[str | None] = None
+            async def start(self) -> AsyncIterator[scrapy.Request]:
                 yield scrapy.Request(endpoint, headers=HEADERS, dont_filter=True,
                                      callback=self.parse, errback=self.on_failure,
                                      meta={'dont_redirect': True, 'dont_retry': True})
-            def parse(self, response):
+            def parse(self, response: Response, **kwargs: object) -> None:
                 if not 200 <= response.status < 300:
                     raise RuntimeError('HTTP {}'.format(response.status))
+                if not isinstance(response, TextResponse):
+                    raise RuntimeError('Expected a text response')
                 type(self).result = json.loads(response.text)
-            def on_failure(self, failure):
-                type(self).failure = str(failure.value)[:350]
+            def on_failure(self, failure: Failure) -> None:
+                type(self).failure = failure.getErrorMessage()[:350]
         # No robots.txt fetch, proxy middleware, redirects or retry connections.
         crawler = CrawlerProcess(settings={
             'LOG_ENABLED': False, 'ROBOTSTXT_OBEY': False, 'RETRY_ENABLED': False,
@@ -110,7 +119,7 @@ def fetch(name, endpoint):
     raise ValueError('Unsupported Python client: {}'.format(name))
 
 
-def main():
+def main() -> None:
     if len(sys.argv) != 4:
         raise SystemExit('Usage: extra_probe.py CLIENT VERSION HTTPS_URL')
     name, expected, endpoint = sys.argv[1:]

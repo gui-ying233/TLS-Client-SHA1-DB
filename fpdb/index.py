@@ -3,29 +3,34 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from collections.abc import Mapping
+from typing import cast
 
 from fpdb.core import FIELDS, ROOT, DataError, canonical, columns, digest, read_json
 from fpdb.evidence import validate_evidence, AUX
+from fpdb.schema import IndexClient, IndexEntry, Record
 
 
 def build(root: Path = ROOT) -> bool:
     directory = root / "data" / "index"
-    buckets: dict[Path, dict[str, dict]] = {}
+    buckets: dict[Path, dict[str, IndexEntry]] = {}
     for source in sorted((root / "data" / "observations").rglob("*.json")):
-        record = read_json(source)
+        record = cast(Record, read_json(source))
         identity = record["identity"]
         if record.get("schema_version") != 1 or record.get("record_id") != digest(identity):
             raise DataError(f"Invalid observation record: {source}")
         columns(record["observations"])
         if "evidence" in record:
             validate_evidence(record["evidence"])
-        client = {key: identity[key] for key in (
-            "target", "language", "client", "runtime_version", "client_version", "platform"
-        )}
-        client["environment"] = identity["environment"]
+        client: IndexClient = {
+            "target": identity["target"], "language": identity["language"],
+            "client": identity["client"], "runtime_version": identity["runtime_version"],
+            "client_version": identity["client_version"], "platform": identity["platform"],
+            "environment": identity["environment"],
+        }
         # Evidence contains exact joint captures, including fields deliberately
         # dropped from the older compact summary. Never cross-join hash lists.
-        source_rows = list(record.get("evidence", []))
+        source_rows: list[Mapping[str, object]] = list(record.get("evidence", []))
         # Older schema-v1 captures have only compact observations. Keep any
         # legacy summary tuple not corroborated by new joint evidence, so
         # transitioning a record never silently removes historical matches.
@@ -37,14 +42,14 @@ def build(root: Path = ROOT) -> bool:
             for field in FIELDS:
                 if field not in row:
                     continue
-                sha1 = row[field]
+                sha1 = cast(str, row[field])
                 # '_' represents '/' (which cannot be used in a filename).
                 # '+' and '=' remain unchanged, matching regular Base64 names.
                 path = directory / field / (sha1.replace("/", "_") + ".json")
-                entry = {**client, **{key: value for key, value in row.items()
-                                     if key != field and (key in FIELDS or key in AUX)}}
+                entry = cast(IndexEntry, {**client, **{key: value for key, value in row.items()
+                                     if key != field and (key in FIELDS or key in AUX)}})
                 if "count" in row:
-                    entry["sample_count"] = row["count"]
+                    entry["sample_count"] = cast(int, row["count"])
                 buckets.setdefault(path, {})[canonical(entry)] = entry
 
     changed = False

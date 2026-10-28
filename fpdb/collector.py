@@ -8,24 +8,27 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
-from fpdb.core import DataError, FIELDS, compact, extract_echo, record_identity, digest
+from fpdb.core import DataError, FIELDS, compact, extract_echo, json_array, json_object, record_identity, digest
 from fpdb.evidence import extract_joint, merge_evidence
-from fpdb.planner import load_config
+from fpdb.planner import load_config, make_case
+from fpdb.schema import Case, Environment, Evidence, Fingerprint, JSONObject, JSONValue, Record
 
 log = logging.getLogger(__name__)
 
 
-def _command(template: list[str], replacements: dict[str, str]) -> list[str]:
-    if not isinstance(template, list) or not template or not all(isinstance(x, str) for x in template):
+def _command(template: object, replacements: dict[str, str]) -> list[str]:
+    parts = json_array(template)
+    if not parts or not all(isinstance(part, str) for part in parts):
         raise DataError("Adapter command must be a nonempty argv array")
     try:
-        return [part.format_map(replacements) for part in template]
+        return [part.format_map(replacements) for part in cast(list[str], parts)]
     except (ValueError, KeyError) as exc:
         raise DataError(f"Invalid adapter command placeholder: {exc}") from exc
 
 
-def _run(command: list[str], root: Path, timeout: int, environment: dict, *, retry_diagnostics: bool = False) -> dict:
+def _run(command: list[str], root: Path, timeout: int, environment: dict[str, str], *, retry_diagnostics: bool = False) -> JSONValue:
     is_oxnode = Path(command[0]).name == "oxnode"
     if is_oxnode:
         # Older oxnode releases resolve their Node loader from the working directory.
@@ -49,19 +52,19 @@ def _run(command: list[str], root: Path, timeout: int, environment: dict, *, ret
     if retry_diagnostics and process.stderr.strip():
         log.warning("Adapter retry diagnostics: %s", process.stderr[-2500:].strip())
     try:
-        return json.loads(process.stdout)
+        return cast(JSONValue, json.loads(process.stdout))
     except json.JSONDecodeError as exc:
         raise DataError("Adapter stdout must be exactly one JSON document") from exc
 
 
-def _echo_shape(payload: object) -> dict:
+def _echo_shape(payload: JSONValue) -> dict[str, str | list[str]]:
     """Print structural diagnostics only; never log response bodies or request headers."""
-    def keys(value: object) -> list[str]:
-        return sorted(str(key) for key in value)[:24] if isinstance(value, dict) else []
+    def keys(value: JSONValue) -> list[str]:
+        return sorted(json_object(value))[:24] if isinstance(value, dict) else []
 
-    body = payload.get("echo", payload) if isinstance(payload, dict) else payload
-    http = body.get("http") if isinstance(body, dict) else None
-    tls = http.get("tls") if isinstance(http, dict) else None
+    body = json_object(payload).get("echo", payload) if isinstance(payload, dict) else payload
+    http = json_object(body).get("http") if isinstance(body, dict) else None
+    tls = json_object(http).get("tls") if isinstance(http, dict) else None
     return {
         "body_type": type(body).__name__,
         "body_keys": keys(body),
@@ -72,7 +75,7 @@ def _echo_shape(payload: object) -> dict:
     }
 
 
-def _require_environment(payload: dict, case: dict) -> dict:
+def _require_environment(payload: JSONObject, case: Case) -> Environment:
     environment = payload.get("environment")
     if not isinstance(environment, dict):
         raise DataError("Adapter must report environment object")
@@ -98,28 +101,25 @@ def _require_environment(payload: dict, case: dict) -> dict:
     allowed = {"os", "arch", "tls_backend", "image", "dependencies", "runtime_resolved_version"}
     if any(k not in allowed for k in environment):
         raise DataError("Unexpected environment keys in adapter response")
-    if "runtime_resolved_version" in environment and not isinstance(environment["runtime_resolved_version"], str):
-        raise DataError("Invalid resolved runtime version")
     if "image" in environment and not isinstance(environment["image"], str):
         raise DataError("environment.image must be string")
     if "dependencies" in environment:
         deps = environment["dependencies"]
         if not isinstance(deps, dict) or not all(
-            isinstance(name, str) and isinstance(version, str) and name and version
+            isinstance(version, str) and name and version
             for name, version in deps.items()
         ):
             raise DataError("environment.dependencies must map package names to version strings")
-    return environment
+    return cast(Environment, environment)
 
 
-def collect(root: Path, case: dict) -> dict | None:
+def collect(root: Path, case: Case) -> Record | None:
     config = load_config(root)
     target = next((target for target in config["targets"] if target["id"] == case["target"] and target.get("enabled")), None)
     if not target:
         raise DataError("Unknown enabled target")
     # Rebuild the case server-side so an injected matrix value cannot choose an arbitrary command.
-    from fpdb.planner import _case
-    expected = _case(target, case["runtime_version"], case["client_version"])
+    expected = make_case(target, case["runtime_version"], case["client_version"])
     if expected != case:
         raise DataError("Matrix case does not match configured target")
 
@@ -132,7 +132,7 @@ def collect(root: Path, case: dict) -> dict | None:
     retry = int(sampling["retry_per_handshake"])
     if retry != 1:
         raise DataError("Current policy requires exactly one retry per failed handshake")
-    replacements = {key: str(val) for key, val in case.items() if isinstance(val, (str, int, float))}
+    replacements = {key: str(val) for key, val in case.items()}
     replacements["endpoint"] = config["endpoint"]
     replacements["python_bin"] = os.environ.get("FPDB_PYTHON_BIN") or sys.executable
     adapter = target["adapter"]
@@ -153,7 +153,7 @@ def collect(root: Path, case: dict) -> dict | None:
     for name in list(runtime_env):
         if name.lower() in {"http_proxy", "https_proxy", "all_proxy", "no_proxy"}:
             runtime_env.pop(name, None)
-    for key, value in adapter.get("env", {}).items():
+    for key, value in json_object(adapter.get("env", {})).items():
         if not isinstance(value, str):
             raise DataError("adapter.env values must be strings")
         runtime_env[key] = value.format_map(replacements)
@@ -188,9 +188,9 @@ def collect(root: Path, case: dict) -> dict | None:
             return None
 
     command = _command(adapter["probe"], replacements)
-    observed = []
-    joint_samples = []
-    resolved_environment = None
+    observed: list[Fingerprint] = []
+    joint_samples: list[Evidence] = []
+    resolved_environment: Environment | None = None
     for sample_index in range(expanded):
         result = None
         for trial in range(retry + 1):
@@ -222,12 +222,13 @@ def collect(root: Path, case: dict) -> dict | None:
                     raise
                 observed_env = _require_environment(result, case)
                 local_profile = runtime_env.get("FPDB_CAPTURE_PROFILE")
+                target_profile = target.get("capture_profile")
                 if local_profile:
                     # Docker captures must never merge into the GH-hosted runner's identity.
                     observed_env["capture_profile"] = local_profile + (
-                        ":" + target["capture_profile"] if target.get("capture_profile") else "")
-                elif target.get("capture_profile"):
-                    observed_env["capture_profile"] = target["capture_profile"]
+                        ":" + target_profile if target_profile else "")
+                elif target_profile:
+                    observed_env["capture_profile"] = target_profile
                 elif runtime_env.get("FPDB_LOCAL_CA"):
                     # Historical records remain untouched; only new captures get this provenance.
                     observed_env["capture_profile"] = "local-echo-fpdb-v1"
@@ -252,6 +253,8 @@ def collect(root: Path, case: dict) -> dict | None:
     # This independent, bounded sample store retains real joint triples and
     # metadata even if compact() must suppress an unstable index column.
     evidence, lost = merge_evidence([], joint_samples)
+    if resolved_environment is None:
+        raise DataError("No observed environment")
     identity = record_identity(case, resolved_environment)
     return {
         "schema_version": 1,

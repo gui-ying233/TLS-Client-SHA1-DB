@@ -2,15 +2,17 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
-from fpdb.core import FIELDS, canonical, read_json, required_sha1
+from fpdb.core import FIELDS, canonical, json_array, read_json, required_sha1
+from fpdb.evidence import TEXT_AUX
+from fpdb.schema import Candidate, CandidateIdentity, IndexEntry, MatchDetail
 
-AUX = ("tlsClientHelloLength", "tlsCipher", "tlsVersion", "tlsAlpn")
 MATCH_NAMES = {1: "single-field candidate", 2: "two-field joint match", 3: "three-field exact tuple"}
 
 
 def lookup(root: Path, supplied: dict[str, str], limit: int = 100,
-           *, require_all: bool = False) -> list[dict]:
+           *, require_all: bool = False) -> list[Candidate]:
     if not supplied or any(field not in FIELDS for field in supplied):
         raise ValueError("Supply one or more supported TLS SHA-1 fields")
     if not 1 <= limit <= 1000:
@@ -21,13 +23,13 @@ def lookup(root: Path, supplied: dict[str, str], limit: int = 100,
     # A shard entry corresponds to ONE captured row.  Reconstruct its missing
     # shard-key field, then calculate the best *single-row* match; never combine
     # values from unrelated observations (even within one client identity).
-    candidates: dict[str, dict] = {}
+    candidates: dict[str, Candidate] = {}
     per_candidate_details: dict[str, dict[str, int]] = {}
     for field, sha in supplied.items():
         path = root / "data" / "index" / field / (sha.replace("/", "_") + ".json")
         if not path.is_file():
             continue
-        for entry in read_json(path):
+        for entry in cast(list[IndexEntry], json_array(read_json(path))):
             fingerprints = {name: (sha if name == field else entry.get(name))
                             for name in FIELDS}
             matched_names = tuple(name for name, value in supplied.items()
@@ -37,21 +39,30 @@ def lookup(root: Path, supplied: dict[str, str], limit: int = 100,
                 continue
             if not matched:
                 continue
-            identity = {key: entry.get(key) for key in (
-                "target", "language", "client", "runtime_version", "client_version",
-                "platform", "environment")}
+            identity: CandidateIdentity = {
+                "target": entry.get("target"), "language": entry.get("language"),
+                "client": entry.get("client"), "runtime_version": entry.get("runtime_version"),
+                "client_version": entry.get("client_version"), "platform": entry.get("platform"),
+                "environment": entry.get("environment"),
+            }
             key = canonical(identity)
             current = candidates.get(key)
             if current is not None and matched < current["matched_fields"]:
                 continue
             if current is None or matched > current["matched_fields"]:
-                current = {**identity, "match": MATCH_NAMES[matched],
-                           "matched_fields": matched, "supplied_fields": len(supplied),
-                           "sample_count": 0, "details": []}
+                current = Candidate(**identity, match=MATCH_NAMES[matched],
+                                    matched_fields=matched, supplied_fields=len(supplied),
+                                    sample_count=0, details=[])
                 candidates[key] = current
                 per_candidate_details[key] = {}
-            detail = {name: value for name, value in fingerprints.items() if value is not None}
-            detail.update({name: entry[name] for name in AUX if name in entry})
+            detail = cast(MatchDetail, {name: value for name, value in fingerprints.items() if value is not None})
+            length = entry.get("tlsClientHelloLength")
+            if length is not None:
+                detail["tlsClientHelloLength"] = length
+            for name in TEXT_AUX:
+                value = entry.get(name)
+                if value is not None:
+                    detail[name] = value
             # Attach which fields matched to each co-observed tuple; different
             # tuples from one client can corroborate different input pairs.
             detail["matched_field_names"] = list(matched_names)
@@ -66,6 +77,8 @@ def lookup(root: Path, supplied: dict[str, str], limit: int = 100,
                 per_candidate_details[key][detail_key] = count
                 current["sample_count"] += count - previous
 
-    return sorted(candidates.values(), key=lambda item: (
-        -item["matched_fields"], -item["sample_count"],
-        item["language"] or "", item["target"] or "", item["runtime_version"] or ""))[:limit]
+    def candidate_priority(item: Candidate) -> tuple[int, int, str, str, str]:
+        return (-item["matched_fields"], -item["sample_count"],
+                item["language"] or "", item["target"] or "", item["runtime_version"] or "")
+
+    return sorted(candidates.values(), key=candidate_priority)[:limit]

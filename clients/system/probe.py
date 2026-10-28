@@ -1,6 +1,7 @@
 """Probe the Ubuntu executable itself. Python orchestrates, never creates the TLS socket."""
+from __future__ import annotations
+
 import json
-import os
 import platform
 import re
 import shutil
@@ -8,12 +9,12 @@ import subprocess
 import sys
 from urllib.parse import urlsplit
 
-def run(cmd, *, input=None):
+def run(cmd: list[str], *, input: str | None = None) -> str:
     p=subprocess.run(cmd, input=input, capture_output=True,text=True,timeout=30,check=False)
     if p.returncode:raise RuntimeError(f'{cmd[0]} exit {p.returncode}: {p.stderr[-500:]}')
     return p.stdout
 
-def main():
+def main() -> None:
     client, expected, endpoint=sys.argv[1:]
     if expected!='system':raise ValueError('expected system')
     if not shutil.which(client):raise RuntimeError('not installed: '+client)
@@ -45,9 +46,9 @@ def main():
         headers,_,raw=wire.partition(sep)
         if not headers.startswith('HTTP/') or not re.search(r'^HTTP/\S+ 2\d\d',headers):raise RuntimeError('Bad HTTPS response')
         if re.search(r'(?im)^Transfer-Encoding:\s*chunked', headers):
-            parts=[];rest=raw
+            parts: list[str] = [];rest=raw
             while rest:
-                line,sep2,rest=rest.partition('\r\n')
+                line,_,rest=rest.partition('\r\n')
                 size=int(line.split(';',1)[0],16)
                 if not size:break
                 parts.append(rest[:size]);rest=rest[size+2:]

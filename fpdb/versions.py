@@ -4,14 +4,17 @@ from __future__ import annotations
 import json
 import os
 import re
-import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Literal, TypeAlias, cast
 
-from fpdb.core import DataError
+from fpdb.core import DataError, json_object
+from fpdb.schema import JSONValue, VersionSource
+
+VersionKey: TypeAlias = tuple[tuple[int, int | str], ...]
 
 
-def sort_key(version: str) -> tuple:
+def sort_key(version: str) -> VersionKey:
     # Natural version ordering (not a full PEP 440/SemVer parser).
     parts = re.findall(r"\d+|[a-zA-Z]+", version.lstrip("vV"))
     return tuple((0, int(part)) if part.isdigit() else (1, part.lower()) for part in parts)
@@ -21,16 +24,16 @@ def prerelease(version: str) -> bool:
     return bool(re.search(r"(?:alpha|beta|rc|pre|preview|dev|snapshot|canary|nightly)", version, re.I))
 
 
-def _get_json(url: str) -> object:
+def _get_json(url: str) -> JSONValue:
     request = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "TLS-Client-SHA1-DB/1"})
     token = os.environ.get("GITHUB_TOKEN")
     if token and urllib.parse.urlsplit(url).hostname == "api.github.com":
         request.add_header("Authorization", f"Bearer {token}")
     with urllib.request.urlopen(request, timeout=25) as response:
-        return json.load(response)
+        return cast(JSONValue, json.load(response))
 
 
-def _select(data: object, path: str) -> object:
+def _select(data: JSONValue, path: str) -> JSONValue:
     current = data
     if not path:
         return current
@@ -44,12 +47,13 @@ def _select(data: object, path: str) -> object:
     return current
 
 
-def discover(source: dict) -> list[str]:
+def discover(source: VersionSource) -> list[str]:
+    values: list[JSONValue]
     kind = source.get("type")
     if kind == "static":
-        values = source.get("versions", [])
+        values = list(source.get("versions", []))
     elif kind == "json_url":
-        url = source["url"]
+        url = _source_text(source, "url")
         if not url.startswith("https://"):
             raise DataError("json_url sources require HTTPS")
         payload = _get_json(url)
@@ -70,7 +74,7 @@ def discover(source: dict) -> list[str]:
                 file.get("platform") == source.get("platform", "linux")
                 and file.get("platform_version") == source.get("platform_version", "24.04")
                 and file.get("arch") == source.get("arch", "x64")
-                for file in entry.get("files", []) if isinstance(file, dict)
+                for file in _files(entry) if isinstance(file, dict)
             )
         ]
     elif kind == "node_dist":
@@ -79,28 +83,28 @@ def discover(source: dict) -> list[str]:
             raise DataError("Invalid Node.js distribution feed")
         # Node.js v26.8.0's release binary reports 26.8.0-alpha.0.0.0.
         # Do not collect a mislabeled runtime as the stable 26.8.0 release.
-        values = [item["version"].lstrip("v") for item in payload
-                  if isinstance(item, dict) and item.get("version") and
+        values = [_feed_version(item).lstrip("v") for item in payload
+                  if isinstance(item, dict) and isinstance(item.get("version"), str) and item.get("version") and
                   item["version"] != "v26.8.0" and
-                  "linux-x64" in item.get("files", [])]
+                  "linux-x64" in _files(item)]
     elif kind == "go_dist":
         payload = _get_json("https://go.dev/dl/?mode=json&include=all")
         if not isinstance(payload, list):
             raise DataError("Invalid Go distribution feed")
-        values = [item["version"].removeprefix("go") for item in payload
+        values = [_feed_version(item).removeprefix("go") for item in payload
                   if isinstance(item, dict) and item.get("stable") and
                   any(f.get("os") == "linux" and f.get("arch") == "amd64"
-                      for f in item.get("files", []))]
+                      for f in _files(item) if isinstance(f, dict))]
     elif kind == "npm":
-        package = source["package"]
+        package = _source_text(source, "package")
         if not re.fullmatch(r"(?:@[a-z0-9_.-]+/)?[a-z0-9_.-]+", package, re.I):
             raise DataError("Invalid npm package name")
         payload = _get_json("https://registry.npmjs.org/" + urllib.parse.quote(package, safe="@"))
         if not isinstance(payload, dict) or not isinstance(payload.get("versions"), dict):
             raise DataError("Invalid npm registry response")
-        values = [v for v in payload["versions"] if re.fullmatch(r"[0-9]+(?:\.[0-9]+){2}", v)]
+        values = [v for v in json_object(payload["versions"]) if re.fullmatch(r"[0-9]+(?:\.[0-9]+){2}", v)]
     elif kind == "rubygems":
-        name = source["package"]
+        name = _source_text(source, "package")
         if not re.fullmatch(r"[A-Za-z0-9_-]+", name):
             raise DataError("Invalid RubyGems package name")
         payload = _get_json(f"https://rubygems.org/api/v1/versions/{name}.json")
@@ -109,7 +113,7 @@ def discover(source: dict) -> list[str]:
         values = [row["number"] for row in payload if isinstance(row, dict)
                   and not row.get("prerelease") and row.get("number")]
     elif kind == "pypi":
-        package = source["package"]
+        package = _source_text(source, "package")
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", package):
             raise DataError("Invalid PyPI package name")
         payload = _get_json(f"https://pypi.org/pypi/{package}/json")
@@ -117,13 +121,13 @@ def discover(source: dict) -> list[str]:
             raise DataError("Invalid PyPI project response")
         # Prefer numeric stable releases; skip withdrawn releases and empty records.
         values = [
-            version for version, files in payload["releases"].items()
+            version for version, files in json_object(payload["releases"]).items()
             if re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", version)
             and isinstance(files, list) and files
             and any(isinstance(file, dict) and not file.get("yanked", False) for file in files)
         ]
     elif kind == "github_releases":
-        repo = source["repo"]
+        repo = _source_text(source, "repo")
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo):
             raise DataError("github_releases repo must be owner/name")
         values = []
@@ -134,8 +138,11 @@ def discover(source: dict) -> list[str]:
             if not isinstance(releases, list):
                 raise DataError("Invalid GitHub Releases response")
             for release in releases:
+                release = json_object(release)
                 if not release.get("draft") and not release.get("prerelease"):
                     tag = release["tag_name"]
+                    if not isinstance(tag, str):
+                        raise DataError("Invalid GitHub release tag")
                     if tag.startswith(tag_prefix):
                         version = tag[len(tag_prefix):]
                         if not tag_prefix or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
@@ -145,13 +152,39 @@ def discover(source: dict) -> list[str]:
     else:
         raise DataError(f"Unknown version source: {kind!r}")
 
-    if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+    if not all(isinstance(v, str) for v in values):
         raise DataError("Version source must return string versions")
+    versions = cast(list[str], values)
     minimum = source.get("min_version")
     maximum = source.get("max_version")
+
+    def version_priority(version: str) -> tuple[VersionKey, str]:
+        return sort_key(version), version
+
     return sorted(set(
-        v for v in values
+        v for v in versions
         if v and (source.get("allow_prerelease", False) or not prerelease(v))
         and (minimum is None or sort_key(v) >= sort_key(minimum))
         and (maximum is None or sort_key(v) <= sort_key(maximum))
-    ), key=lambda v: (sort_key(v), v), reverse=True)
+    ), key=version_priority, reverse=True)
+
+
+def _files(entry: dict[str, JSONValue]) -> list[JSONValue]:
+    files = entry.get("files", [])
+    if not isinstance(files, list):
+        raise DataError("Version feed files must be a list")
+    return files
+
+
+def _source_text(source: VersionSource, key: Literal["url", "package", "repo"]) -> str:
+    value = source.get(key)
+    if value is None:
+        raise DataError(f"Version source requires {key}")
+    return value
+
+
+def _feed_version(entry: dict[str, JSONValue]) -> str:
+    version = entry["version"]
+    if not isinstance(version, str):
+        raise DataError("Version feed must contain string versions")
+    return version

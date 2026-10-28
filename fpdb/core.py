@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import json
 import re
 from pathlib import Path
+from typing import cast
 
-FIELDS = (
+from fpdb.schema import (Case, Fingerprint, FingerprintField, Environment,
+                         JSONObject, JSONValue, RecordIdentity)
+
+FIELDS: tuple[FingerprintField, ...] = (
     "tlsClientCiphersSha1",
     "tlsClientExtensionsSha1",
     "tlsClientExtensionsSha1Le",
@@ -28,9 +33,22 @@ def digest(value: object) -> str:
     return hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()[:24]
 
 
-def read_json(path: str | Path) -> dict:
+def read_json(path: str | Path) -> JSONValue:
     with open(path, encoding="utf-8") as stream:
-        return json.load(stream)
+        return cast(JSONValue, json.load(stream))
+
+
+def json_object(value: object) -> JSONObject:
+    """Narrow an untrusted JSON value before accessing object members."""
+    if not isinstance(value, dict):
+        raise DataError("Expected a JSON object")
+    return cast(JSONObject, value)
+
+
+def json_array(value: object) -> list[JSONValue]:
+    if not isinstance(value, list):
+        raise DataError("Expected a JSON array")
+    return cast(list[JSONValue], value)
 
 
 def save_json(path: str | Path, obj: object) -> None:
@@ -42,7 +60,7 @@ def save_json(path: str | Path, obj: object) -> None:
     temp.replace(path)
 
 
-def safe_part(part: str) -> str:
+def safe_part(part: object) -> str:
     if not isinstance(part, str) or not _SAFE_PART.fullmatch(part):
         raise DataError(f"Unsafe path component: {part!r}")
     return part
@@ -53,7 +71,7 @@ def required_sha1(raw: object, field: str) -> str:
         raise DataError(f"{field}: expected Base64 text")
     try:
         data = base64.b64decode(raw, validate=True)
-    except (ValueError, base64.binascii.Error) as exc:
+    except (ValueError, binascii.Error) as exc:
         raise DataError(f"{field}: invalid Base64") from exc
     if len(data) != 20 or base64.b64encode(data).decode("ascii") != raw:
         raise DataError(f"{field}: expected canonical Base64 of 20-byte SHA-1 digest")
@@ -63,22 +81,23 @@ def required_sha1(raw: object, field: str) -> str:
 def extract_echo(response: object) -> dict[str, str]:
     """Accept the Echo response or an adapter wrapper {echo: <Echo response>}."""
     try:
-        if not isinstance(response, dict):
-            raise KeyError("response")
-        payload = response.get("echo", response)
-        tls = payload["http"]["tls"]
+        response = json_object(response)
+        payload = json_object(response.get("echo", response))
+        tls = json_object(json_object(payload["http"])["tls"])
         return {field: required_sha1(tls[field], field) for field in FIELDS}
     except (KeyError, TypeError, AttributeError) as exc:
         raise DataError("Echo JSON missing http.tls and/or required SHA-1 fields") from exc
 
 
-def columns(rows: list[dict]) -> tuple[str, ...]:
-    if not isinstance(rows, list) or not rows:
+def columns(rows: object) -> tuple[FingerprintField, ...]:
+    rows = json_array(rows)
+    if not rows:
         raise DataError("observations must be a nonempty list")
     if not all(isinstance(row, dict) for row in rows):
         raise DataError("observations must contain objects")
-    first = tuple(field for field in FIELDS if field in rows[0])
-    for row in rows:
+    objects = [json_object(row) for row in rows]
+    first: tuple[FingerprintField, ...] = tuple(field for field in FIELDS if field in objects[0])
+    for row in objects:
         if any(field not in FIELDS for field in row):
             raise DataError("Unknown fingerprint field")
         if tuple(field for field in FIELDS if field in row) != first:
@@ -88,8 +107,8 @@ def columns(rows: list[dict]) -> tuple[str, ...]:
     return first
 
 
-def compact(rows: list[dict], *, unique_limit: int, combination_limit: int,
-            allowed_fields: tuple[str, ...] = FIELDS) -> list[dict]:
+def compact(rows: list[Fingerprint], *, unique_limit: int, combination_limit: int,
+            allowed_fields: tuple[FingerprintField, ...] = FIELDS) -> list[Fingerprint]:
     """Monotone column elimination; preserve real joint observations of retained fields.
 
     allowed_fields comes from the previously stored record, if any. A dropped
@@ -97,9 +116,10 @@ def compact(rows: list[dict], *, unique_limit: int, combination_limit: int,
     """
     if unique_limit < 1 or combination_limit < 1:
         raise DataError("Limits must be positive")
-    allowed = tuple(field for field in FIELDS if field in allowed_fields)
+    allowed: tuple[FingerprintField, ...] = tuple(field for field in FIELDS if field in allowed_fields)
     for row in rows:
-        if not isinstance(row, dict) or any(field not in row for field in allowed):
+        row_object = json_object(row)
+        if any(field not in row_object for field in allowed):
             raise DataError("Input row missing an active field")
         for field in allowed:
             required_sha1(row[field], field)
@@ -115,23 +135,26 @@ def compact(rows: list[dict], *, unique_limit: int, combination_limit: int,
         if len(projected) <= combination_limit or not allowed:
             return [{field: val for field, val in zip(allowed, vals)} for vals in sorted(projected)]
         # Tie-breaking is deterministic. Columns with most unique values go first.
-        victim = max(allowed, key=lambda field: (uniques[field], FIELDS.index(field)))
+        def elimination_priority(field: FingerprintField) -> tuple[int, int]:
+            return uniques[field], FIELDS.index(field)
+
+        victim = max(allowed, key=elimination_priority)
         allowed = tuple(field for field in allowed if field != victim)
 
 
-def merge_observations(old: list[dict] | None, fresh: list[dict], *,
-                       unique_limit: int, combination_limit: int) -> list[dict]:
+def merge_observations(old: list[Fingerprint] | None, fresh: list[Fingerprint], *,
+                       unique_limit: int, combination_limit: int) -> list[Fingerprint]:
     fresh_columns = columns(fresh)
     if old is None:
         return compact(fresh, unique_limit=unique_limit, combination_limit=combination_limit)
     old_columns = columns(old)
-    common = tuple(field for field in FIELDS if field in old_columns and field in fresh_columns)
+    common: tuple[FingerprintField, ...] = tuple(field for field in FIELDS if field in old_columns and field in fresh_columns)
     joined = [{field: row[field] for field in common} for row in old + fresh]
     return compact(joined, unique_limit=unique_limit, combination_limit=combination_limit,
                    allowed_fields=common)
 
 
-def record_identity(case: dict, resolved_environment: dict) -> dict:
+def record_identity(case: Case, resolved_environment: Environment) -> RecordIdentity:
     return {
         "target": case["target"],
         "language": case["language"],
@@ -145,5 +168,5 @@ def record_identity(case: dict, resolved_environment: dict) -> dict:
     }
 
 
-def record_path(root: Path, identity: dict) -> Path:
+def record_path(root: Path, identity: RecordIdentity) -> Path:
     return root / "data" / "observations" / safe_part(identity["language"]) / safe_part(identity["client"]) / (digest(identity) + ".json")

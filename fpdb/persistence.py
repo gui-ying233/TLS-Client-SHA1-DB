@@ -2,18 +2,20 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 from fpdb.core import (DataError, columns, digest, merge_observations,
-                       read_json, record_path, save_json)
+                       json_object, read_json, record_path, save_json)
 from fpdb.evidence import merge_evidence, validate_evidence
 from fpdb.planner import load_config
 from fpdb.index import build as build_index
+from fpdb.schema import JSONObject, Record
 
 
-def _check_record(record: dict) -> None:
+def _check_record(record: JSONObject) -> Record:
     if record.get("schema_version") != 1 or not isinstance(record.get("identity"), dict):
         raise DataError("Unsupported record")
-    identity = record["identity"]
+    identity = json_object(record["identity"])
     if record.get("record_id") != digest(identity):
         raise DataError("Record ID doesn't match identity")
     requested = {key: identity[key] for key in (
@@ -29,6 +31,7 @@ def _check_record(record: dict) -> None:
         validate_evidence(record["evidence"])
     if "evidence_truncated" in record and type(record["evidence_truncated"]) is not bool:
         raise DataError("Invalid evidence_truncated")
+    return cast(Record, record)
 
 
 def persist(root: Path, inbox: Path) -> tuple[int, int]:
@@ -37,13 +40,11 @@ def persist(root: Path, inbox: Path) -> tuple[int, int]:
     files = sorted(inbox.rglob("*.json")) if inbox.exists() else []
     changed = 0
     for artifact in files:
-        fresh = read_json(artifact)
-        _check_record(fresh)
+        fresh = _check_record(json_object(read_json(artifact)))
         fresh_truncated = fresh.get("evidence_truncated", False)
         path = record_path(root, fresh["identity"])
         if path.exists():
-            existing = read_json(path)
-            _check_record(existing)
+            existing = _check_record(json_object(read_json(path)))
             if existing["identity"] != fresh["identity"] or existing["case_id"] != fresh["case_id"]:
                 raise DataError("Record collision or inconsistent case_id")
             combined = merge_observations(existing["observations"], fresh["observations"],

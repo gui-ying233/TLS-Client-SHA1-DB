@@ -1,0 +1,12 @@
+# Static checking includes optional probe libraries; collectors install their
+# requested versions independently in their own environments.
+pyright==1.1.414
+aiohttp
+httpx
+pycurl
+requests
+scrapy
+tornado
+urllib3
+types-pycurl
+types-requests

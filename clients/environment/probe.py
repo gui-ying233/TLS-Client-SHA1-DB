@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 
-def distro():
+def distro() -> str:
     try:
         with open('/etc/os-release', encoding='utf-8') as stream:
             pairs = dict(line.rstrip().split('=', 1) for line in stream if '=' in line)
@@ -17,7 +17,7 @@ def distro():
         return platform.platform()
 
 
-def main():
+def main() -> None:
     kind, endpoint = sys.argv[1:]
     if not endpoint.startswith('https://'):
         raise ValueError('HTTPS required')

@@ -1,0 +1,12 @@
+{
+  "include": ["fpdb", "clients", "scripts"],
+  "typeCheckingMode": "strict",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Linux",
+  "venvPath": ".",
+  "venv": ".venv",
+  "executionEnvironments": [
+    {"root": "clients/python", "pythonVersion": "3.8"},
+    {"root": "."}
+  ]
+}

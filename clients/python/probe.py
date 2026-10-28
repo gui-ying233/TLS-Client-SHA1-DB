@@ -1,4 +1,6 @@
 """One process = one HTTPS request = one new TLS connection."""
+from __future__ import annotations
+
 import importlib.metadata
 import json
 import platform
@@ -7,7 +9,7 @@ import sys
 import urllib.request
 
 
-def get_echo(client, endpoint):
+def get_echo(client: str, endpoint: str) -> object:
     headers = {"Accept": "application/json", "Connection": "close"}
     if client == "urllib":
         # No proxy; prevent a middlebox from replacing our TLS ClientHello.
@@ -33,13 +35,13 @@ def get_echo(client, endpoint):
     raise ValueError("Unknown Python client: " + client)
 
 
-def installed_versions(client):
+def installed_versions(client: str) -> dict[str, str]:
     packages = {
         "urllib": (),
         "requests": ("requests", "urllib3", "certifi", "charset-normalizer", "idna"),
         "httpx": ("httpx", "httpcore", "h11", "anyio", "certifi", "sniffio"),
     }[client]
-    result = {}
+    result: dict[str, str] = {}
     for name in packages:
         try:
             result[name] = importlib.metadata.version(name)
@@ -48,7 +50,7 @@ def installed_versions(client):
     return result
 
 
-def main():
+def main() -> None:
     if len(sys.argv) != 4:
         raise SystemExit("Usage: probe.py CLIENT EXPECTED_VERSION ENDPOINT")
     client, expected, endpoint = sys.argv[1:]

@@ -93,13 +93,16 @@ def _serve(certdir: Path) -> None:
                             break
                         request.extend(fragment)
                     little = b"".join(extensions[i:i + 2][::-1] for i in range(0, len(extensions), 2))
+                    cipher = stream.cipher()
+                    if cipher is None:
+                        raise ValueError("TLS handshake did not negotiate a cipher")
                     payload = json.dumps({"http": {"tls": {
                         "tlsClientCiphersSha1": _sha1(ciphers),
                         "tlsClientExtensionsSha1": _sha1(extensions),
                         "tlsClientExtensionsSha1Le": _sha1(little),
                         "tlsClientHelloLength": len(client_hello) - 4,
                         "tlsVersion": stream.version(),
-                        "tlsCipher": stream.cipher()[0],
+                        "tlsCipher": cipher[0],
                         "tlsAlpn": stream.selected_alpn_protocol() or "",
                     }}}).encode()
                     response = (b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"

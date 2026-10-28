@@ -18,14 +18,17 @@ import tarfile
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import nullcontext
+from collections.abc import Iterator
 from pathlib import Path
 from threading import Lock
+from typing import ContextManager
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from fpdb.planner import load_config, plan
 from fpdb.persistence import persist
+from fpdb.schema import Case, Target
 STATE = ROOT / '.fpdb-local'
 NODE_BASE = Path('/cache/node')
 _LOCKS: dict[str, Lock] = {}
@@ -38,10 +41,10 @@ def resource_lock(key: str) -> Lock:
         return _LOCKS.setdefault(key, Lock())
 
 
-def probe_lock(target: dict):
+def probe_lock(target: Target) -> ContextManager[object]:
     # npm --prefix overwrites a shared node_modules tree; hold the lock through
     # both installation AND the TLS probe so package versions cannot change.
-    prepare = target.get('adapter', {}).get('prepare', [])
+    prepare = target['adapter'].get('prepare', [])
     if '--prefix' in prepare:
         index = prepare.index('--prefix') + 1
         if index < len(prepare):
@@ -49,7 +52,7 @@ def probe_lock(target: dict):
     return nullcontext()
 
 
-def run(args: list[str], *, env: dict | None = None) -> None:
+def run(args: list[str], *, env: dict[str, str] | None = None) -> None:
     print('+', ' '.join(args), flush=True)
     subprocess.run(args, cwd=ROOT, env=env, check=True, text=True)
 
@@ -117,7 +120,7 @@ def python_binary(version: str) -> Path:
     return Path(path)
 
 
-def supported(target: dict) -> bool:
+def supported(target: Target) -> bool:
     if target.get('runner') != 'ubuntu-24.04' or target.get('platform') != 'linux-x86_64':
         return False
     if target.get('language') in ('node', 'python') and not target['id'].startswith('env-'):
@@ -126,7 +129,7 @@ def supported(target: dict) -> bool:
         'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}
 
 
-def collect_one(case: dict, target: dict, inbox: Path) -> bool:
+def collect_one(case: Case, target: Target, inbox: Path) -> bool:
     language, version = case['language'], case['runtime_version']
     env = os.environ.copy()
     if language == 'node':
@@ -149,6 +152,18 @@ def collect_one(case: dict, target: dict, inbox: Path) -> bool:
     return code == 0 and (inbox / (case['id'] + '.json')).is_file()
 
 
+class Arguments(argparse.Namespace):
+    target: str | None
+    all_supported: bool
+    mode: str
+    jobs: int
+    max_cases: int
+    parallel: int
+    recheck: bool
+    list_targets: bool
+    reindex: bool
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description='Docker-hosted TLS fingerprint collector')
     parser.add_argument('--target', help='Existing target id')
@@ -160,7 +175,7 @@ def main() -> int:
     parser.add_argument('--recheck', action='store_true', help='Explicitly repeat already collected cases')
     parser.add_argument('--list-targets', action='store_true')
     parser.add_argument('--reindex', action='store_true', help='Rebuild index from remaining observations')
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=Arguments())
     if args.reindex:
         STATE.mkdir(parents=True, exist_ok=True)
         with (STATE / 'docker-runner.lock').open('a+') as maintenance_lock:
@@ -204,7 +219,7 @@ def main() -> int:
         for p in inbox.iterdir():
             if p.suffix in ('.json', '.skip'):
                 p.unlink()
-    queues = []
+    queues: list[tuple[Target, Iterator[Case]]] = []
     discovery_errors = 0
     for target in selected:
         try:
@@ -215,9 +230,9 @@ def main() -> int:
             discovery_errors += 1
             print(f'FAILED planning target={target["id"]}: {exc}', file=sys.stderr, flush=True)
     # Interleave targets so a large cross-product cannot starve other clients.
-    work = []
+    work: list[tuple[Target, Case]] = []
     while len(work) < args.max_cases and queues:
-        next_queues = []
+        next_queues: list[tuple[Target, Iterator[Case]]] = []
         for target, pending in queues:
             try:
                 case = next(pending)
@@ -231,7 +246,7 @@ def main() -> int:
     print(f'planned_cases={len(work)} targets={len(selected)} mode={args.mode} parallel={args.parallel}', flush=True)
     succeeded, failed = 0, 0
 
-    def worker(i: int, target: dict, case: dict) -> bool:
+    def worker(i: int, target: Target, case: Case) -> bool:
         print(f'[{i}/{len(work)}] {target["id"]} {case["runtime_version"]} / {case["client_version"]}', flush=True)
         try:
             ok = collect_one(case, target, inbox)

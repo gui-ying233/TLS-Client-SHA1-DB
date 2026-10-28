@@ -3,35 +3,40 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from pathlib import Path
+from typing import cast
 
-from fpdb.core import DataError, digest, read_json
+from fpdb.core import DataError, digest, json_array, json_object, read_json
+from fpdb.schema import Case, CaseIdentity, Config, Job, Target
 from fpdb.versions import discover, sort_key
 
 
-def load_config(root: Path) -> dict:
-    config = read_json(root / "config.json")
+def load_config(root: Path) -> Config:
+    config = json_object(read_json(root / "config.json"))
     if config.get("schema_version") != 1 or not isinstance(config.get("targets"), list):
         raise DataError("Invalid config.json")
     environments = root / "config.environments.json"
     if environments.exists():
-        additional = read_json(environments)
+        additional = json_object(read_json(environments))
         if not isinstance(additional.get("targets"), list):
             raise DataError("Invalid config.environments.json")
-        config["targets"].extend(additional["targets"])
-    return config
+        json_array(config["targets"]).extend(json_array(additional["targets"]))
+    return cast(Config, config)
 
 
 def completed_case_ids(root: Path) -> set[str]:
-    ids = set()
+    ids: set[str] = set()
     for path in (root / "data" / "observations").rglob("*.json"):
-        record = read_json(path)
+        record = json_object(read_json(path))
         if record.get("schema_version") == 1:
-            ids.add(record["case_id"])
+            case_id = record["case_id"]
+            if not isinstance(case_id, str):
+                raise DataError("case_id must be a string")
+            ids.add(case_id)
     return ids
 
 
-def _case(target: dict, runtime: str, client: str) -> dict:
-    case = {
+def make_case(target: Target, runtime: str, client: str) -> Case:
+    identity: CaseIdentity = {
         "target": target["id"],
         "language": target["language"],
         "client": target["client"],
@@ -41,26 +46,28 @@ def _case(target: dict, runtime: str, client: str) -> dict:
         "runner": target.get("runner", "ubuntu-24.04"),
         "revision": str(target.get("revision", "1")),
     }
-    case["id"] = digest(case)
-    return case
+    return {**identity, "id": digest(identity)}
 
 
-def job_batches(cases: list[dict], max_cases: int = 8, max_jobs: int | None = None) -> list[dict]:
+def job_batches(cases: list[Case], max_cases: int = 8, max_jobs: int | None = None) -> list[Job]:
     """Fill compatible runtime batches first, then stop at the Job budget."""
-    groups = {}
+    groups: dict[tuple[str, str, str, str, bool], list[Case]] = {}
     for case in cases:
         key = (case["runner"], case["platform"], case["language"],
                case["runtime_version"],
                case["language"] == "python" and case["target"].startswith("env-"))
         groups.setdefault(key, []).append(case)
 
-    per_language = defaultdict(list)
+    per_language: defaultdict[str, list[list[Case]]] = defaultdict(list)
     for key, items in groups.items():
         per_language[key[2]].append(items)
     # Largest compatible groups first. Stable ties keep the discovery/version order.
-    queues = {language: deque(sorted(buckets, key=lambda items: -len(items)))
+    def batch_priority(items: list[Case]) -> int:
+        return -len(items)
+
+    queues = {language: deque(sorted(buckets, key=batch_priority))
               for language, buckets in per_language.items()}
-    jobs = []
+    jobs: list[Job] = []
     while any(queues.values()) and (max_jobs is None or len(jobs) < max_jobs):
         for language in sorted(queues):
             if not queues[language]:
@@ -77,7 +84,7 @@ def job_batches(cases: list[dict], max_cases: int = 8, max_jobs: int | None = No
     return jobs
 
 
-def _matches_range(pair: tuple[str, str], constraint: dict) -> bool:
+def _matches_range(pair: tuple[str, str], constraint: dict[str, str]) -> bool:
     runtime, client = pair
     for key, value in (("runtime", runtime), ("client", client)):
         if key in constraint and value != constraint[key]:
@@ -89,7 +96,7 @@ def _matches_range(pair: tuple[str, str], constraint: dict) -> bool:
     return True
 
 
-def _compatible(pair: tuple[str, str], target: dict) -> bool:
+def _compatible(pair: tuple[str, str], target: Target) -> bool:
     rules = target.get("compatibility", {})
     includes = rules.get("include", [])
     excludes = rules.get("exclude", [])
@@ -97,7 +104,7 @@ def _compatible(pair: tuple[str, str], target: dict) -> bool:
         _matches_range(pair, rule) for rule in excludes)
 
 
-def _pairs(target: dict, mode: str, active_runtime_count: int) -> list[tuple[str, str]]:
+def _pairs(target: Target, mode: str, active_runtime_count: int) -> list[tuple[str, str]]:
     runtimes = discover(target["runtime_versions"])
     clients = discover(target["client_versions"])
     if not runtimes or not clients:
@@ -126,7 +133,7 @@ def _pairs(target: dict, mode: str, active_runtime_count: int) -> list[tuple[str
 
 
 def plan(root: Path, *, mode: str, target_filter: str = "",
-         recheck: bool = False, batch_size: int | None = None) -> list[dict]:
+         recheck: bool = False, batch_size: int | None = None) -> list[Case]:
     config = load_config(root)
     if not config["profiles"].get(mode, {}).get("enabled", False):
         raise DataError(f"Profile {mode!r} is disabled in config.json")
@@ -135,10 +142,10 @@ def plan(root: Path, *, mode: str, target_filter: str = "",
     limit = int(batch_size if batch_size is not None else config["execution"]["batch_size"])
     if not (1 <= limit <= max_matrix_size):
         raise DataError(f"batch_size must be between 1 and {max_matrix_size}")
-    completed = completed_case_ids(root) if not recheck else set()
-    seen = set()
-    cases = []
-    target_ids = set()
+    completed: set[str] = completed_case_ids(root) if not recheck else set()
+    seen: set[str] = set()
+    cases: list[Case] = []
+    target_ids: set[str] = set()
     for target in config["targets"]:
         if not target.get("enabled", False):
             continue
@@ -149,7 +156,7 @@ def plan(root: Path, *, mode: str, target_filter: str = "",
         if target_filter and target_filter != target_id:
             continue
         for runtime, client in _pairs(target, mode, active_runtime_count):
-            case = _case(target, runtime, client)
+            case = make_case(target, runtime, client)
             if case["id"] in seen or (case["id"] in completed and mode not in target.get("recheck_modes", [])):
                 continue
             seen.add(case["id"])
