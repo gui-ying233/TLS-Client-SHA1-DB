@@ -735,7 +735,7 @@
           "3.2",
           "3.3",
           "3.4",
-          "3.5"
+          "4.0"
         ]
       },
       "client_versions": {
@@ -1128,6 +1128,7 @@
           "dotnet",
           "build",
           "clients/dotnet/Fpdb.csproj",
+          "-p:TargetFrameworks=net{runtime_version}",
           "-c",
           "Release",
           "-f",

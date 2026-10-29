@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+from functools import cache
 import hashlib
 import json
 import os
@@ -28,6 +29,7 @@ sys.path.insert(0, str(ROOT))
 
 from fpdb.planner import load_config, plan
 from fpdb.persistence import persist
+from fpdb.core import json_object
 from fpdb.schema import Case, Target
 STATE = ROOT / '.fpdb-local'
 NODE_BASE = Path('/cache/node')
@@ -41,7 +43,7 @@ def resource_lock(key: str) -> Lock:
         return _LOCKS.setdefault(key, Lock())
 
 
-def probe_lock(target: Target) -> ContextManager[object]:
+def probe_lock(target: Target, case: Case) -> ContextManager[object]:
     # npm --prefix overwrites a shared node_modules tree; hold the lock through
     # both installation AND the TLS probe so package versions cannot change.
     prepare = target['adapter'].get('prepare', [])
@@ -49,6 +51,16 @@ def probe_lock(target: Target) -> ContextManager[object]:
         index = prepare.index('--prefix') + 1
         if index < len(prepare):
             return resource_lock('npm:' + prepare[index])
+    # These adapters build into shared paths. Keep the selected compiler's
+    # output in place until all of that case's handshakes have completed.
+    if target['id'] in ('java-httpclient', 'java-urlconnection'):
+        return resource_lock('java:stdlib')
+    if target['id'] in ('go-http', 'dotnet-httpclient', 'c-libcurl', 'cpp-boost-beast'):
+        return resource_lock('build:' + target['id'])
+    if target['language'] == 'rust':
+        return resource_lock('cargo:' + case['runtime_version'] + ':' + target['client'])
+    if target['language'] == 'ruby':
+        return resource_lock('gems:' + case['runtime_version'] + ':' + target['client'])
     return nullcontext()
 
 
@@ -123,13 +135,45 @@ def python_binary(version: str) -> Path:
 def supported(target: Target) -> bool:
     if target.get('runner') != 'ubuntu-24.04' or target.get('platform') != 'linux-x86_64':
         return False
-    if target.get('language') in ('node', 'python') and not target['id'].startswith('env-'):
-        return True
-    return target['id'] in {
-        'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}
+    return not target['id'].startswith('env-') and target['language'] in {
+        'node', 'python', 'go', 'java', 'php', 'ruby', 'rust', 'dotnet',
+        'bun', 'deno', 'dart', 'erlang', 'perl', 'c', 'cpp', 'ubuntu'}
 
 
-def collect_one(case: Case, target: Target, inbox: Path) -> bool:
+@cache
+def managed_environment(language: str, version: str) -> dict[str, str]:
+    if not re.fullmatch(r'[0-9]+(?:\.[0-9]+){0,2}|stable', version):
+        raise ValueError('Invalid runtime version')
+    requested = 'latest' if version == 'stable' else version
+    if language == 'java':
+        requested = 'temurin-' + requested
+    tool = language + '@' + requested
+    if language == 'rust':
+        tool = 'rust[profile=minimal]@' + requested
+    # Tools are explicit argv values; no project configuration or shell eval.
+    installed = subprocess.run(['mise', 'install', tool], cwd='/tmp',
+                               capture_output=True, text=True, check=False)
+    if installed.returncode:
+        raise ValueError(f'Could not install {tool}: {installed.stderr[-2500:]}')
+    process = subprocess.run(['mise', 'env', '--json', tool], cwd='/tmp',
+                             capture_output=True, text=True, check=False)
+    if process.returncode:
+        raise ValueError(f'Could not install {tool}: {process.stderr[-2500:]}')
+    values = json_object(json.loads(process.stdout))
+    result: dict[str, str] = {}
+    for key in ('PATH', 'JAVA_HOME', 'GOROOT', 'GOPATH', 'DOTNET_ROOT', 'DOTNET_MULTILEVEL_LOOKUP',
+                'RUSTUP_HOME', 'CARGO_HOME', 'RUSTUP_TOOLCHAIN', 'LD_LIBRARY_PATH'):
+        if key in values:
+            value = values[key]
+            if not isinstance(value, str):
+                raise ValueError(f'Runtime environment {key} must be a string')
+            result[key] = value
+    if 'PATH' not in result:
+        raise ValueError(f'No executable path for {tool}')
+    return result
+
+
+def runtime_environment(case: Case) -> dict[str, str]:
     language, version = case['language'], case['runtime_version']
     env = os.environ.copy()
     if language == 'node':
@@ -139,11 +183,72 @@ def collect_one(case: Case, target: Target, inbox: Path) -> bool:
     elif language == 'python':
         with resource_lock('python:' + version):
             env['FPDB_PYTHON_BIN'] = str(python_binary(version))
-    elif case['target'] not in {'ubuntu-curl', 'ubuntu-wget', 'ubuntu-openssl'}:
+    elif language in {'perl', 'c', 'cpp', 'ubuntu'}:
+        return env
+    else:
+        # Reuse matching distribution runtimes already supplied by the image.
+        if language == 'php' and re.fullmatch(r'[0-9]+\.[0-9]+(?:\.[0-9]+)?', version):
+            php = Path('/usr/bin/php' + '.'.join(version.split('.')[:2]))
+            actual = subprocess.check_output([str(php), '-r', 'echo PHP_VERSION;'], text=True) if php.is_file() else ''
+            if actual == version or actual.startswith(version + '.'):
+                with resource_lock('php:' + version):
+                    directory = Path('/cache/php') / version / 'bin'
+                    directory.mkdir(parents=True, exist_ok=True)
+                    # Composer's distro shebang otherwise selects the system PHP.
+                    for name, extra in (('php', ''), ('composer', ' /usr/bin/composer')):
+                        wrapper = directory / name
+                        content = f'#!/bin/sh\nexec {php}{extra} "$@"\n'
+                        if not wrapper.exists() or wrapper.read_text(encoding='utf-8') != content:
+                            temporary = wrapper.with_suffix('.tmp')
+                            temporary.write_text(content, encoding='utf-8')
+                            temporary.chmod(0o755)
+                            temporary.replace(wrapper)
+                env['PATH'] = str(directory) + os.pathsep + env.get('PATH', '')
+                return env
+        if language == 'ruby' and shutil.which('ruby'):
+            actual = subprocess.check_output(['ruby', '-e', 'print RUBY_VERSION'], text=True)
+            if actual == version or actual.startswith(version + '.'):
+                return ruby_environment(case, env)
+        # The existing shared .NET cache may already contain a newer SDK plus
+        # the requested runtime. Never require another SDK download in that case.
+        dotnet = Path('/cache/dotnet/dotnet')
+        if language == 'dotnet' and dotnet.is_file():
+            runtimes = subprocess.check_output([str(dotnet), '--list-runtimes'], text=True)
+            sdks = subprocess.check_output([str(dotnet), '--list-sdks'], text=True)
+            if (any(line.startswith('Microsoft.NETCore.App ' + version + '.') for line in runtimes.splitlines())
+                    and any(int(line.split('.')[0]) >= int(version.split('.')[0]) for line in sdks.splitlines())):
+                env.update(DOTNET_ROOT='/cache/dotnet', DOTNET_MULTILEVEL_LOOKUP='0',
+                           DOTNET_CLI_TELEMETRY_OPTOUT='1')
+                env['PATH'] = '/cache/dotnet' + os.pathsep + env.get('PATH', '')
+                return env
+        with resource_lock('runtime:' + language):
+            env.update(managed_environment(language, version))
+        if language == 'ruby':
+            return ruby_environment(case, env)
+        if language == 'rust':
+            env['FPDB_RUST_TOOLCHAIN'] = env['RUSTUP_TOOLCHAIN']
+            env['CARGO_TARGET_DIR'] = str(Path('/cache/cargo-target') / version / case['client'])
+            env['CARGO_BUILD_JOBS'] = '2'
+        if language == 'go':
+            env['GOCACHE'] = '/cache/go-build'
+            env['GOMODCACHE'] = '/cache/go-mod'
+    return env
+
+
+def ruby_environment(case: Case, env: dict[str, str]) -> dict[str, str]:
+    home = Path('/cache/gems') / case['runtime_version'] / case['client'] / case['client_version']
+    home.mkdir(parents=True, exist_ok=True)
+    env.update(GEM_HOME=str(home), GEM_PATH=str(home))
+    return env
+
+
+def collect_one(case: Case, target: Target, inbox: Path) -> bool:
+    if not supported(target):
         raise ValueError('Unsupported local Docker target')
+    env = runtime_environment(case)
     # Explicit case identity is always verified again by fpdb.collector.
     env['FPDB_CASES_JSON'] = json.dumps([case], separators=(',', ':'))
-    with probe_lock(target):
+    with probe_lock(target, case):
         code = subprocess.run([sys.executable, '-m', 'fpdb.cli', 'collect',
                                '--cases-env', 'FPDB_CASES_JSON', '--output-dir', str(inbox)],
                               cwd=ROOT, env=env, check=False).returncode
@@ -247,7 +352,8 @@ def main() -> int:
     succeeded, failed = 0, 0
 
     def worker(i: int, target: Target, case: Case) -> bool:
-        print(f'[{i}/{len(work)}] {target["id"]} {case["runtime_version"]} / {case["client_version"]}', flush=True)
+        verification = 'verify=false' if case.get('verify') is False else 'default'
+        print(f'[{i}/{len(work)}] {target["id"]} {case["runtime_version"]} / {case["client_version"]} {verification}', flush=True)
         try:
             ok = collect_one(case, target, inbox)
         except (OSError, ValueError, subprocess.CalledProcessError) as exc:

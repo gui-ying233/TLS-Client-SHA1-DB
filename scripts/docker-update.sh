@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Run actual fingerprints on your Docker host; never call the GitHub Actions API.
-export FPDB_DOCKER_SKIP_BUILD=1
 set -euo pipefail
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 command -v docker >/dev/null || { echo 'Docker is required' >&2; exit 2; }

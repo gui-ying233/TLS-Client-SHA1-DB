@@ -10,6 +10,7 @@ matrix.json
 
 # Native probes / language install caches
 clients/go/fpdb-go
+clients/cpp/fpdb-cpp
 clients/go/*/fpdb-*
 clients/system/curl_probe
 clients/java/*.class

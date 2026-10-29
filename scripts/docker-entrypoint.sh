@@ -25,7 +25,9 @@ if [[ "$ready" != 1 ]]; then
 fi
 # The host checkout and caches remain owned by the invoking user.
 install -d -o "$FPDB_UID" -g "$FPDB_GID" /repo/.fpdb-local \
-  /cache/home /cache/node /cache/uv-cache /cache/uv-python /cache/runner-temp
+  /cache/home /cache/node /cache/uv-cache /cache/uv-python /cache/runner-temp \
+  /cache/mise /cache/runtimes /cache/mise-cache /cache/mise-config /cache/mise-state \
+  /cache/cargo /cache/rustup /cache/dotnet /cache/gems /cache/php /cache/go-build /cache/go-mod /cache/cargo-target
 export HOME=/cache/home
 export UV_CACHE_DIR=/cache/uv-cache UV_PYTHON_INSTALL_DIR=/cache/uv-python
 export RUNNER_TEMP=/cache/runner-temp

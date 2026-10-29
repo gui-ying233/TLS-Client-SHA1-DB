@@ -93,7 +93,13 @@ def prepare_dotnet(version: str, runtime: str, directory: Path) -> None:
 
 
 def prepare_rust(client: str, version: str, runtime: str, directory: Path) -> None:
-    run(["rustup", "toolchain", "install", runtime, "--profile", "minimal"], directory)
+    toolchain = os.environ.get("FPDB_RUST_TOOLCHAIN", runtime) if runtime == "stable" else runtime
+    compiler_probe = subprocess.run(["rustup", "run", toolchain, "rustc", "--version"],
+                                    capture_output=True, text=True, check=False)
+    cargo_probe = subprocess.run(["rustup", "run", toolchain, "cargo", "--version"],
+                                 capture_output=True, text=True, check=False)
+    if compiler_probe.returncode or cargo_probe.returncode:
+        run(["rustup", "toolchain", "install", toolchain, "--profile", "minimal"], directory)
     reqwest_feature = "rustls" if tuple(map(int, version.split(".")[:2])) >= (0, 13) else "rustls-tls"
     (directory / "Cargo.toml").write_text(
         '[package]\nname="fpdb-probe"\nversion="0.1.0"\nedition="2021"\n'
@@ -103,11 +109,11 @@ def prepare_rust(client: str, version: str, runtime: str, directory: Path) -> No
         'serde_json="=1.0.145"\n', encoding="utf-8")
     (directory / "src").mkdir(exist_ok=True)
     shutil.copyfile(ROOT / "clients/rust/src/main.rs", directory / "src/main.rs")
-    compiler = subprocess.check_output(["rustup", "run", runtime, "rustc", "--version"], text=True).split()[1]
+    compiler = subprocess.check_output(["rustup", "run", toolchain, "rustc", "--version"], text=True).split()[1]
     env = {**os.environ, "FPDB_RUSTC_VERSION": compiler,
            "CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS": "fallback"}
     feature = "native" if client == "reqwest-native" else "rustls"
-    run(["cargo", "+" + runtime, "build", "--release", "--no-default-features",
+    run(["cargo", "+" + toolchain, "build", "--release", "--no-default-features",
          "--features", feature], directory, env)
     target = Path(env.get("CARGO_TARGET_DIR", str(directory / "target")))
     shutil.copyfile(target / "release/fpdb-probe", directory / "fpdb-probe")

@@ -117,13 +117,22 @@ jobs:
         continue-on-error: true
         with:
           php-version: ${{ matrix.case.runtime_version }}
-          extensions: curl, openssl
+          extensions: curl, openssl, mbstring, dom, xml
+          tools: composer:v2
           coverage: none
       - uses: actions/setup-dotnet@v4
         if: matrix.case.language == 'dotnet'
         continue-on-error: true
         with:
           dotnet-version: ${{ matrix.case.runtime_version }}.x
+      - name: Install Java build dependencies
+        if: matrix.case.language == 'java'
+        run: sudo apt-get update -qq && sudo apt-get install -y maven
+      - name: Install exact Rust toolchain
+        if: matrix.case.language == 'rust'
+        env:
+          RUST_VERSION: ${{ matrix.case.runtime_version }}
+        run: rustup toolchain install "$RUST_VERSION" --profile minimal
       # Cache *downloads and compiler objects*, never fingerprint observations,
       # complete probe executables or mutable system TLS libraries.
       # GitHub Actions caches are immutable and shared by both collection workflows.
