@@ -1,0 +1,47 @@
+{
+  "case_id": "0e2ee2cba3306c78d853114d",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "z756bn+x21PiebYy319nCdFpEYo=",
+      "tlsClientExtensionsSha1": "eRqbjPzFMDjRutTL3FMxCPCnVgM=",
+      "tlsClientExtensionsSha1Le": "E4UokdXVmpLUwNHAc8bMobbnf2k=",
+      "tlsClientHelloLength": 1496,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "js",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {},
+      "os": "linux",
+      "runtime_resolved_version": "1.4.4",
+      "tls_backend": {
+        "name": "BoringSSL",
+        "version": "bundled"
+      }
+    },
+    "language": "bun",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.4.4",
+    "target": "bun-js",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "z756bn+x21PiebYy319nCdFpEYo=",
+      "tlsClientExtensionsSha1": "eRqbjPzFMDjRutTL3FMxCPCnVgM=",
+      "tlsClientExtensionsSha1Le": "E4UokdXVmpLUwNHAc8bMobbnf2k="
+    }
+  ],
+  "record_id": "32fce5204433202626bf2f00",
+  "schema_version": 1
+}

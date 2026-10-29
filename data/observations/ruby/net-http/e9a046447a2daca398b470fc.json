@@ -1,0 +1,45 @@
+{
+  "case_id": "c5fe74521905d8a8d2ddd5b8",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "hCCNuWP9ky6AR69i97wdKYbhFQo=",
+      "tlsClientExtensionsSha1": "7yA+sD5m8qOwGgKOwi7LYiNGeR4=",
+      "tlsClientExtensionsSha1Le": "c1PvwOQK1XwL8cCvflPp9nAwhqI=",
+      "tlsClientHelloLength": 1542,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "net-http",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "os": "linux",
+      "runtime_resolved_version": "4.0.9",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.5.5 27 Jan 2026"
+      }
+    },
+    "language": "ruby",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "4.0",
+    "target": "ruby-net-http"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "hCCNuWP9ky6AR69i97wdKYbhFQo=",
+      "tlsClientExtensionsSha1": "7yA+sD5m8qOwGgKOwi7LYiNGeR4=",
+      "tlsClientExtensionsSha1Le": "c1PvwOQK1XwL8cCvflPp9nAwhqI="
+    }
+  ],
+  "record_id": "e9a046447a2daca398b470fc",
+  "schema_version": 1
+}
