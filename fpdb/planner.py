@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
 from fpdb.core import DataError, digest, json_array, json_object, read_json
 from fpdb.schema import Case, CaseIdentity, Config, Job, Target
@@ -35,7 +35,7 @@ def completed_case_ids(root: Path) -> set[str]:
     return ids
 
 
-def make_case(target: Target, runtime: str, client: str) -> Case:
+def make_case(target: Target, runtime: str, client: str, *, verify: Literal[False] | None = None) -> Case:
     identity: CaseIdentity = {
         "target": target["id"],
         "language": target["language"],
@@ -46,6 +46,10 @@ def make_case(target: Target, runtime: str, client: str) -> Case:
         "runner": target.get("runner", "ubuntu-24.04"),
         "revision": str(target.get("revision", "1")),
     }
+    if verify is False:
+        identity["verify"] = False
+    elif verify is not None:
+        raise DataError("verify must be false or omitted for the client's default")
     return {**identity, "id": digest(identity)}
 
 
@@ -149,6 +153,9 @@ def plan(root: Path, *, mode: str, target_filter: str = "",
     completed: set[str] = completed_case_ids(root) if not recheck else set()
     seen: set[str] = set()
     cases: list[Case] = []
+    verify_modes = config.get("tls_verify_modes", ["default"])
+    if not verify_modes or any(mode not in ("default", "disabled") for mode in verify_modes):
+        raise DataError("tls_verify_modes must contain default and/or disabled")
     target_ids: set[str] = set()
     for target in config["targets"]:
         if not target.get("enabled", False):
@@ -160,11 +167,13 @@ def plan(root: Path, *, mode: str, target_filter: str = "",
         if target_filter and target_filter != target_id:
             continue
         for runtime, client in _pairs(target, mode, active_runtime_count):
-            case = make_case(target, runtime, client)
-            if case["id"] in seen or (case["id"] in completed and mode not in target.get("recheck_modes", [])):
-                continue
-            seen.add(case["id"])
-            cases.append(case)
+            for verify_mode in verify_modes:
+                case = make_case(target, runtime, client,
+                                 verify=False if verify_mode == "disabled" else None)
+                if case["id"] in seen or (case["id"] in completed and mode not in target.get("recheck_modes", [])):
+                    continue
+                seen.add(case["id"])
+                cases.append(case)
     if target_filter and target_filter not in target_ids:
         raise DataError(f"Unknown or disabled target {target_filter}")
     # batch_size now limits runner Jobs, not individual fingerprint cases.

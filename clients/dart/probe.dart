@@ -6,6 +6,7 @@ Future<void> main(List<String> args) async {
     throw ArgumentError('usage: probe.dart stdlib URL');
   }
   final sdk = Platform.version.split(' ').first;
+  final verify = Platform.environment['FPDB_TLS_VERIFY'] != 'false';
   final arch = (await Process.run('uname', ['-m'])).stdout.toString().trim();
   final context = SecurityContext.defaultContext;
   final caPath = Platform.environment['FPDB_LOCAL_CA'];
@@ -14,6 +15,7 @@ Future<void> main(List<String> args) async {
     ..connectionTimeout = const Duration(seconds: 25)
     ..idleTimeout = Duration.zero
     ..findProxy = ((uri) => 'DIRECT');
+  if (!verify) client.badCertificateCallback = (cert, host, port) => true;
   try {
     final request = await client.getUrl(Uri.parse(args[1]));
     request.headers.set(HttpHeaders.acceptHeader, 'application/json');
@@ -27,6 +29,7 @@ Future<void> main(List<String> args) async {
     stdout.writeln(jsonEncode({
       'runtime_version': sdk,
       'client_version': 'stdlib',
+      'verify': verify,
       'environment': {
         'os': Platform.operatingSystem,
         'arch': arch,

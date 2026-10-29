@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "tls_verify_modes": ["default", "disabled"],
   "endpoint": "https://echo.fpdb.test:18443/",
   "sampling": {
     "initial_handshakes": 5,

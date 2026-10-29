@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
 import re
 import shutil
@@ -15,6 +16,7 @@ def run(cmd: list[str], *, input: str | None = None) -> str:
     return p.stdout
 
 def main() -> None:
+    verify=os.environ.get('FPDB_TLS_VERIFY')!='false'
     client, expected, endpoint=sys.argv[1:]
     if expected!='system':raise ValueError('expected system')
     if not shutil.which(client):raise RuntimeError('not installed: '+client)
@@ -24,7 +26,7 @@ def main() -> None:
         tls=re.search(r'(OpenSSL|GnuTLS|NSS|wolfSSL|mbedTLS|rustls)/([^\s]+)',info,re.I)
         backend={'name':tls.group(1),'version':tls.group(2)} if tls else {'name':'unknown','version':info}
         dependencies['curl']=info.split()[1]
-        raw=run(['curl','-sS','--fail','--max-time','25','--noproxy','*','-H','Accept: application/json','-H','Connection: close',endpoint])
+        raw=run(['curl','-sS','--fail','--max-time','25','--noproxy','*','-H','Accept: application/json','-H','Connection: close',*(['--insecure'] if not verify else []),endpoint])
     elif client=='wget':
         version=run(['wget','--version']).splitlines()[0]
         details=run(['wget','--version'])
@@ -33,7 +35,7 @@ def main() -> None:
         sslver=run(['openssl','version']).strip() if name=='OPENSSL' else version
         backend={'name':name,'version':sslver}
         dependencies['wget']=version
-        raw=run(['wget','--no-proxy','-qO-','--timeout=25','--tries=1','--header=Accept: application/json',endpoint])
+        raw=run(['wget','--no-proxy','-qO-','--timeout=25','--tries=1','--header=Accept: application/json',*(['--no-check-certificate'] if not verify else []),endpoint])
     elif client=='openssl':
         version=run(['openssl','version']).strip()
         backend={'name':'OpenSSL','version':version};dependencies['openssl']=version
@@ -41,7 +43,9 @@ def main() -> None:
         if url.scheme!='https' or not url.hostname:raise ValueError('https URL required')
         host=url.hostname;port=url.port or 443
         request=f'GET {url.path or "/"}{("?"+url.query) if url.query else ""} HTTP/1.1\r\nHost: {host}\r\nAccept: application/json\r\nConnection: close\r\n\r\n'
-        wire=run(['openssl','s_client','-connect',f'{host}:{port}','-servername',host,'-verify_hostname',host,'-verify_return_error','-ignore_unexpected_eof','-quiet','-ign_eof'], input=request)
+        wire=run(['openssl','s_client','-connect',f'{host}:{port}','-servername',host,
+                  *(['-verify_hostname',host,'-verify_return_error'] if verify else []),
+                  '-ignore_unexpected_eof','-quiet','-ign_eof'], input=request)
         sep='\r\n\r\n' if '\r\n\r\n' in wire else '\n\n'
         headers,_,raw=wire.partition(sep)
         if not headers.startswith('HTTP/') or not re.search(r'^HTTP/\S+ 2\d\d',headers):raise RuntimeError('Bad HTTPS response')
@@ -56,7 +60,7 @@ def main() -> None:
     else:raise ValueError('Unknown system client')
     echo=json.loads(raw)
     print(json.dumps({'runtime_version':platform.freedesktop_os_release().get('VERSION_ID','unknown'),
-        'client_version':'system','environment':{'os':platform.system().lower(),'arch':platform.machine().lower(),
+        'client_version':'system','verify':verify,'environment':{'os':platform.system().lower(),'arch':platform.machine().lower(),
         'tls_backend':backend,'dependencies':dependencies},'echo':echo}))
 
 if __name__=='__main__':main()

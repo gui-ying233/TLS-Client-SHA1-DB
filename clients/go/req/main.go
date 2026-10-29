@@ -12,6 +12,7 @@ import (
 )
 
 var clientVersion = dependencyVersion("github.com/imroc/req/v3")
+var verify = os.Getenv("FPDB_TLS_VERIFY") != "false"
 
 const depName = "req"
 
@@ -22,7 +23,7 @@ func output(body []byte) {
 	}
 	v := strings.TrimPrefix(runtime.Version(), "go")
 	value := map[string]interface{}{
-		"runtime_version": v, "client_version": clientVersion,
+		"runtime_version": v, "client_version": clientVersion, "verify": verify,
 		"environment": map[string]interface{}{
 			"os": runtime.GOOS, "arch": runtime.GOARCH,
 			"tls_backend":  map[string]string{"name": "crypto/tls", "version": runtime.Version()},
@@ -47,6 +48,9 @@ func main() {
 	uri := endpoint()
 	// Intentionally use Req's ordinary TLS stack. Never enable SetTLSFingerprint* or browser presets.
 	client := req.C().SetTimeout(25 * time.Second).SetRedirectPolicy(req.NoRedirectPolicy())
+	if !verify {
+		client.EnableInsecureSkipVerify()
+	}
 	response, err := client.R().SetHeader("Accept", "application/json").SetHeader("Connection", "close").Get(uri)
 	if err != nil {
 		panic(err)

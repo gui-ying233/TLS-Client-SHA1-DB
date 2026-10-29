@@ -14,11 +14,12 @@ import (
 )
 
 func main() {
+	verify := os.Getenv("FPDB_TLS_VERIFY") != "false"
 	version := dependencyVersion("github.com/go-resty/resty/v2")
 	if len(os.Args) != 3 || os.Args[1] != version {
 		panic("usage: fpdb-resty 2.16.5 URL")
 	}
-	transport := &http.Transport{Proxy: nil, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12}, DisableKeepAlives: true}
+	transport := &http.Transport{Proxy: nil, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: !verify}, DisableKeepAlives: true}
 	defer transport.CloseIdleConnections()
 	client := resty.New().SetTransport(transport).SetTimeout(25 * time.Second).SetRedirectPolicy(resty.NoRedirectPolicy())
 	resp, err := client.R().SetHeader("Accept", "application/json").SetHeader("Connection", "close").Get(os.Args[2])
@@ -35,6 +36,7 @@ func main() {
 	data := map[string]interface{}{
 		"runtime_version": strings.TrimPrefix(runtime.Version(), "go"),
 		"client_version":  version,
+		"verify":          verify,
 		"environment": map[string]interface{}{"os": runtime.GOOS, "arch": runtime.GOARCH,
 			"tls_backend":  map[string]string{"name": "crypto/tls", "version": runtime.Version()},
 			"dependencies": map[string]string{"resty": version}},

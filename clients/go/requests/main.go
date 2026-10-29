@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,11 +16,15 @@ import (
 )
 
 func main() {
+	verify := os.Getenv("FPDB_TLS_VERIFY") != "false"
 	version := dependencyVersion("github.com/carlmjohnson/requests")
 	if len(os.Args) != 3 || os.Args[1] != version || !strings.HasPrefix(os.Args[2], "https://") {
 		panic("usage: fpdb-requests 0.26.2 HTTPS_URL")
 	}
 	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true, TLSHandshakeTimeout: 20 * time.Second}
+	if !verify {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 	defer transport.CloseIdleConnections()
 	client := &http.Client{Transport: transport, Timeout: 25 * time.Second,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }}
@@ -34,7 +39,7 @@ func main() {
 		panic(err)
 	}
 	payload := map[string]interface{}{
-		"runtime_version": strings.TrimPrefix(runtime.Version(), "go"), "client_version": version,
+		"runtime_version": strings.TrimPrefix(runtime.Version(), "go"), "client_version": version, "verify": verify,
 		"environment": map[string]interface{}{
 			"os": runtime.GOOS, "arch": runtime.GOARCH,
 			"tls_backend":  map[string]string{"name": "crypto/tls", "version": runtime.Version()},

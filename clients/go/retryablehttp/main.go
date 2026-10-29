@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
@@ -14,6 +15,7 @@ import (
 )
 
 var clientVersion = dependencyVersion("github.com/hashicorp/go-retryablehttp")
+var verify = os.Getenv("FPDB_TLS_VERIFY") != "false"
 
 const depName = "go-retryablehttp"
 
@@ -24,7 +26,7 @@ func output(body []byte) {
 	}
 	v := strings.TrimPrefix(runtime.Version(), "go")
 	value := map[string]interface{}{
-		"runtime_version": v, "client_version": clientVersion,
+		"runtime_version": v, "client_version": clientVersion, "verify": verify,
 		"environment": map[string]interface{}{
 			"os": runtime.GOOS, "arch": runtime.GOARCH,
 			"tls_backend":  map[string]string{"name": "crypto/tls", "version": runtime.Version()},
@@ -48,6 +50,9 @@ func endpoint() string {
 func main() {
 	uri := endpoint()
 	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true, TLSHandshakeTimeout: 20 * time.Second}
+	if !verify {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 	defer transport.CloseIdleConnections()
 	client := retryablehttp.NewClient()
 	client.RetryMax = 0 // One independent TLS handshake per probe; collector owns retries.

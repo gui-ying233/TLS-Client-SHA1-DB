@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/gocolly/colly/v2"
@@ -13,6 +14,7 @@ import (
 )
 
 var clientVersion = dependencyVersion("github.com/gocolly/colly/v2")
+var verify = os.Getenv("FPDB_TLS_VERIFY") != "false"
 
 const depName = "colly"
 
@@ -23,7 +25,7 @@ func output(body []byte) {
 	}
 	v := strings.TrimPrefix(runtime.Version(), "go")
 	value := map[string]interface{}{
-		"runtime_version": v, "client_version": clientVersion,
+		"runtime_version": v, "client_version": clientVersion, "verify": verify,
 		"environment": map[string]interface{}{
 			"os": runtime.GOOS, "arch": runtime.GOARCH,
 			"tls_backend":  map[string]string{"name": "crypto/tls", "version": runtime.Version()},
@@ -47,6 +49,9 @@ func endpoint() string {
 func main() {
 	uri := endpoint()
 	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true, TLSHandshakeTimeout: 20 * time.Second}
+	if !verify {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 	defer transport.CloseIdleConnections()
 	collector := colly.NewCollector(colly.MaxBodySize(1<<20), colly.IgnoreRobotsTxt())
 	collector.WithTransport(transport)

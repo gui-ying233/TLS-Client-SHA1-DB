@@ -16,8 +16,38 @@
       "tlsAlpn": "http/1.1",
       "tlsCipher": "TLS_AES_256_GCM_SHA384",
       "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "1Uxdf3STX+2WfW3DecqcQYbAveU=",
+      "tlsClientExtensionsSha1Le": "06BW4GeFAC/y1HYbgvfO0Oy7TMw=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
       "tlsClientExtensionsSha1": "39ZQm9a+BRB0sWgib7PVXZqtuH8=",
       "tlsClientExtensionsSha1Le": "Hu4SJMbC1Y4eeo8QhgVra1eXqn8=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "4QY93cV1nSHY9x/PxPjJjwgdwpg=",
+      "tlsClientExtensionsSha1Le": "aj+GgJAu3H+3yXKsn59Top8Yq8s=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "6IkpC83mJpLcsc77TCWbQDDKEhA=",
+      "tlsClientExtensionsSha1Le": "+uqv5dW+FvxbkyQJtF6FRuNOmTw=",
       "tlsClientHelloLength": 247,
       "tlsVersion": "TLSv1.3"
     },
@@ -36,6 +66,16 @@
       "tlsAlpn": "http/1.1",
       "tlsCipher": "TLS_AES_256_GCM_SHA384",
       "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "81AOmDXeShHDsaOEs1clT+J2bGM=",
+      "tlsClientExtensionsSha1Le": "k3H9kQF8LEjcWqaZaNOirGEkyn8=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
       "tlsClientExtensionsSha1": "8XgZTcy/jIjsCTmO1eXpkXViYZQ=",
       "tlsClientExtensionsSha1Le": "Y/oYWfVq/Uo8wGjHb9Gjznoxehk=",
       "tlsClientHelloLength": 247,
@@ -46,8 +86,68 @@
       "tlsAlpn": "http/1.1",
       "tlsCipher": "TLS_AES_256_GCM_SHA384",
       "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "ABZdb0FAxuMMiKn5L29zu+SGES4=",
+      "tlsClientExtensionsSha1Le": "taQnrGr+4eG1RbnrkQ6BiOp8Nhw=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
       "tlsClientExtensionsSha1": "J1PkCiz/cwROBXbDMgjd4/91FKA=",
       "tlsClientExtensionsSha1Le": "8D+v2db7lcHIsIWE1a1wQ4J0TDs=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "UNKhvG3jS3Tjc9qqtxNX6vPdSHk=",
+      "tlsClientExtensionsSha1Le": "yK231aiaY8WVk9huVT9MHpZ7K5g=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "Y8kpvEXnjL/VTshd8xalt2ILeuQ=",
+      "tlsClientExtensionsSha1Le": "+LmY8MzOvx31jLEJ4bq95zofbQI=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "ZQHm7a1iPntRqvbFU8kcwYnpSu8=",
+      "tlsClientExtensionsSha1Le": "aTLPJ348ud+CqwtVdFV6Anfrmf0=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "aB0Raz2+yqlpUcCKKGP0czYHcWQ=",
+      "tlsClientExtensionsSha1Le": "o8oPrmc7fPIVZVhZc8JGBb/Dj5Y=",
+      "tlsClientHelloLength": 247,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "aYoMa+/DJhpRD/zoFGBPxkxjTTY=",
+      "tlsClientExtensionsSha1Le": "zTTRgSycAjN+o8X9vG51IyIwHt4=",
       "tlsClientHelloLength": 247,
       "tlsVersion": "TLSv1.3"
     },

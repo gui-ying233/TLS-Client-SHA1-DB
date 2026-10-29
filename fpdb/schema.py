@@ -20,6 +20,7 @@ class CaseIdentity(TypedDict):
     platform: str
     runner: str
     revision: str
+    verify: NotRequired[Literal[False]]
 
 
 class Case(CaseIdentity):
@@ -83,6 +84,7 @@ class Config(TypedDict):
     sampling: dict[str, int]
     execution: dict[str, int]
     profiles: dict[str, dict[str, bool]]
+    tls_verify_modes: NotRequired[list[Literal["default", "disabled"]]]
 
 
 class TLSBackend(TypedDict):
@@ -139,6 +141,7 @@ class IndexClient(TypedDict):
     client_version: str
     platform: str
     environment: Environment
+    verify: NotRequired[Literal[False]]
 
 
 class IndexEntry(IndexClient, TLSMetadata, total=False):
@@ -156,6 +159,7 @@ class CandidateIdentity(TypedDict):
     client_version: str | None
     platform: str | None
     environment: Environment | None
+    verify: NotRequired[Literal[False]]
 
 
 class MatchDetail(TLSMetadata, total=False):

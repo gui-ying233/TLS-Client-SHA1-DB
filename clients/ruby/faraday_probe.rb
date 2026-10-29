@@ -7,7 +7,8 @@ expected, endpoint = ARGV
 raise 'HTTPS required' unless endpoint.start_with?('https://')
 actual = Gem.loaded_specs.fetch('faraday').version.to_s
 raise "Faraday version #{actual} != #{expected}" unless actual == expected
-connection = Faraday.new(url: endpoint, proxy: nil) do |builder|
+verify = ENV['FPDB_TLS_VERIFY'] != 'false'
+connection = Faraday.new(url: endpoint, proxy: nil, ssl: {verify: verify}) do |builder|
   builder.adapter :net_http
 end
 response = connection.get do |request|
@@ -18,7 +19,7 @@ response = connection.get do |request|
 end
 raise "HTTP #{response.status}" unless (200..299).cover?(response.status)
 echo = JSON.parse(response.body)
-puts JSON.generate({runtime_version: RUBY_VERSION, client_version: actual,
+puts JSON.generate({runtime_version: RUBY_VERSION, client_version: actual, verify: verify,
   environment: {os: RbConfig::CONFIG['host_os'], arch: RbConfig::CONFIG['host_cpu'],
     tls_backend: {name: 'OpenSSL', version: OpenSSL::OPENSSL_VERSION},
     dependencies: {'faraday' => actual}}, echo: echo})

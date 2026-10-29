@@ -43,13 +43,15 @@ int main(int argc, char** argv) {
     const std::string port = match[2].matched ? match[2].str() : "443";
     const std::string path = match[3].str().empty() ? "/" : match[3].str();
     net::io_context ctx;
+    const char* mode = std::getenv("FPDB_TLS_VERIFY");
+    const bool verify = !mode || std::string(mode) != "false";
     ssl::context tls(ssl::context::tls_client);
     tls.set_default_verify_paths();
-    tls.set_verify_mode(ssl::verify_peer);
+    tls.set_verify_mode(verify ? ssl::verify_peer : ssl::verify_none);
     beast::ssl_stream<beast::tcp_stream> stream(ctx, tls);
     if (!SSL_set_tlsext_host_name(stream.native_handle(), host.c_str()))
       throw std::runtime_error("TLS SNI setup failed");
-    if (!X509_VERIFY_PARAM_set1_host(SSL_get0_param(stream.native_handle()), host.c_str(), host.size()))
+    if (verify && !X509_VERIFY_PARAM_set1_host(SSL_get0_param(stream.native_handle()), host.c_str(), host.size()))
       throw std::runtime_error("TLS hostname validation setup failed");
     tcp::resolver resolver(ctx);
     beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(25));
@@ -69,7 +71,7 @@ int main(int argc, char** argv) {
       throw std::runtime_error("Echo response is not a JSON object");
     struct utsname system_info{};
     if (uname(&system_info) != 0) throw std::runtime_error("uname failed");
-    std::cout << "{\"runtime_version\":\"system\",\"client_version\":\"system\",\"environment\":{\"os\":"
+    std::cout << "{\"runtime_version\":\"system\",\"client_version\":\"system\",\"verify\":" << (verify ? "true" : "false") << ",\"environment\":{\"os\":"
       << quote(system_info.sysname) << ",\"arch\":" << quote(system_info.machine)
       << ",\"tls_backend\":{\"name\":\"OpenSSL\",\"version\":"
       << quote(OpenSSL_version(OPENSSL_VERSION)) << "}},\"echo\":" << resp.body() << "}\n";

@@ -28,6 +28,8 @@ def build(root: Path = ROOT) -> bool:
             "client_version": identity["client_version"], "platform": identity["platform"],
             "environment": identity["environment"],
         }
+        if "verify" in identity:
+            client["verify"] = identity["verify"]
         # Evidence contains exact joint captures, including fields deliberately
         # dropped from the older compact summary. Never cross-join hash lists.
         source_rows: list[Mapping[str, object]] = list(record.get("evidence", []))

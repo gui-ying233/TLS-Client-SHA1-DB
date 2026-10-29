@@ -20,6 +20,8 @@ static void print_string(const char *s){
 int main(int argc,char **argv){
  if(argc!=3||strcmp(argv[1],"system")){fprintf(stderr,"usage: curl_probe system URL\n");return 2;}
  CURL *h=curl_easy_init();if(!h)return 1;
+ const char *mode=getenv("FPDB_TLS_VERIFY");int verify=!mode||strcmp(mode,"false");
+ if(!verify){curl_easy_setopt(h,CURLOPT_SSL_VERIFYPEER,0L);curl_easy_setopt(h,CURLOPT_SSL_VERIFYHOST,0L);}
  struct buffer b={0};struct curl_slist *headers=NULL;
  headers=curl_slist_append(headers,"Accept: application/json");
  headers=curl_slist_append(headers,"Connection: close");
@@ -35,7 +37,7 @@ int main(int argc,char **argv){
  struct utsname un;if(uname(&un)){perror("uname");return 1;}
  curl_version_info_data *v=curl_version_info(CURLVERSION_NOW);
  printf("{\"runtime_version\":");print_string(gnu_get_libc_version());
- printf(",\"client_version\":\"system\",\"environment\":{\"os\":");print_string(un.sysname);
+ printf(",\"client_version\":\"system\",\"verify\":%s,\"environment\":{\"os\":",verify?"true":"false");print_string(un.sysname);
  printf(",\"arch\":");print_string(un.machine);
  printf(",\"tls_backend\":{\"name\":\"libcurl TLS\",\"version\":");print_string(v->ssl_version?v->ssl_version:"unknown");
  printf("},\"dependencies\":{\"libcurl\":");print_string(v->version);

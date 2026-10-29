@@ -17,11 +17,16 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
  let actual_client=locked_version("reqwest");
  if args[2]!=actual_client {return Err("reqwest version mismatch".into());}
  let native=args[1]=="reqwest-native";
+ let verify=env::var("FPDB_TLS_VERIFY").as_deref()!=Ok("false");
  let builder=reqwest::blocking::Client::builder().no_proxy().timeout(std::time::Duration::from_secs(25));
  #[cfg(feature="rustls")]
  let builder=builder.use_rustls_tls();
  #[cfg(feature="native")]
  let builder=builder.use_native_tls();
+ let builder=if verify {builder}else{builder.danger_accept_invalid_certs(true)};
+ // native-tls checks hostnames separately from the certificate chain.
+ #[cfg(feature="native")]
+ let builder=if verify {builder}else{builder.danger_accept_invalid_hostnames(true)};
  // Bundled rustls roots do not include the per-run test certificate.
  let builder=if let Ok(path)=env::var("FPDB_LOCAL_CA") {
   builder.add_root_certificate(reqwest::Certificate::from_pem(&std::fs::read(path)?)?)
@@ -37,7 +42,7 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
   locked_version("rustls")
  };
  let backend=if native{"OpenSSL"}else{"rustls"};
- println!("{}",json!({"runtime_version":version,"client_version":actual_client,
+ println!("{}",json!({"runtime_version":version,"client_version":actual_client,"verify":verify,
  "environment":{"os":env::consts::OS,"arch":env::consts::ARCH,
  "tls_backend":{"name":backend,"version":tlsversion},"dependencies":{"reqwest":args[2]}},"echo":echo}));
  Ok(())

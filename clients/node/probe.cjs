@@ -6,6 +6,7 @@ const https = require('https');
 const { client, version, endpoint } = {client: process.argv[2], version: process.argv[3], endpoint: process.argv[4]};
 if (!client || !version || !endpoint) process.exit(2);
 const diagnosticRetry = process.env.FPDB_DIAGNOSTIC_RETRY === '1';
+const verify = process.env.FPDB_TLS_VERIFY !== 'false';
 function describeResponse(data) {
   if (data === null) return {type:'null'};
   if (Array.isArray(data)) return {type:'array',length:data.length};
@@ -29,19 +30,21 @@ function reportAxiosResponse(response) {
 }
 async function read() {
   if (client === 'https') return await new Promise((resolve,reject) => {
-    const req=https.get(endpoint, {headers:{Accept:'application/json',Connection:'close'},agent:false}, res => {
+    const req=https.get(endpoint, {headers:{Accept:'application/json',Connection:'close'},agent:false,
+      ...(!verify ? {rejectUnauthorized:false} : {})}, res => {
       let data=''; res.setEncoding('utf8');res.on('data',v=>data+=v);
       res.on('end',()=>res.statusCode>=200&&res.statusCode<300?resolve(JSON.parse(data)):reject(new Error('HTTP '+res.statusCode)));
     });req.on('error',reject);req.setTimeout(25000,()=>req.destroy(new Error('timeout')));
   });
   if (client === 'fetch') {
+    if (!verify) process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     const response=await fetch(endpoint,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(25000)});
     if(!response.ok) throw Error('HTTP '+response.status);
     return response.json();
   }
   if (client === 'undici') {
     const { Agent, request } = require('undici');
-    const dispatcher = new Agent({connections:1,pipelining:0});
+    const dispatcher = new Agent({connections:1,pipelining:0,...(!verify ? {connect:{rejectUnauthorized:false}} : {})});
     try { const response=await request(endpoint,{dispatcher,headers:{accept:'application/json'},headersTimeout:25000,bodyTimeout:25000});
       if(response.statusCode<200||response.statusCode>=300) throw Error('HTTP '+response.statusCode);
       return await response.body.json();
@@ -55,7 +58,7 @@ async function read() {
     try {
       // Response compression is not part of the TLS ClientHello fingerprint.
       // Avoid old axios versions' Brotli decompression failures.
-      const response=await axios.get(endpoint,{proxy:false,httpsAgent:new https.Agent({keepAlive:false}),
+      const response=await axios.get(endpoint,{proxy:false,httpsAgent:new https.Agent({keepAlive:false,...(!verify ? {rejectUnauthorized:false} : {})}),
         headers:{Accept:'application/json','Accept-Encoding':'identity',Connection:'close'},timeout:25000});
       reportAxiosResponse(response);
       return response.data;
@@ -78,6 +81,6 @@ async function read() {
     dependencies[client]=actual;
   }
   if(actual!==version) throw Error('Version mismatch '+actual+' vs '+version);
-  console.log(JSON.stringify({runtime_version:process.versions.node,client_version:actual,
+  console.log(JSON.stringify({runtime_version:process.versions.node,client_version:actual,verify,
     environment:{os:os.platform(),arch:os.arch(),tls_backend:{name:'OpenSSL',version:process.versions.openssl},dependencies},echo:await read()}));
 })().catch(e=>{console.error(e.stack||e);process.exit(1)});

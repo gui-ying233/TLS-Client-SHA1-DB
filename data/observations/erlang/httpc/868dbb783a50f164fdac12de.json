@@ -1,0 +1,45 @@
+{
+  "case_id": "b5d47c50ff259c8adfdf9844",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "5jSHH5mODVJ2jSJSKvyhMlmoPnU=",
+      "tlsClientExtensionsSha1": "KpE4QlWJ4r/Ar0iq+5JRYuzwxWE=",
+      "tlsClientExtensionsSha1Le": "sZ/636RA7BqLK6o6/wRZAnD12JY=",
+      "tlsClientHelloLength": 343,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "httpc",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64-pc-linux-gnu",
+      "capture_profile": "local-docker-erlang28-v1",
+      "os": "linux",
+      "runtime_resolved_version": "28",
+      "tls_backend": {
+        "name": "OTP ssl",
+        "version": "11.6.0.7"
+      }
+    },
+    "language": "erlang",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "28",
+    "target": "erlang-httpc"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "5jSHH5mODVJ2jSJSKvyhMlmoPnU=",
+      "tlsClientExtensionsSha1": "KpE4QlWJ4r/Ar0iq+5JRYuzwxWE=",
+      "tlsClientExtensionsSha1Le": "sZ/636RA7BqLK6o6/wRZAnD12JY="
+    }
+  ],
+  "record_id": "868dbb783a50f164fdac12de",
+  "schema_version": 1
+}

@@ -18,6 +18,7 @@ def distro() -> str:
 
 
 def main() -> None:
+    verify = os.environ.get('FPDB_TLS_VERIFY') != 'false'
     kind, endpoint = sys.argv[1:]
     if not endpoint.startswith('https://'):
         raise ValueError('HTTPS required')
@@ -28,7 +29,7 @@ def main() -> None:
             session.trust_env = False
             response = session.get(endpoint, headers={'Accept': 'application/json', 'Connection': 'close'},
                                    timeout=25, allow_redirects=False,
-                                   verify=os.environ.get('FPDB_LOCAL_CA', True))
+                                   verify=os.environ.get('FPDB_LOCAL_CA', True) if verify else False)
             response.raise_for_status()
             echo = response.json()
         version = requests.__version__
@@ -42,6 +43,8 @@ def main() -> None:
                '--header', 'Connection: close']
         if kind == 'curl-http1':
             cmd += ['--http1.1']
+        if not verify:
+            cmd += ['--insecure']
         if os.environ.get('FPDB_LOCAL_CA'):
             cmd += ['--cacert', os.environ['FPDB_LOCAL_CA']]
         cmd += [endpoint]
@@ -56,6 +59,7 @@ def main() -> None:
     print(json.dumps({
         'runtime_version': platform.python_version() if kind == 'requests' else 'system',
         'client_version': 'system',
+        'verify': verify,
         'environment': {'os': platform.system().lower(), 'arch': platform.machine().lower(),
                         'image': os.getenv('FPDB_IMAGE_LABEL', distro()), 'tls_backend': backend, 'dependencies': dependencies},
         'echo': echo,

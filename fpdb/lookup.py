@@ -45,6 +45,8 @@ def lookup(root: Path, supplied: dict[str, str], limit: int = 100,
                 "client_version": entry.get("client_version"), "platform": entry.get("platform"),
                 "environment": entry.get("environment"),
             }
+            if "verify" in entry:
+                identity["verify"] = entry["verify"]
             key = canonical(identity)
             current = candidates.get(key)
             if current is not None and matched < current["matched_fields"]:

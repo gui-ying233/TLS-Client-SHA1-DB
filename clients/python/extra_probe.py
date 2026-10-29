@@ -12,13 +12,16 @@ import sys
 from typing import AsyncIterator, ClassVar
 
 HEADERS = {'Accept': 'application/json', 'Connection': 'close'}
+VERIFY = os.environ.get('FPDB_TLS_VERIFY') != 'false'
 
 
 def fetch(name: str, endpoint: str) -> object:
     if name == 'urllib3':
         import urllib3
         ca = os.environ.get('FPDB_LOCAL_CA')
-        if ca:
+        if not VERIFY:
+            pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25), cert_reqs=ssl.CERT_NONE)
+        elif ca:
             pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25), ca_certs=ca)
         else:
             pool = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(total=25))
@@ -35,7 +38,8 @@ def fetch(name: str, endpoint: str) -> object:
         async def aiohttp_request() -> object:
             timeout = aiohttp.ClientTimeout(total=25)
             local_ca = os.environ.get('FPDB_LOCAL_CA')
-            connector = aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=local_ca)) if local_ca else None
+            connector = (aiohttp.TCPConnector(ssl=False) if not VERIFY else
+                         aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=local_ca)) if local_ca else None)
             async with aiohttp.ClientSession(timeout=timeout, trust_env=False, connector=connector) as session:
                 async with session.get(endpoint, headers=HEADERS, allow_redirects=False) as response:
                     response.raise_for_status()
@@ -48,6 +52,9 @@ def fetch(name: str, endpoint: str) -> object:
         curl = pycurl.Curl()
         try:
             curl.setopt(pycurl.URL, endpoint)
+            if not VERIFY:
+                curl.setopt(pycurl.SSL_VERIFYPEER, 0)
+                curl.setopt(pycurl.SSL_VERIFYHOST, 0)
             if os.environ.get('FPDB_LOCAL_CA'):
                 curl.setopt(pycurl.CAINFO, os.environ['FPDB_LOCAL_CA'])
             # Match the identifier used by the working LWP probe; keep pycurl's TLS stack.
@@ -74,6 +81,7 @@ def fetch(name: str, endpoint: str) -> object:
             try:
                 request = HTTPRequest(endpoint, method='GET', headers=HEADERS,
                                       request_timeout=25, follow_redirects=False,
+                                      validate_cert=VERIFY,
                                       ca_certs=os.environ.get('FPDB_LOCAL_CA'))
                 response = await client.fetch(request, raise_error=True)
                 return json.loads(response.body)
@@ -103,13 +111,17 @@ def fetch(name: str, endpoint: str) -> object:
             def on_failure(self, failure: Failure) -> None:
                 type(self).failure = failure.getErrorMessage()[:350]
         # No robots.txt fetch, proxy middleware, redirects or retry connections.
-        crawler = CrawlerProcess(settings={
+        settings: dict[str, object] = {
             'LOG_ENABLED': False, 'ROBOTSTXT_OBEY': False, 'RETRY_ENABLED': False,
             'REDIRECT_ENABLED': False, 'HTTPPROXY_ENABLED': False,
             'COOKIES_ENABLED': False, 'TELNETCONSOLE_ENABLED': False,
             'CONCURRENT_REQUESTS': 1, 'DOWNLOAD_TIMEOUT': 25,
             'DEPTH_LIMIT': 1,
-        })
+        }
+        if not VERIFY:
+            settings['DOWNLOAD_VERIFY_CERTIFICATES'] = False
+            settings['DOWNLOADER_CLIENTCONTEXTFACTORY'] = 'scrapy.core.downloader.contextfactory.ScrapyClientContextFactory'
+        crawler = CrawlerProcess(settings=settings)
         crawler.crawl(OneRequest)
         crawler.start(stop_after_crawl=True)
         if OneRequest.result is None:
@@ -142,6 +154,7 @@ def main() -> None:
     echo = fetch(name, endpoint)
     print(json.dumps({
         'runtime_version': platform.python_version(), 'client_version': actual,
+        'verify': False if name == 'scrapy' else VERIFY,
         'environment': {'os': platform.system().lower(), 'arch': platform.machine().lower(),
                         'tls_backend': {'name': backend_name, 'version': backend_version},
                         'dependencies': dependencies}, 'echo': echo}, ensure_ascii=False))

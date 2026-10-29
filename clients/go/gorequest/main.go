@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,11 +15,15 @@ import (
 )
 
 func main() {
+	verify := os.Getenv("FPDB_TLS_VERIFY") != "false"
 	version := dependencyVersion("github.com/parnurzeal/gorequest")
 	if len(os.Args) != 3 || os.Args[1] != version || !strings.HasPrefix(os.Args[2], "https://") {
 		panic("usage: fpdb-gorequest 0.2.17 HTTPS_URL")
 	}
 	agent := gorequest.New()
+	if !verify {
+		agent.Transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 	agent.Transport.Proxy = nil
 	agent.Transport.DisableKeepAlives = true
 	agent.Client.Timeout = 25 * time.Second
@@ -35,7 +40,7 @@ func main() {
 		panic(err)
 	}
 	payload := map[string]interface{}{
-		"runtime_version": strings.TrimPrefix(runtime.Version(), "go"), "client_version": version,
+		"runtime_version": strings.TrimPrefix(runtime.Version(), "go"), "client_version": version, "verify": verify,
 		"environment": map[string]interface{}{
 			"os": runtime.GOOS, "arch": runtime.GOARCH,
 			"tls_backend":  map[string]string{"name": "crypto/tls", "version": runtime.Version()},

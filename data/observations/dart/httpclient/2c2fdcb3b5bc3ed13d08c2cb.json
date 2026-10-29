@@ -1,0 +1,46 @@
+{
+  "case_id": "b23c273723adb3bcf223ca2e",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "Z5hJp4rGfwSOBwFfibDtLAP5rkI=",
+      "tlsClientExtensionsSha1": "IDS2jshLLK/HGrjct4bpWAlzt4s=",
+      "tlsClientExtensionsSha1Le": "f0GI4lWgjQCmrfuxp8ErVr/D19M=",
+      "tlsClientHelloLength": 242,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "httpclient",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "os": "linux",
+      "runtime_resolved_version": "3.9.4",
+      "tls_backend": {
+        "name": "dart:io SecureSocket",
+        "version": "3.9.4"
+      }
+    },
+    "language": "dart",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.9.4",
+    "target": "dart-httpclient",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "Z5hJp4rGfwSOBwFfibDtLAP5rkI=",
+      "tlsClientExtensionsSha1": "IDS2jshLLK/HGrjct4bpWAlzt4s=",
+      "tlsClientExtensionsSha1Le": "f0GI4lWgjQCmrfuxp8ErVr/D19M="
+    }
+  ],
+  "record_id": "2c2fdcb3b5bc3ed13d08c2cb",
+  "schema_version": 1
+}

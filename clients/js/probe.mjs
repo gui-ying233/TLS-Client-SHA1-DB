@@ -3,6 +3,8 @@ const deno = typeof globalThis.Deno !== 'undefined';
 const bun = !deno && typeof globalThis.Bun !== 'undefined';
 const runtime = deno ? 'deno' : bun ? 'bun' : 'node';
 const args = deno ? Deno.args : process.argv.slice(2);
+const verify = deno ? !args.includes('--fpdb-no-verify') : process.env.FPDB_TLS_VERIFY !== 'false';
+if (!verify && runtime === 'node') process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const [client, expected, endpoint] = args;
 if (!client || !expected || !endpoint?.startsWith('https://')) {
   throw new Error('Usage: probe.[mjs|ts] CLIENT VERSION HTTPS_URL');
@@ -29,10 +31,11 @@ const response = await fetch(endpoint, {
   headers: { Accept: 'application/json' },
   redirect: 'manual',
   signal: AbortSignal.timeout(25000),
+  ...(!verify && bun ? {tls:{rejectUnauthorized:false}} : {}),
 });
 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 const echo = await response.json();
 console.log(JSON.stringify({
-  runtime_version: runtimeVersion, client_version: actual,
+  runtime_version: runtimeVersion, client_version: actual, verify,
   environment: { os, arch, tls_backend: backend, dependencies }, echo,
 }));

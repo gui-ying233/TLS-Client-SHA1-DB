@@ -21,6 +21,10 @@ def _check_record(record: JSONObject) -> Record:
     requested = {key: identity[key] for key in (
         "target", "language", "client", "runtime_version", "client_version",
         "platform", "runner", "revision")}
+    if "verify" in identity:
+        if identity["verify"] is not False:
+            raise DataError("verify must be false or omitted for the client's default")
+        requested["verify"] = False
     if record.get("case_id") != digest(requested):
         raise DataError("case_id does not match the requested configuration")
     environment = identity.get("environment")

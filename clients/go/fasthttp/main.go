@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/valyala/fasthttp"
@@ -12,6 +13,7 @@ import (
 )
 
 var clientVersion = dependencyVersion("github.com/valyala/fasthttp")
+var verify = os.Getenv("FPDB_TLS_VERIFY") != "false"
 
 const depName = "fasthttp"
 
@@ -22,7 +24,7 @@ func output(body []byte) {
 	}
 	v := strings.TrimPrefix(runtime.Version(), "go")
 	value := map[string]interface{}{
-		"runtime_version": v, "client_version": clientVersion,
+		"runtime_version": v, "client_version": clientVersion, "verify": verify,
 		"environment": map[string]interface{}{
 			"os": runtime.GOOS, "arch": runtime.GOARCH,
 			"tls_backend":  map[string]string{"name": "crypto/tls", "version": runtime.Version()},
@@ -46,6 +48,9 @@ func endpoint() string {
 func main() {
 	uri := endpoint()
 	client := &fasthttp.Client{ReadTimeout: 25 * time.Second, WriteTimeout: 25 * time.Second, MaxConnsPerHost: 1, MaxIdemponentCallAttempts: 1}
+	if !verify {
+		client.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 	request := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(request)
 	response := fasthttp.AcquireResponse()

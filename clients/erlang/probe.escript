@@ -4,9 +4,13 @@
 main(["stdlib", Url]) ->
     {ok, _} = application:ensure_all_started(ssl),
     {ok, _} = application:ensure_all_started(inets),
+    Verify = os:getenv("FPDB_TLS_VERIFY") =/= "false",
+    TLSOptions = case Verify of
+        true -> [{verify, verify_peer}, {cacertfile, "/etc/ssl/certs/ca-certificates.crt"}];
+        false -> [{verify, verify_none}]
+    end,
     Options = [{timeout, 25000}, {autoredirect, false},
-               {ssl, [{verify, verify_peer},
-                      {cacertfile, "/etc/ssl/certs/ca-certificates.crt"}]}],
+               {ssl, TLSOptions}],
     {ok, {{_, Status, _}, _, Body}} = httpc:request(
         get, {Url, [{"accept", "application/json"}, {"connection", "close"}]},
         Options, [{body_format, binary}]),
@@ -15,6 +19,7 @@ main(["stdlib", Url]) ->
     Payload = #{
         <<"runtime_version">> => list_to_binary(erlang:system_info(otp_release)),
         <<"client_version">> => <<"stdlib">>,
+        <<"verify">> => Verify,
         <<"environment">> => #{
             <<"os">> => <<"linux">>,
             <<"arch">> => list_to_binary(erlang:system_info(system_architecture)),

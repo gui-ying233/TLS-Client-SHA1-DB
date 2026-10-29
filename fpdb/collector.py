@@ -76,6 +76,8 @@ def _echo_shape(payload: JSONValue) -> dict[str, str | list[str]]:
 
 
 def _require_environment(payload: JSONObject, case: Case) -> Environment:
+    if case.get("verify") is False and payload.get("verify") is not False:
+        raise DataError("Adapter must confirm verify=false")
     environment = payload.get("environment")
     if not isinstance(environment, dict):
         raise DataError("Adapter must report environment object")
@@ -119,7 +121,7 @@ def collect(root: Path, case: Case) -> Record | None:
     if not target:
         raise DataError("Unknown enabled target")
     # Rebuild the case server-side so an injected matrix value cannot choose an arbitrary command.
-    expected = make_case(target, case["runtime_version"], case["client_version"])
+    expected = make_case(target, case["runtime_version"], case["client_version"], verify=case.get("verify"))
     if expected != case:
         raise DataError("Matrix case does not match configured target")
 
@@ -157,6 +159,7 @@ def collect(root: Path, case: Case) -> Record | None:
         if not isinstance(value, str):
             raise DataError("adapter.env values must be strings")
         runtime_env[key] = value.format_map(replacements)
+    runtime_env["FPDB_TLS_VERIFY"] = "false" if case.get("verify") is False else "default"
 
     prepare = adapter.get("prepare", [])
     if prepare:
@@ -188,6 +191,9 @@ def collect(root: Path, case: Case) -> Record | None:
             return None
 
     command = _command(adapter["probe"], replacements)
+    if case["language"] == "deno" and case.get("verify") is False:
+        command.insert(2, "--unsafely-ignore-certificate-errors")
+        command.append("--fpdb-no-verify")
     observed: list[Fingerprint] = []
     joint_samples: list[Evidence] = []
     resolved_environment: Environment | None = None

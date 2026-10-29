@@ -155,7 +155,7 @@ def merge_observations(old: list[Fingerprint] | None, fresh: list[Fingerprint], 
 
 
 def record_identity(case: Case, resolved_environment: Environment) -> RecordIdentity:
-    return {
+    identity: RecordIdentity = {
         "target": case["target"],
         "language": case["language"],
         "client": case["client"],
@@ -166,6 +166,9 @@ def record_identity(case: Case, resolved_environment: Environment) -> RecordIden
         "revision": case["revision"],
         "environment": resolved_environment,
     }
+    if "verify" in case:
+        identity["verify"] = case["verify"]
+    return identity
 
 
 def record_path(root: Path, identity: RecordIdentity) -> Path:

@@ -1,0 +1,48 @@
+{
+  "case_id": "e91e44f6bde52edeeeac9456",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "4rub1TWb873iWBi4CL+Pp7GtUOg=",
+      "tlsClientExtensionsSha1": "r4LbdAkYlCvgy307Rh7AnowAfig=",
+      "tlsClientExtensionsSha1Le": "lrjVvXnzqHFwGxOuaM2uQw+KV4w=",
+      "tlsClientHelloLength": 399,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "wget",
+    "client_version": "system",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "wget": "GNU Wget 1.21.4 built on linux-gnu."
+      },
+      "os": "linux",
+      "runtime_resolved_version": "24.04",
+      "tls_backend": {
+        "name": "OPENSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)"
+      }
+    },
+    "language": "ubuntu",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "system",
+    "target": "ubuntu-wget"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "4rub1TWb873iWBi4CL+Pp7GtUOg=",
+      "tlsClientExtensionsSha1": "r4LbdAkYlCvgy307Rh7AnowAfig=",
+      "tlsClientExtensionsSha1Le": "lrjVvXnzqHFwGxOuaM2uQw+KV4w="
+    }
+  ],
+  "record_id": "b507a479e8ff02342da4a583",
+  "schema_version": 1
+}

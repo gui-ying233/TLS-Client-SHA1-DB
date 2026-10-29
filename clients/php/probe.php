@@ -2,9 +2,10 @@
 if ($argc !== 4) throw new RuntimeException('usage: probe.php stream|curl stdlib URL');
 [$script,$client,$expected,$endpoint]=$argv;
 if ($expected !== 'stdlib') throw new RuntimeException('Unexpected client version');
+$verify=getenv('FPDB_TLS_VERIFY')!=='false';
 if ($client === 'stream') {
  $context=stream_context_create(['http'=>['header'=>"Accept: application/json\r\nConnection: close\r\n",'timeout'=>25,'follow_location'=>0,'ignore_errors'=>true],
-  'ssl'=>['verify_peer'=>true,'verify_peer_name'=>true]]);
+  'ssl'=>['verify_peer'=>$verify,'verify_peer_name'=>$verify]]);
  $raw=file_get_contents($endpoint,false,$context);
  if($raw === false) throw new RuntimeException('HTTP stream failure');
  if(!preg_match('/^HTTP\/\S+ 2\d\d/', $http_response_header[0]??''))throw new RuntimeException('HTTP non-2xx');
@@ -13,13 +14,14 @@ if ($client === 'stream') {
  $ch=curl_init($endpoint);
  curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_HTTPHEADER=>['Accept: application/json','Connection: close'],
   CURLOPT_TIMEOUT=>25,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_PROXY=>'',CURLOPT_NOPROXY=>'*']);
+ if(!$verify)curl_setopt_array($ch,[CURLOPT_SSL_VERIFYPEER=>false,CURLOPT_SSL_VERIFYHOST=>0]);
  $raw=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);
  if($raw === false || $code<200 || $code>=300)throw new RuntimeException('curl failure: '.curl_error($ch));
  $info=curl_version();$backend=$info['ssl_version']??'unknown';$backendVersion=$backend;
  curl_close($ch);
 } else throw new RuntimeException('Unknown PHP client');
 $echo=json_decode($raw,true,512,JSON_THROW_ON_ERROR);
-print json_encode(['runtime_version'=>PHP_VERSION,'client_version'=>'stdlib',
+print json_encode(['runtime_version'=>PHP_VERSION,'client_version'=>'stdlib','verify'=>$verify,
 'environment'=>['os'=>PHP_OS_FAMILY,'arch'=>php_uname('m'),
  'tls_backend'=>['name'=>$backend,'version'=>$backendVersion],
  'dependencies'=>$client==='curl'?['libcurl'=>(string)($info['version']??'unknown')]:(object)[]],

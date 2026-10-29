@@ -3,17 +3,26 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+import os
 import platform
 import ssl
 import sys
 import urllib.request
+
+VERIFY = os.environ.get("FPDB_TLS_VERIFY") != "false"
 
 
 def get_echo(client: str, endpoint: str) -> object:
     headers = {"Accept": "application/json", "Connection": "close"}
     if client == "urllib":
         # No proxy; prevent a middlebox from replacing our TLS ClientHello.
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        handlers: list[urllib.request.BaseHandler] = [urllib.request.ProxyHandler({})]
+        if not VERIFY:
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            handlers.append(urllib.request.HTTPSHandler(context=context))
+        opener = urllib.request.build_opener(*handlers)
         request = urllib.request.Request(endpoint, headers={**headers, "User-Agent": "TLS-Client-SHA1-DB/1"})
         with opener.open(request, timeout=25) as response:
             return json.load(response)
@@ -22,13 +31,13 @@ def get_echo(client: str, endpoint: str) -> object:
         with requests.Session() as session:
             session.trust_env = False
             response = session.get(endpoint, headers=headers, timeout=25,
-                                   verify=__import__('os').environ.get('FPDB_LOCAL_CA', True))
+                                   verify=os.environ.get('FPDB_LOCAL_CA', True) if VERIFY else False)
             response.raise_for_status()
             return response.json()
     if client == "httpx":
         import httpx
         with httpx.Client(trust_env=False, http2=False, timeout=25,
-                          verify=__import__('os').environ.get('FPDB_LOCAL_CA', True)) as session:
+                          verify=os.environ.get('FPDB_LOCAL_CA', True) if VERIFY else False) as session:
             response = session.get(endpoint, headers=headers)
             response.raise_for_status()
             return response.json()
@@ -62,6 +71,7 @@ def main() -> None:
     payload = {
         "runtime_version": runtime,
         "client_version": actual,
+        "verify": VERIFY,
         "environment": {
             "os": platform.system().lower(),
             "arch": platform.machine().lower(),
