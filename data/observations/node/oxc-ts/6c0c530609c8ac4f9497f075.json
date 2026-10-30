@@ -1,0 +1,49 @@
+{
+  "case_id": "955cb037ff88d8468a65e241",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ=",
+      "tlsClientHelloLength": 378,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "oxc-ts",
+    "client_version": "1.0.1",
+    "environment": {
+      "arch": "x64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "@oxc-node/cli": "1.0.1"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "22.0.0",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.0.13+quic"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "22.0.0",
+    "target": "node-oxc-ts",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "JZtiTn8H/ntxORk+XXvU2EvNoz8=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ="
+    }
+  ],
+  "record_id": "6c0c530609c8ac4f9497f075",
+  "schema_version": 1
+}
