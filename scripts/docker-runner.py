@@ -17,7 +17,8 @@ import subprocess
 import sys
 import tarfile
 import urllib.request
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed, wait, FIRST_COMPLETED
 from contextlib import nullcontext
 from collections.abc import Iterator
 from pathlib import Path
@@ -27,7 +28,7 @@ from typing import ContextManager
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from fpdb.planner import load_config, plan
+from fpdb.planner import completed_case_ids, load_config, plan
 from fpdb.persistence import persist
 from fpdb.core import json_object
 from fpdb.schema import Case, Target
@@ -264,6 +265,7 @@ class Arguments(argparse.Namespace):
     jobs: int
     max_cases: int
     parallel: int
+    plan_parallel: int
     recheck: bool
     list_targets: bool
     reindex: bool
@@ -277,6 +279,8 @@ def main() -> int:
     parser.add_argument('--jobs', type=int, default=4, help='Planner batch budget (1..200)')
     parser.add_argument('--max-cases', type=int, default=32, help='Maximum cases per local invocation')
     parser.add_argument('--parallel', type=int, default=1, help='Concurrent Case workers (1..16; default 1)')
+    parser.add_argument('--plan-parallel', type=int, default=32,
+                        help='Concurrent target planners (1..64; per-host network cap is separate)')
     parser.add_argument('--recheck', action='store_true', help='Explicitly repeat already collected cases')
     parser.add_argument('--list-targets', action='store_true')
     parser.add_argument('--reindex', action='store_true', help='Rebuild index from remaining observations')
@@ -307,6 +311,8 @@ def main() -> int:
         parser.error('--jobs must be 1..200 and --max-cases must be 1..2000')
     if not 1 <= args.parallel <= 16:
         parser.error('--parallel must be 1..16')
+    if not 1 <= args.plan_parallel <= 64:
+        parser.error('--plan-parallel must be 1..64')
     inbox = STATE / 'inbox'
     inbox.mkdir(parents=True, exist_ok=True)
     # Never let two separate Docker invocations mutate the same inbox/data tree.
@@ -324,56 +330,101 @@ def main() -> int:
         for p in inbox.iterdir():
             if p.suffix in ('.json', '.skip'):
                 p.unlink()
-    queues: list[tuple[Target, Iterator[Case]]] = []
+    # The snapshot is stable until all workers finish and persist() runs.
+    scan_start = time.perf_counter()
+    if not args.recheck:
+        print('scanning completed Case IDs...', flush=True)
+    completed = set() if args.recheck else completed_case_ids(ROOT)
+    print(f'completed_case_ids={len(completed)} scan_seconds={time.perf_counter() - scan_start:.2f}', flush=True)
     discovery_errors = 0
-    for target in selected:
-        try:
-            pending = plan(ROOT, mode=args.mode, target_filter=target['id'],
-                           recheck=args.recheck, batch_size=args.jobs)
-            queues.append((target, iter(pending)))
-        except (OSError, ValueError, KeyError) as exc:
-            discovery_errors += 1
-            print(f'FAILED planning target={target["id"]}: {exc}', file=sys.stderr, flush=True)
-    # Interleave targets so a large cross-product cannot starve other clients.
-    work: list[tuple[Target, Case]] = []
-    while len(work) < args.max_cases and queues:
-        next_queues: list[tuple[Target, Iterator[Case]]] = []
-        for target, pending in queues:
-            try:
-                case = next(pending)
-            except StopIteration:
-                continue
-            work.append((target, case))
-            next_queues.append((target, pending))
-            if len(work) >= args.max_cases:
-                break
-        queues = next_queues
-    print(f'planned_cases={len(work)} targets={len(selected)} mode={args.mode} parallel={args.parallel}', flush=True)
+    planned = 0
     succeeded, failed = 0, 0
+    print(f'planning targets={len(selected)} planners={args.plan_parallel} '
+          f'network_per_host={os.environ.get("FPDB_VERSION_PER_HOST", "4")}', flush=True)
+
+    def plan_target(target: Target) -> list[Case]:
+        return plan(ROOT, mode=args.mode, target_filter=target['id'],
+                    recheck=args.recheck, batch_size=args.jobs,
+                    completed_ids=completed, config=config)
 
     def worker(i: int, target: Target, case: Case) -> bool:
         verification = 'verify=false' if case.get('verify') is False else 'default'
-        print(f'[{i}/{len(work)}] {target["id"]} {case["runtime_version"]} / {case["client_version"]} {verification}', flush=True)
+        print(f'[{i}] {target["id"]} {case["runtime_version"]} / {case["client_version"]} {verification}', flush=True)
         try:
             ok = collect_one(case, target, inbox)
         except (OSError, ValueError, subprocess.CalledProcessError) as exc:
             print(f'FAILED setup case={case["id"]}: {exc}', file=sys.stderr, flush=True)
             ok = False
-        print(f'[{i}/{len(work)}] {"OK" if ok else "FAILED"} case={case["id"]}', flush=True)
+        print(f'[{i}] {"OK" if ok else "FAILED"} case={case["id"]}', flush=True)
         return ok
 
-    with ThreadPoolExecutor(max_workers=args.parallel) as pool:
-        tasks = [pool.submit(worker, i, target, case)
-                 for i, (target, case) in enumerate(work, start=1)]
-        for future in as_completed(tasks):
-            try:
-                ok = future.result()
-            except Exception as exc:
-                # Do not lose other successful artifacts due to one unexpected error.
-                print(f'FAILED unexpected worker error: {exc!r}', file=sys.stderr, flush=True)
-                ok = False
-            succeeded += bool(ok)
-            failed += not ok
+    def record_result(future: Future[bool]) -> None:
+        nonlocal succeeded, failed
+        try:
+            ok = future.result()
+        except Exception as exc:
+            # Do not lose other successful artifacts due to one unexpected error.
+            print(f'FAILED unexpected worker error: {exc!r}', file=sys.stderr, flush=True)
+            ok = False
+        succeeded += bool(ok)
+        failed += not ok
+
+    # Planning runs ahead concurrently. We only wait for each target when its
+    # turn arrives, preserving the original deterministic round-robin order.
+    # Collected cases execute immediately; no full-matrix planning barrier.
+    with ThreadPoolExecutor(max_workers=args.plan_parallel) as planners, \
+         ThreadPoolExecutor(max_workers=args.parallel) as pool:
+        planned_futures = [(t, planners.submit(plan_target, t)) for t in selected]
+        queues: list[tuple[Target, Future[list[Case]], Iterator[Case] | None]] = [
+            (t, f, None) for t, f in planned_futures
+        ]
+        examined: set[Future[list[Case]]] = set()
+        inflight: set[Future[bool]] = set()
+        max_inflight = args.parallel * 2
+
+        def planning_error(target: Target, exc: Exception) -> None:
+            nonlocal discovery_errors
+            discovery_errors += 1
+            print(f'FAILED planning target={target["id"]}: {exc}', file=sys.stderr, flush=True)
+
+        while planned < args.max_cases and queues:
+            next_queues: list[tuple[Target, Future[list[Case]], Iterator[Case] | None]] = []
+            for target, future, pending in queues:
+                if pending is None:
+                    examined.add(future)
+                    try:
+                        pending = iter(future.result())
+                    except (OSError, ValueError, KeyError) as exc:
+                        planning_error(target, exc)
+                        continue
+                try:
+                    case = next(pending)
+                except StopIteration:
+                    continue
+                planned += 1
+                inflight.add(pool.submit(worker, planned, target, case))
+                next_queues.append((target, future, pending))
+                if len(inflight) >= max_inflight:
+                    done, _ = wait(inflight, return_when=FIRST_COMPLETED)
+                    for finished in done:
+                        inflight.remove(finished)
+                        record_result(finished)
+                if planned >= args.max_cases:
+                    break
+            queues = next_queues
+
+        # Like the old runner, report errors from every selected target, even
+        # when --max-cases was reached before its queue was needed.
+        for target, future in planned_futures:
+            if future not in examined:
+                try:
+                    future.result()
+                except (OSError, ValueError, KeyError) as exc:
+                    planning_error(target, exc)
+        print(f'planned_cases={planned} targets={len(selected)} mode={args.mode} '
+              f'parallel={args.parallel}', flush=True)
+        for future in as_completed(inflight):
+            record_result(future)
     artifacts = list(inbox.rglob('*.json'))
     if artifacts:
         changed, processed = persist(ROOT, inbox)
@@ -384,7 +435,7 @@ def main() -> int:
     else:
         for p in inbox.glob('*.skip'):
             p.unlink()
-    print(f'summary planned={len(work)} collected={succeeded} failed={failed} planning_errors={discovery_errors}', flush=True)
+    print(f'summary planned={planned} collected={succeeded} failed={failed} planning_errors={discovery_errors}', flush=True)
     print('Changes are local. Review and commit/push them yourself.', flush=True)
     return 1 if failed or discovery_errors else 0
 

@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 from typing import Literal, TypeAlias, cast
 
 from fpdb.core import DataError, json_object
+from fpdb.version_io import go_minimum_cached, host_slot, once_discover
 from fpdb.schema import JSONValue, VersionSource
 
 VersionKey: TypeAlias = tuple[tuple[int, int | str], ...]
@@ -31,14 +32,16 @@ def _get_json(url: str) -> JSONValue:
     token = os.environ.get("GITHUB_TOKEN")
     if token and urllib.parse.urlsplit(url).hostname == "api.github.com":
         request.add_header("Authorization", f"Bearer {token}")
-    with urllib.request.urlopen(request, timeout=25) as response:
-        return cast(JSONValue, json.load(response))
+    with host_slot(url):
+        with urllib.request.urlopen(request, timeout=25) as response:
+            return cast(JSONValue, json.load(response))
 
 
 def _get_text(url: str) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "TLS-Client-SHA1-DB/1"})
-    with urllib.request.urlopen(request, timeout=25) as response:
-        return response.read().decode("utf-8")
+    with host_slot(url):
+        with urllib.request.urlopen(request, timeout=25) as response:
+            return response.read().decode("utf-8")
 
 
 def _select(data: JSONValue, path: str) -> JSONValue:
@@ -56,6 +59,12 @@ def _select(data: JSONValue, path: str) -> JSONValue:
 
 
 def discover(source: VersionSource) -> list[str]:
+    # Single-flight memoization: concurrent targets share one in-progress fetch.
+    key = json.dumps(source, sort_keys=True, separators=(",", ":"))
+    return once_discover(key, lambda: _discover_uncached(source))
+
+
+def _discover_uncached(source: VersionSource) -> list[str]:
     values: list[JSONValue]
     kind = source.get("type")
     if kind == "static":
@@ -255,9 +264,8 @@ def minimum_runtime(source: VersionSource, client_version: str) -> str | None:
 @cache
 def _go_minimum(package: str, client_version: str) -> str | None:
     escaped = "".join("!" + char.lower() if char.isupper() else char for char in package)
-    manifest = _get_text(f"https://proxy.golang.org/{escaped}/@v/v{client_version}.mod")
-    match = re.search(r"(?m)^go\s+([0-9]+\.[0-9]+(?:\.[0-9]+)?)\s*(?://[^\n]*)?$", manifest)
-    return match.group(1) if match else None
+    url = f"https://proxy.golang.org/{escaped}/@v/v{client_version}.mod"
+    return go_minimum_cached(package, client_version, lambda: _get_text(url))
 
 
 def _feed_version(entry: dict[str, JSONValue]) -> str:

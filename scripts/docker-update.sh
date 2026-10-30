@@ -12,6 +12,7 @@ if [[ "${FPDB_DOCKER_SKIP_BUILD:-0}" != 1 ]]; then
 fi
 extra=()
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then extra+=(-e GITHUB_TOKEN); fi
+if [[ -n "${FPDB_VERSION_PER_HOST:-}" ]]; then extra+=(-e FPDB_VERSION_PER_HOST); fi
 # Git Bash (MSYS) rewrites Linux container paths such as /repo to
 # C:/Program Files/Git/repo. Pass native Windows bind paths and disable
 # MSYS argument conversion for this one Docker invocation.

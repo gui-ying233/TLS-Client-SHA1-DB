@@ -141,8 +141,9 @@ def _pairs(target: Target, mode: str, active_runtime_count: int) -> list[tuple[s
 
 
 def plan(root: Path, *, mode: str, target_filter: str = "",
-         recheck: bool = False, batch_size: int | None = None) -> list[Case]:
-    config = load_config(root)
+         recheck: bool = False, batch_size: int | None = None,
+         completed_ids: set[str] | None = None, config: Config | None = None) -> list[Case]:
+    config = config if config is not None else load_config(root)
     if not config["profiles"].get(mode, {}).get("enabled", False):
         raise DataError(f"Profile {mode!r} is disabled in config.json")
     active_runtime_count = int(config["execution"]["active_runtime_count"])
@@ -150,7 +151,8 @@ def plan(root: Path, *, mode: str, target_filter: str = "",
     limit = int(batch_size if batch_size is not None else config["execution"]["batch_size"])
     if not (1 <= limit <= max_matrix_size):
         raise DataError(f"batch_size must be between 1 and {max_matrix_size}")
-    completed: set[str] = completed_case_ids(root) if not recheck else set()
+    completed: set[str] = (set() if recheck else completed_ids
+                           if completed_ids is not None else completed_case_ids(root))
     seen: set[str] = set()
     cases: list[Case] = []
     verify_modes = config.get("tls_verify_modes", ["default"])
