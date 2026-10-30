@@ -1,0 +1,49 @@
+{
+  "case_id": "7bfdd7f19c81d703839e1af3",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "EPPWGkMwL/+VHBbDlFeYFF2S3W0=",
+      "tlsClientExtensionsSha1": "ZhmeBkCahFYuc3rQrwdmeOMoaFQ=",
+      "tlsClientExtensionsSha1Le": "ROXsunPGFVO8S1Y2QomOyjXWY+8=",
+      "tlsClientHelloLength": 1523,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "urllib3",
+    "client_version": "2.1.0",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "urllib3": "2.1.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.15.2",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.5.9 29 Sep 2026"
+      }
+    },
+    "language": "python",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.15.2",
+    "target": "python-urllib3",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "EPPWGkMwL/+VHBbDlFeYFF2S3W0=",
+      "tlsClientExtensionsSha1": "ZhmeBkCahFYuc3rQrwdmeOMoaFQ=",
+      "tlsClientExtensionsSha1Le": "ROXsunPGFVO8S1Y2QomOyjXWY+8="
+    }
+  ],
+  "record_id": "191fed1675ad58db7e30316c",
+  "schema_version": 1
+}

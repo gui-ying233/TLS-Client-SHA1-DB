@@ -1,0 +1,72 @@
+{
+  "case_id": "b5d68a8a0571504a737aa6b4",
+  "evidence": [
+    {
+      "count": 4,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "z756bn+x21PiebYy319nCdFpEYo=",
+      "tlsClientExtensionsSha1": "g7CUyX4IGfVWT4opL1PEzZ2U1EQ=",
+      "tlsClientExtensionsSha1Le": "29pLmat8Ljr3wiUemHNTUe0plFA=",
+      "tlsClientHelloLength": 556,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 3,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "z756bn+x21PiebYy319nCdFpEYo=",
+      "tlsClientExtensionsSha1": "M0G+OspD/xblYCuewmNntzf3ayw=",
+      "tlsClientExtensionsSha1Le": "P1zYSzNBfI+jMRDwEW74yx0EBM0=",
+      "tlsClientHelloLength": 508,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 3,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "z756bn+x21PiebYy319nCdFpEYo=",
+      "tlsClientExtensionsSha1": "g7CUyX4IGfVWT4opL1PEzZ2U1EQ=",
+      "tlsClientExtensionsSha1Le": "29pLmat8Ljr3wiUemHNTUe0plFA=",
+      "tlsClientHelloLength": 524,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "ts",
+    "client_version": "stdlib",
+    "environment": {
+      "arch": "x64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {},
+      "os": "linux",
+      "runtime_resolved_version": "1.3.0",
+      "tls_backend": {
+        "name": "BoringSSL",
+        "version": "bundled"
+      }
+    },
+    "language": "bun",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.3.0",
+    "target": "bun-ts",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "z756bn+x21PiebYy319nCdFpEYo=",
+      "tlsClientExtensionsSha1": "M0G+OspD/xblYCuewmNntzf3ayw=",
+      "tlsClientExtensionsSha1Le": "P1zYSzNBfI+jMRDwEW74yx0EBM0="
+    },
+    {
+      "tlsClientCiphersSha1": "z756bn+x21PiebYy319nCdFpEYo=",
+      "tlsClientExtensionsSha1": "g7CUyX4IGfVWT4opL1PEzZ2U1EQ=",
+      "tlsClientExtensionsSha1Le": "29pLmat8Ljr3wiUemHNTUe0plFA="
+    }
+  ],
+  "record_id": "1a67fa089590b6501333ab5c",
+  "schema_version": 1
+}

@@ -1,0 +1,48 @@
+{
+  "case_id": "2acac2713e580064879a29e1",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "v+AjeMob5TzYg9mc22KHhwgxWM8=",
+      "tlsClientExtensionsSha1Le": "/gG5KBYfkoj48J2FyxR9rIFtzSI=",
+      "tlsClientHelloLength": 254,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "reqwest-rustls",
+    "client_version": "0.11.22",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "reqwest": "0.11.22"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.99.1",
+      "tls_backend": {
+        "name": "rustls",
+        "version": "0.21.12"
+      }
+    },
+    "language": "rust",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "stable",
+    "target": "rust-reqwest-rustls"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "v+AjeMob5TzYg9mc22KHhwgxWM8=",
+      "tlsClientExtensionsSha1Le": "/gG5KBYfkoj48J2FyxR9rIFtzSI="
+    }
+  ],
+  "record_id": "5d3feb05c14aa380a912f8ac",
+  "schema_version": 1
+}
