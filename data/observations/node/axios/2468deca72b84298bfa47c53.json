@@ -1,0 +1,49 @@
+{
+  "case_id": "f46a907981c6bb273608f90b",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "kXrN3VEKDdzz2cPKTQaKzpxVTxQ=",
+      "tlsClientExtensionsSha1": "M5Sm/2qrabCxy8tG1NIWsjf99Ug=",
+      "tlsClientExtensionsSha1Le": "C6UcGP66kPwR41Cyi/I/iPOzh/Q=",
+      "tlsClientHelloLength": 1582,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "axios",
+    "client_version": "1.21.0",
+    "environment": {
+      "arch": "x64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "axios": "1.21.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "24.22.1",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "3.5.9"
+      }
+    },
+    "language": "node",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "24.22.1",
+    "target": "node-axios",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "kXrN3VEKDdzz2cPKTQaKzpxVTxQ=",
+      "tlsClientExtensionsSha1": "M5Sm/2qrabCxy8tG1NIWsjf99Ug=",
+      "tlsClientExtensionsSha1Le": "C6UcGP66kPwR41Cyi/I/iPOzh/Q="
+    }
+  ],
+  "record_id": "2468deca72b84298bfa47c53",
+  "schema_version": 1
+}
