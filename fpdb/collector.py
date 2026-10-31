@@ -194,16 +194,26 @@ def collect(root: Path, case: Case) -> Record | None:
     prepare = adapter.get("prepare", [])
     if prepare:
         prepare_command = _command(prepare, replacements)
-        # Older Scrapy versions import private interfaces removed from newer
-        # dependencies. Constrain the dependencies while keeping the selected
-        # Scrapy version unchanged. Each case has its own temporary venv.
+        # Each Python case runs in a disposable venv. Preserve the exact Scrapy
+        # release while choosing compatible versions of its TLS dependencies.
         if (case['target'] == 'python-scrapy' and len(prepare_command) >= 3
                 and prepare_command[1:3] == ['-m', 'pip']):
             version = tuple(int(part) for part in case['client_version'].split('.'))
-            if version <= (2, 13, 3):
+            if version <= (2, 11, 1):
+                # Scrapy 2.10.1/2.11.0 require Twisted <23.8.0.
+                prepare_command.append('Twisted<23.8.0')
+            elif version <= (2, 13, 3):
                 prepare_command.append('Twisted==24.11.0')
             if version <= (2, 12, 0):
                 prepare_command.append('w3lib==2.2.1')
+            if version <= (2, 6, 2):
+                # Scrapy removed its SSLv3 references in 2.6.3.
+                prepare_command.extend(['pyOpenSSL==22.0.0', 'cryptography<38'])
+        # An old CLI range may otherwise resolve a newer core with incompatible
+        # loader hooks. Pin the real Oxc core to its matching CLI release.
+        if (case['target'] in ('node-oxc-ts', 'node-oxc-js')
+                and prepare_command[:2] == ['npm', 'install']):
+            prepare_command.append('@oxc-node/core@' + case['client_version'])
         prepare_input = None
         # Windows Git checkouts may expose CRLF .sh scripts to a Linux Docker
         # bind mount. Execute a LF-normalized copy over stdin; do not edit the

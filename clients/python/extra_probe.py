@@ -126,11 +126,29 @@ def fetch(name: str, endpoint: str) -> object:
         if not VERIFY:
             settings['DOWNLOAD_VERIFY_CERTIFICATES'] = False
             settings['DOWNLOADER_CLIENTCONTEXTFACTORY'] = 'scrapy.core.downloader.contextfactory.ScrapyClientContextFactory'
-        crawler = CrawlerProcess(settings=settings)
-        crawler.crawl(OneRequest)
-        # A single-shot probe process needs no OS signal handlers. Older
-        # Scrapy calls reactor._handleSignals(), removed in newer Twisted.
-        crawler.start(stop_after_crawl=True, install_signal_handlers=False)
+        if tuple(map(int, scrapy.__version__.split('.'))) <= (2, 5, 1):
+            # Old CrawlerProcess installs signal handlers in __init__, before
+            # start(install_signal_handlers=False) can disable them. Use the
+            # supported CrawlerRunner API for this single-request subprocess.
+            from scrapy.crawler import CrawlerRunner
+            from twisted.internet import reactor
+            runner = CrawlerRunner(settings=settings)
+            crawl_errors: list[str] = []
+            def launch() -> None:
+                d = runner.crawl(OneRequest)
+                def finish(result: object) -> None:
+                    if isinstance(result, Failure):
+                        crawl_errors.append(result.getErrorMessage())
+                    reactor.stop()
+                d.addBoth(finish)
+            reactor.callWhenRunning(launch)
+            reactor.run(installSignalHandlers=False)
+            if crawl_errors:
+                raise RuntimeError('Scrapy crawl failed: {}'.format(crawl_errors[0]))
+        else:
+            crawler = CrawlerProcess(settings=settings)
+            crawler.crawl(OneRequest)
+            crawler.start(stop_after_crawl=True, install_signal_handlers=False)
         if OneRequest.result is None:
             raise RuntimeError('Scrapy request failed: {}'.format(OneRequest.failure))
         return OneRequest.result
