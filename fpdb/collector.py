@@ -28,6 +28,31 @@ def _command(template: object, replacements: dict[str, str]) -> list[str]:
         raise DataError(f"Invalid adapter command placeholder: {exc}") from exc
 
 
+def _node_cli_entry(command: list[str], root: Path) -> list[str] | None:
+    """Resolve npm's declared CLI entry when a Windows bind mount cannot execute .bin.
+
+    Only known local probe executables are considered, and the resolved entry
+    must remain inside its package directory.
+    """
+    cli = Path(command[0]).name
+    package = {"tsx": "tsx", "oxnode": "@oxc-node/cli"}.get(cli)
+    if not package:
+        return None
+    directory = (root / "clients/js/node_modules" / package).resolve()
+    try:
+        meta = json.loads((directory / "package.json").read_text(encoding="utf-8"))
+        bins = meta.get("bin", {})
+        entry = bins.get(cli) if isinstance(bins, dict) else bins
+        if not isinstance(entry, str):
+            return None
+        binary = (directory / entry).resolve()
+        if not binary.is_relative_to(directory) or not binary.is_file():
+            return None
+        return ["node", str(binary), *command[1:]]
+    except (OSError, ValueError):
+        return None
+
+
 def _run(command: list[str], root: Path, timeout: int, environment: dict[str, str], *, retry_diagnostics: bool = False) -> JSONValue:
     is_oxnode = Path(command[0]).name == "oxnode"
     if is_oxnode:
@@ -42,10 +67,15 @@ def _run(command: list[str], root: Path, timeout: int, environment: dict[str, st
         process = subprocess.run(command, cwd=workdir, env=environment, capture_output=True, text=True,
                                  timeout=timeout, check=False)
     except OSError as exc:
-        if exc.errno != errno.ENOEXEC or not is_oxnode:
+        if exc.errno not in (errno.ENOEXEC, errno.ENOENT):
             raise
-        # Versions before 0.0.33 shipped a JavaScript executable without a shebang.
-        process = subprocess.run(["node", *command], cwd=workdir, env=environment,
+        fallback = _node_cli_entry(command, root)
+        if fallback is None:
+            if exc.errno != errno.ENOEXEC or not is_oxnode:
+                raise
+            # Legacy oxnode distributions shipped a JS CLI without a shebang.
+            fallback = ["node", *command]
+        process = subprocess.run(fallback, cwd=workdir, env=environment,
                                  capture_output=True, text=True, timeout=timeout, check=False)
     if process.returncode != 0:
         raise DataError(f"Adapter exited {process.returncode}; stderr={process.stderr[-2500:]!r}")

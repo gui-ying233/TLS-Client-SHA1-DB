@@ -118,10 +118,23 @@ def node_binary(version: str) -> Path:
     return node
 
 
+_FAILED_PYTHONS: dict[str, str] = {}
+
+
+@cache
 def python_binary(version: str) -> Path:
     if not re.fullmatch(r'[0-9]+\.[0-9]+(?:\.[0-9]+)?', version):
         raise ValueError('Invalid Python version')
-    run(['uv', 'python', 'install', '--no-config', version])
+    if version in _FAILED_PYTHONS:
+        raise ValueError(f'Python {version} previously failed in this run: {_FAILED_PYTHONS[version]}')
+    try:
+        run(['uv', 'python', 'install', '--no-config', version])
+    except (OSError, subprocess.CalledProcessError) as exc:
+        # Within one invocation failures are not repeatedly downloaded.
+        # The negative cache is not persisted: transient failures are retried
+        # next time. The case never gets a synthetic success record.
+        _FAILED_PYTHONS[version] = str(exc)
+        raise
     path = subprocess.check_output(
         ['uv', 'python', 'find', '--no-config', '--managed-python', version], text=True).strip()
     if not path:

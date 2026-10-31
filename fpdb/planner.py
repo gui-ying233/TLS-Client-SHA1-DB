@@ -8,6 +8,7 @@ from typing import Literal, cast
 from fpdb.core import DataError, digest, json_array, json_object, read_json
 from fpdb.schema import Case, CaseIdentity, Config, Job, Target
 from fpdb.versions import discover, minimum_runtime, sort_key
+from fpdb.runtime_compat import known_broken_pair, pypi_allows
 
 
 def load_config(root: Path) -> Config:
@@ -108,6 +109,13 @@ def _compatible(pair: tuple[str, str], target: Target) -> bool:
         _matches_range(pair, rule) for rule in excludes)
     if not matches:
         return False
+    # Precise observed failures are not evidence of a valid fingerprint.
+    if known_broken_pair(target["id"], pair[0], pair[1]):
+        return False
+    source = target["client_versions"]
+    if target["language"] == "python" and source["type"] == "pypi":
+        if not pypi_allows(source["package"], pair[1], pair[0]):
+            return False
     required = minimum_runtime(target["client_versions"], pair[1])
     return required is None or sort_key(pair[0]) >= sort_key(required)
 
@@ -130,10 +138,21 @@ def _pairs(target: Target, mode: str, active_runtime_count: int) -> list[tuple[s
         anchor = target.get("historical_anchor_runtime", runtimes[0])
         if anchor not in runtimes:
             raise DataError(f"Historical anchor {anchor!r} not in runtime versions for {target['id']}")
-        return [pair for pair in dict.fromkeys(
-            [(runtime, baseline) for runtime in runtimes] +
-            [(anchor, client) for client in clients]
-        ) if _compatible(pair, target)]
+        # Keep the historical two-axis policy, but if a baseline/anchor
+        # cannot run, choose another real, compatible pair. Never relabel
+        # a probe as a different runtime than the one actually executed.
+        pairs: list[tuple[str, str]] = []
+        for runtime in runtimes:
+            chosen = baseline if _compatible((runtime, baseline), target) else next(
+                (client for client in clients if _compatible((runtime, client), target)), None)
+            if chosen is not None:
+                pairs.append((runtime, chosen))
+        for client in clients:
+            chosen = anchor if _compatible((anchor, client), target) else next(
+                (runtime for runtime in runtimes if _compatible((runtime, client), target)), None)
+            if chosen is not None:
+                pairs.append((chosen, client))
+        return list(dict.fromkeys(pairs))
     if mode == "full":
         return [(runtime, client) for runtime in runtimes for client in clients
                 if _compatible((runtime, client), target)]

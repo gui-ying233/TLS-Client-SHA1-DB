@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 from typing import Literal, TypeAlias, cast
 
 from fpdb.core import DataError, json_object
+from fpdb.runtime_compat import remember_pypi_releases, uv_available_python
 from fpdb.version_io import go_minimum_cached, host_slot, once_discover
 from fpdb.schema import JSONValue, VersionSource
 
@@ -140,6 +141,11 @@ def _discover_uncached(source: VersionSource) -> list[str]:
                 for file in _files(entry) if isinstance(file, dict)
             )
         ]
+        # Local Docker uses uv-managed runtimes. setup-python's manifest also
+        # lists exact patch versions that uv cannot install.
+        if os.environ.get("UV_PYTHON_INSTALL_DIR"):
+            installable = uv_available_python()
+            values = [version for version in values if version in installable]
     elif kind == "node_dist":
         payload = _get_json("https://nodejs.org/dist/index.json")
         if not isinstance(payload, list):
@@ -182,6 +188,8 @@ def _discover_uncached(source: VersionSource) -> list[str]:
         payload = _get_json(f"https://pypi.org/pypi/{package}/json")
         if not isinstance(payload, dict) or not isinstance(payload.get("releases"), dict):
             raise DataError("Invalid PyPI project response")
+        # Keep per-file Requires-Python for true run-time compatibility checks.
+        remember_pypi_releases(package, json_object(payload["releases"]))
         # Prefer numeric stable releases; skip withdrawn releases and empty records.
         values = [
             version for version, files in json_object(payload["releases"]).items()
