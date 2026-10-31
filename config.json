@@ -179,6 +179,9 @@
       "platform": "linux-x86_64",
       "compatibility": {
         "exclude": [
+          {"client_min": "0.0.16", "client_max": "0.0.19"},
+          {"client": "0.0.35"},
+          {"client_min": "0.1.0", "client_max": "0.1.6"},
           {"runtime": "26.12.1", "client_min": "0.0.16", "client_max": "0.0.19"},
           {"runtime_min": "20.0.0", "runtime_max": "20.11.99", "client_min": "1.0.0"},
           {"runtime_min": "21.0.0", "runtime_max": "21.6.99", "client_min": "1.0.0"}
@@ -223,6 +226,9 @@
       "platform": "linux-x86_64",
       "compatibility": {
         "exclude": [
+          {"client_min": "0.0.16", "client_max": "0.0.19"},
+          {"client": "0.0.35"},
+          {"client_min": "0.1.0", "client_max": "0.1.6"},
           {"runtime": "26.12.1", "client_min": "0.0.16", "client_max": "0.0.19"},
           {"runtime_min": "20.0.0", "runtime_max": "20.11.99", "client_min": "1.0.0"},
           {"runtime_min": "21.0.0", "runtime_max": "21.6.99", "client_min": "1.0.0"}
