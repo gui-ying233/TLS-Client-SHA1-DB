@@ -5,6 +5,7 @@ import errno
 import json
 import logging
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -55,12 +56,22 @@ def _node_cli_entry(command: list[str], root: Path) -> list[str] | None:
 
 def _run(command: list[str], root: Path, timeout: int, environment: dict[str, str], *, retry_diagnostics: bool = False) -> JSONValue:
     is_oxnode = Path(command[0]).name == "oxnode"
+    selected_node: str | None = None
     if is_oxnode:
         # Older oxnode releases resolve their Node loader from the working directory.
         workdir = root / "clients/js"
         environment = {**environment, "FPDB_ROOT": str(root)}
         command = [str((root / command[0]).resolve()),
                    str((root / command[1]).resolve()), *command[2:]]
+        # Invoke npm's declared JS entry using the runtime selected for this
+        # Case, not the host's .bin wrapper/shebang. The CLI can still spawn
+        # child Node processes and load the genuine matching Oxc core.
+        selected_node = shutil.which("node", path=environment.get("PATH", ""))
+        if selected_node is None:
+            raise DataError("No Node executable in selected runtime PATH")
+        direct = _node_cli_entry(command, root)
+        if direct is not None:
+            command = [selected_node, *direct[1:]]
     else:
         workdir = root
     try:
@@ -74,10 +85,19 @@ def _run(command: list[str], root: Path, timeout: int, environment: dict[str, st
             if exc.errno != errno.ENOEXEC or not is_oxnode:
                 raise
             # Legacy oxnode distributions shipped a JS CLI without a shebang.
-            fallback = ["node", *command]
+            fallback = [selected_node or "node", *command]
+        elif is_oxnode:
+            fallback[0] = selected_node or "node"
         process = subprocess.run(fallback, cwd=workdir, env=environment,
                                  capture_output=True, text=True, timeout=timeout, check=False)
     if process.returncode != 0:
+        if is_oxnode and selected_node:
+            version_check = subprocess.run([selected_node, "--version"], cwd=workdir,
+                                           env=environment, capture_output=True, text=True,
+                                           timeout=10, check=False)
+            raise DataError(f"Adapter exited {process.returncode}; "
+                            f"selected_node={version_check.stdout.strip()!r}; "
+                            f"stderr={process.stderr[-2500:]!r}")
         raise DataError(f"Adapter exited {process.returncode}; stderr={process.stderr[-2500:]!r}")
     if retry_diagnostics and process.stderr.strip():
         log.warning("Adapter retry diagnostics: %s", process.stderr[-2500:].strip())
@@ -213,6 +233,11 @@ def collect(root: Path, case: Case) -> Record | None:
             if version <= (2, 6, 2):
                 # Scrapy removed its SSLv3 references in 2.6.3.
                 prepare_command.extend(['pyOpenSSL==22.0.0', 'cryptography<38'])
+            if case['runtime_version'] == '3.8.12' and version == (2, 11, 0):
+                # CFFI's prebuilt wheel produced an ffi_prep_closure/libffi ABI
+                # mismatch on this interpreter. Build it from the container's
+                # headers and record the actually installed dependency version.
+                prepare_command.extend(['--no-binary=cffi', 'cffi==1.15.1'])
         # An old CLI range may otherwise resolve a newer core with incompatible
         # loader hooks. Pin the real Oxc core to its matching CLI release.
         if (case['target'] in ('node-oxc-ts', 'node-oxc-js')
