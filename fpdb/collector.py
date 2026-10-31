@@ -199,7 +199,11 @@ def collect(root: Path, case: Case) -> Record | None:
         if (case['target'] == 'python-scrapy' and len(prepare_command) >= 3
                 and prepare_command[1:3] == ['-m', 'pip']):
             version = tuple(int(part) for part in case['client_version'].split('.'))
-            if version <= (2, 11, 1):
+            if version <= (2, 3, 0):
+                # Scrapy 2.0-2.3 import HTTPClientFactory, present in
+                # Twisted 21.7 but removed from more recent Twisted releases.
+                prepare_command.append('Twisted==21.7.0')
+            elif version <= (2, 11, 1):
                 # Scrapy 2.10.1/2.11.0 require Twisted <23.8.0.
                 prepare_command.append('Twisted<23.8.0')
             elif version <= (2, 13, 3):

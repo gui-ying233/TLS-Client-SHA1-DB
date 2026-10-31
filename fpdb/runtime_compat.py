@@ -105,13 +105,14 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
         return (client == "1.0.0" or
                 (ver(runtime) >= (25, 0, 0) and ver(client) <= (3, 3, 0)))
     if target_id in {"node-oxc-ts", "node-oxc-js"}:
-        # Old loaders repeatedly failed on Node >=22; on early Node 20 the
-        # 0.1.5-0.1.7 loader cannot use the importAttributes hook API.
-        # Keep other runtime/client pairs available for real collection.
-        return ((ver(runtime) >= (22, 0, 0)
+        # The 0.0.16-0.0.19 loaders fail through Node 21.7.3 (missing
+        # hook fields or native crashes). The 0.1.4-0.1.7 loaders require a
+        # newer Node 20 ESM hook API than observed in 20.0.0-20.9.0.
+        # Select other actual runtime/client pairs; never fake an observation.
+        return ((ver(runtime) >= (21, 0, 0)
                  and (0, 0, 16) <= ver(client) <= (0, 0, 19))
                 or (ver(runtime) < (20, 10, 0)
-                    and (0, 1, 5) <= ver(client) <= (0, 1, 7)))
+                    and (0, 1, 4) <= ver(client) <= (0, 1, 7)))
     if target_id == "python-aiohttp":
         return ((ver(runtime) >= (3, 12, 0) and ver(client) <= (3, 8, 6))
                 or (ver(runtime) >= (3, 11, 0) and ver(client) <= (3, 8, 1)))
@@ -119,7 +120,7 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
         # Old C-API sources cannot compile against newer CPython headers.
         return ((ver(runtime) >= (3, 13, 0) and ver(client) <= (7, 45, 1))
                 or (ver(runtime) >= (3, 10, 0) and ver(client) <= (7, 43, 0, 6))
-                or (runtime == "3.8.12" and client in {"7.45.6", "7.45.7"}))
+                or (runtime == "3.8.12" and client in {"7.45.5", "7.45.6", "7.45.7"}))
     if target_id == "python-requests":
         return ver(runtime) >= (3, 12, 0) and ver(client) <= (2, 24, 0)
     if target_id == "python-httpx":
