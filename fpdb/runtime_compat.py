@@ -105,15 +105,16 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
         return (client == "1.0.0" or
                 (ver(runtime) >= (25, 0, 0) and ver(client) <= (3, 3, 0)))
     if target_id in {"node-oxc-ts", "node-oxc-js"}:
-        # Oxc 0.0.16-0.0.19: observed native crashes or loader failures on
-        # Node >=20.19, including 20.19.6, 20.20.x, 21.x, 22.x, 23.x, 24.x.
-        # Keep untested 20.10-20.18 pairs eligible for a genuine probe.
-        # Oxc 0.1.1-0.1.7: Node <20.10 lacks the expected ESM hook fields;
-        # 0.1.7 has actually succeeded on Node 20.10/20.11 and 21.0-21.6.
-        return ((ver(runtime) >= (20, 19, 0)
-                 and (0, 0, 16) <= ver(client) <= (0, 0, 19))
-                or (ver(runtime) < (20, 10, 0)
-                    and (0, 1, 1) <= ver(client) <= (0, 1, 7)))
+        # 0.0.16-0.0.19 failed on Node 20.10.0 (missing hook fields or
+        # native crashes), as well as observed Node >=20.19 builds. The
+        # intervening 20.11-20.18 releases remain untested, not presumed bad.
+        # 0.1.0-0.1.7 fail with missing importAttributes on Node <20.10;
+        # keep Node 20.10+ eligible for a genuine runtime-specific probe.
+        return (((20, 10, 0) <= ver(runtime) < (20, 11, 0)
+                 or ver(runtime) >= (20, 19, 0))
+                and (0, 0, 16) <= ver(client) <= (0, 0, 19) or
+                (ver(runtime) < (20, 10, 0)
+                 and (0, 1, 0) <= ver(client) <= (0, 1, 7)))
     if target_id == "python-aiohttp":
         return ((ver(runtime) >= (3, 12, 0) and ver(client) <= (3, 8, 6))
                 or (ver(runtime) >= (3, 11, 0) and ver(client) <= (3, 8, 1)))
@@ -129,6 +130,8 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
         return (ver(runtime) >= (3, 14, 0)
                 and (0, 24, 0) <= ver(client) <= (0, 25, 0))
     if target_id == "python-scrapy":
+        if runtime == "3.8.12" and client == "2.10.0":
+            return True
         return ((ver(runtime) >= (3, 15, 0) and ver(client) <= (2, 19, 0))
                 or (ver(runtime) >= (3, 14, 0) and ver(client) <= (2, 13, 3))
                 # Scrapy <=2.11.1 needs older Twisted, which is not compatible

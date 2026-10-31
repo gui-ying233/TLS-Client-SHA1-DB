@@ -151,17 +151,19 @@ def _pairs(target: Target, mode: str, active_runtime_count: int) -> list[tuple[s
             if _compatible((anchor, client), target):
                 chosen = anchor
             else:
-                # The four Oxc 0.0.16-0.0.19 releases repeatedly crash on
-                # newer Node. Try the genuine Node 20.10 ESM-hook boundary
-                # before walking every untested 20.18/20.17 patch release.
-                # This changes only the next *real* pair to collect, never its
-                # declared runtime or client identity.
+                # Check an untested genuine Node minor line for the oldest
+                # Oxc releases, rather than cycling through adjacent patches
+                # of a minor already known to fail. The selected Case retains
+                # its actual Node and Oxc versions.
                 chosen = None
-                if (target['id'] in {'node-oxc-ts', 'node-oxc-js'}
-                        and client in {'0.0.16', '0.0.17', '0.0.18', '0.0.19'}):
-                    chosen = next((runtime for runtime in runtimes
-                                   if runtime.startswith('20.10.')
-                                   and _compatible((runtime, client), target)), None)
+                if target['id'] in {'node-oxc-ts', 'node-oxc-js'}:
+                    preferred = ('20.11.' if client in
+                                 {'0.0.16', '0.0.17', '0.0.18', '0.0.19'} else
+                                 '20.10.' if client == '0.1.0' else None)
+                    if preferred:
+                        chosen = next((runtime for runtime in runtimes
+                                       if runtime.startswith(preferred)
+                                       and _compatible((runtime, client), target)), None)
                 if chosen is None:
                     chosen = next((runtime for runtime in runtimes
                                    if _compatible((runtime, client), target)), None)
