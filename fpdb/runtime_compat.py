@@ -105,15 +105,13 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
         return (client == "1.0.0" or
                 (ver(runtime) >= (25, 0, 0) and ver(client) <= (3, 3, 0)))
     if target_id in {"node-oxc-ts", "node-oxc-js"}:
-        # The legacy ESM hooks failed on Node 20.20.2 with 0.0.16-0.0.19,
-        # and on Node 20.0.0-20.9.0 with 0.1.3-0.1.7. These are observed
-        # loader failures, not TLS fingerprints. Try other genuine pairs.
-        return ((ver(runtime) >= (21, 0, 0)
+        # Observed ESM loader failures: Node 20.20.x and >=21 with Oxc
+        # 0.0.16-0.0.19; Node 20.0-20.9 with Oxc 0.1.2-0.1.7.
+        # Do not record an unsuccessful invocation as a TLS observation.
+        return ((ver(runtime) >= (20, 20, 0)
                  and (0, 0, 16) <= ver(client) <= (0, 0, 19))
-                or (runtime == "20.20.2"
-                    and (0, 0, 16) <= ver(client) <= (0, 0, 19))
                 or (ver(runtime) < (20, 10, 0)
-                    and (0, 1, 3) <= ver(client) <= (0, 1, 7)))
+                    and (0, 1, 2) <= ver(client) <= (0, 1, 7)))
     if target_id == "python-aiohttp":
         return ((ver(runtime) >= (3, 12, 0) and ver(client) <= (3, 8, 6))
                 or (ver(runtime) >= (3, 11, 0) and ver(client) <= (3, 8, 1)))
@@ -137,5 +135,5 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
                 # Scrapy <=2.6.2 still uses APIs removed by recent pyOpenSSL;
                 # use a genuine older runtime with old SSL dependencies.
                 or (ver(runtime) >= (3, 11, 0) and ver(client) <= (2, 6, 2))
-                or (runtime == "3.8.12" and client in {"2.11.1", "2.11.2"}))
+                or (runtime == "3.8.12" and client in {"2.11.0", "2.11.1", "2.11.2"}))
     return False

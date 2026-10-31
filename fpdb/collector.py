@@ -233,11 +233,6 @@ def collect(root: Path, case: Case) -> Record | None:
             if version <= (2, 6, 2):
                 # Scrapy removed its SSLv3 references in 2.6.3.
                 prepare_command.extend(['pyOpenSSL==22.0.0', 'cryptography<38'])
-            if case['runtime_version'] == '3.8.12' and version == (2, 11, 0):
-                # CFFI's prebuilt wheel produced an ffi_prep_closure/libffi ABI
-                # mismatch on this interpreter. Build it from the container's
-                # headers and record the actually installed dependency version.
-                prepare_command.extend(['--no-binary=cffi', 'cffi==1.15.1'])
         # An old CLI range may otherwise resolve a newer core with incompatible
         # loader hooks. Pin the real Oxc core to its matching CLI release.
         if (case['target'] in ('node-oxc-ts', 'node-oxc-js')
