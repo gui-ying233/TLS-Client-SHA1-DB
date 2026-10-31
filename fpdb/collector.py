@@ -194,6 +194,16 @@ def collect(root: Path, case: Case) -> Record | None:
     prepare = adapter.get("prepare", [])
     if prepare:
         prepare_command = _command(prepare, replacements)
+        # Older Scrapy versions import private interfaces removed from newer
+        # dependencies. Constrain the dependencies while keeping the selected
+        # Scrapy version unchanged. Each case has its own temporary venv.
+        if (case['target'] == 'python-scrapy' and len(prepare_command) >= 3
+                and prepare_command[1:3] == ['-m', 'pip']):
+            version = tuple(int(part) for part in case['client_version'].split('.'))
+            if version <= (2, 13, 3):
+                prepare_command.append('Twisted==24.11.0')
+            if version <= (2, 12, 0):
+                prepare_command.append('w3lib==2.2.1')
         prepare_input = None
         # Windows Git checkouts may expose CRLF .sh scripts to a Linux Docker
         # bind mount. Execute a LF-normalized copy over stdin; do not edit the

@@ -100,16 +100,32 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
         return tuple(map(int, value.split(".")))
 
     if target_id in {"node-tsx-ts", "node-tsx-js"}:
-        return (ver(runtime) >= (25, 0, 0)
-                and ver(client) <= (3, 3, 0))
+        # v1.0.0 does not expose a usable tsx binary in the observed npm package.
+        # 1.0.0 has no executable .bin/tsx on both Node 23 and 24.
+        return (client == "1.0.0" or
+                (ver(runtime) >= (25, 0, 0) and ver(client) <= (3, 3, 0)))
     if target_id in {"node-oxc-ts", "node-oxc-js"}:
-        return (ver(runtime) >= (25, 0, 0)
-                and ver(client) <= (0, 0, 19))
+        # Reproduced native crashes on Node 23.11.1, 24.22.2, 26.13.0.
+        # 0.1.6 and 0.1.7 also failed on the observed early Node 20 builds.
+        return ((ver(runtime) >= (23, 0, 0)
+                 and (0, 0, 16) <= ver(client) <= (0, 0, 19))
+                or (ver(runtime) < (20, 10, 0) and client in {"0.1.6", "0.1.7"}))
     if target_id == "python-aiohttp":
-        return ver(runtime) >= (3, 12, 0) and ver(client) <= (3, 8, 6)
+        return ((ver(runtime) >= (3, 12, 0) and ver(client) <= (3, 8, 6))
+                or (ver(runtime) >= (3, 11, 0) and ver(client) <= (3, 8, 1)))
     if target_id == "python-pycurl":
-        # Py_TRASHCAN_SAFE_END was removed in CPython 3.13.
-        return ver(runtime) >= (3, 13, 0) and ver(client) <= (7, 45, 1)
+        # Old C-API sources cannot compile against newer CPython headers.
+        return ((ver(runtime) >= (3, 13, 0) and ver(client) <= (7, 45, 1))
+                or (ver(runtime) >= (3, 10, 0) and ver(client) <= (7, 43, 0, 6))
+                or (runtime == "3.8.12" and client == "7.45.7"))
+    if target_id == "python-requests":
+        return ver(runtime) >= (3, 12, 0) and ver(client) <= (2, 24, 0)
+    if target_id == "python-httpx":
+        # Old httpcore mutates typing.Union, disallowed by CPython 3.14.
+        return (ver(runtime) >= (3, 14, 0)
+                and (0, 24, 0) <= ver(client) <= (0, 25, 0))
     if target_id == "python-scrapy":
-        return ver(runtime) >= (3, 15, 0) and ver(client) <= (2, 19, 0)
+        return ((ver(runtime) >= (3, 15, 0) and ver(client) <= (2, 19, 0))
+                or (ver(runtime) >= (3, 14, 0) and ver(client) <= (2, 13, 3))
+                or (runtime == "3.8.12" and client == "2.11.2"))
     return False

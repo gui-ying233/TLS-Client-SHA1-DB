@@ -98,10 +98,15 @@ def fetch(name: str, endpoint: str) -> object:
             name = 'fpdb-single-probe'
             result: ClassVar[object | None] = None
             failure: ClassVar[str | None] = None
-            async def start(self) -> AsyncIterator[scrapy.Request]:
+            def start_requests(self):
+                # Scrapy <2.13 uses start_requests(), not async start().
                 yield scrapy.Request(endpoint, headers=HEADERS, dont_filter=True,
                                      callback=self.parse, errback=self.on_failure,
                                      meta={'dont_redirect': True, 'dont_retry': True})
+            async def start(self) -> AsyncIterator[scrapy.Request]:
+                # Scrapy >=2.13 uses async start(); only one of the two entrypoints runs.
+                for request in self.start_requests():
+                    yield request
             def parse(self, response: Response, **kwargs: object) -> None:
                 if not 200 <= response.status < 300:
                     raise RuntimeError('HTTP {}'.format(response.status))
@@ -123,7 +128,9 @@ def fetch(name: str, endpoint: str) -> object:
             settings['DOWNLOADER_CLIENTCONTEXTFACTORY'] = 'scrapy.core.downloader.contextfactory.ScrapyClientContextFactory'
         crawler = CrawlerProcess(settings=settings)
         crawler.crawl(OneRequest)
-        crawler.start(stop_after_crawl=True)
+        # A single-shot probe process needs no OS signal handlers. Older
+        # Scrapy calls reactor._handleSignals(), removed in newer Twisted.
+        crawler.start(stop_after_crawl=True, install_signal_handlers=False)
         if OneRequest.result is None:
             raise RuntimeError('Scrapy request failed: {}'.format(OneRequest.failure))
         return OneRequest.result
@@ -149,12 +156,14 @@ def main() -> None:
         backend_name, backend_version = 'libcurl/' + str(info[5]), str(info[5])
         dependencies['libcurl'] = str(info[1])
     if name == 'scrapy':
-        dependencies['Twisted'] = importlib.metadata.version('Twisted')
+        # Dependency versions matter when reproducing historical TLS stacks.
+        for package in ('Twisted', 'w3lib', 'pyOpenSSL'):
+            dependencies[package] = importlib.metadata.version(package)
         backend_name = 'Twisted/OpenSSL'
     echo = fetch(name, endpoint)
     print(json.dumps({
         'runtime_version': platform.python_version(), 'client_version': actual,
-        'verify': False if name == 'scrapy' else VERIFY,
+        'verify': VERIFY,
         'environment': {'os': platform.system().lower(), 'arch': platform.machine().lower(),
                         'tls_backend': {'name': backend_name, 'version': backend_version},
                         'dependencies': dependencies}, 'echo': echo}, ensure_ascii=False))
