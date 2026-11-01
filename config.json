@@ -179,8 +179,7 @@
       "platform": "linux-x86_64",
       "compatibility": {
         "exclude": [
-          {"client_min": "0.0.16", "client_max": "0.0.19"},
-          {"client": "0.0.35"},
+          {"client_min": "0.0.16", "client_max": "0.0.35"},
           {"client_min": "0.1.0", "client_max": "0.1.6"},
           {"runtime": "26.12.1", "client_min": "0.0.16", "client_max": "0.0.19"},
           {"runtime_min": "20.0.0", "runtime_max": "20.11.99", "client_min": "1.0.0"},
@@ -226,8 +225,7 @@
       "platform": "linux-x86_64",
       "compatibility": {
         "exclude": [
-          {"client_min": "0.0.16", "client_max": "0.0.19"},
-          {"client": "0.0.35"},
+          {"client_min": "0.0.16", "client_max": "0.0.35"},
           {"client_min": "0.1.0", "client_max": "0.1.6"},
           {"runtime": "26.12.1", "client_min": "0.0.16", "client_max": "0.0.19"},
           {"runtime_min": "20.0.0", "runtime_max": "20.11.99", "client_min": "1.0.0"},
@@ -1904,6 +1902,11 @@
       "revision": "1",
       "runner": "ubuntu-24.04",
       "platform": "linux-x86_64",
+      "compatibility": {
+        "exclude": [
+          {"runtime": "3.8.12", "client_min": "2.9.0", "client_max": "2.11.2"}
+        ]
+      },
       "runtime_versions": {
         "type": "python_manifest",
         "url": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
