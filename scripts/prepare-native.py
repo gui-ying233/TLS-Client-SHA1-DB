@@ -122,13 +122,14 @@ def prepare_rust(client: str, version: str, runtime: str, directory: Path) -> No
 
 def main() -> None:
     if len(sys.argv) != 5:
-        raise SystemExit("usage: prepare-native.py TARGET CLIENT_VERSION RUNTIME_VERSION CASE_ID")
-    target, version, runtime, case_id = sys.argv[1:]
+        raise SystemExit("usage: prepare-native.py TARGET CLIENT_VERSION RUNTIME_VERSION BUILD_DIR")
+    target, version, runtime, build_dir = sys.argv[1:]
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", version):
         raise ValueError("Invalid client version")
-    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){0,2}|stable", runtime) or not re.fullmatch(r"[a-f0-9]{24}", case_id):
-        raise ValueError("Invalid runtime or case ID")
-    directory = ROOT / ".fpdb-local/build" / case_id
+    directory = Path(build_dir)
+    if (not re.fullmatch(r"[0-9]+(?:\.[0-9]+){0,2}|stable", runtime)
+            or not directory.is_absolute() or not re.fullmatch(r"[a-f0-9]{24}", directory.name)):
+        raise ValueError("Invalid runtime or build directory")
     directory.mkdir(parents=True, exist_ok=True)
     if target.startswith("go-"):
         prepare_go(target.removeprefix("go-"), version, runtime, directory)

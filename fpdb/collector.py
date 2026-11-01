@@ -187,6 +187,14 @@ def collect(root: Path, case: Case) -> Record | None:
     replacements = {key: str(val) for key, val in case.items()}
     replacements["endpoint"] = config["endpoint"]
     replacements["python_bin"] = os.environ.get("FPDB_PYTHON_BIN") or sys.executable
+    build_root = os.environ.get("FPDB_BUILD_ROOT")
+    if build_root:
+        build_base = Path(build_root).expanduser()
+    else:
+        cache_home = os.environ.get("XDG_CACHE_HOME")
+        cache_base = Path(cache_home).expanduser() if cache_home else Path.home() / ".cache"
+        build_base = cache_base / "fpdb-local" / "build"
+    replacements["build_dir"] = str((build_base / case["id"]).resolve())
     adapter = target["adapter"]
     runtime_env = os.environ.copy()
     runtime_env.update({"FPDB_ENDPOINT": config["endpoint"], "FPDB_TARGET": case["target"]})

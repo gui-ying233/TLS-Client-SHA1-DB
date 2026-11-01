@@ -24,13 +24,14 @@ if [[ "$ready" != 1 ]]; then
   exit 1
 fi
 # The host checkout and caches remain owned by the invoking user.
-install -d -o "$FPDB_UID" -g "$FPDB_GID" /repo/.fpdb-local \
+install -d -o "$FPDB_UID" -g "$FPDB_GID" /repo/.fpdb-local /cache/build \
   /cache/home /cache/node /cache/uv-cache /cache/uv-python /cache/runner-temp \
   /cache/mise /cache/runtimes /cache/mise-cache /cache/mise-config /cache/mise-state \
   /cache/cargo /cache/rustup /cache/dotnet /cache/gems /cache/php /cache/go-build /cache/go-mod /cache/cargo-target /cache/version-metadata
 export HOME=/cache/home
 export UV_CACHE_DIR=/cache/uv-cache UV_PYTHON_INSTALL_DIR=/cache/uv-python
 export RUNNER_TEMP=/cache/runner-temp
+export FPDB_BUILD_ROOT=/cache/build
 export FPDB_VERSION_CACHE_DIR=/cache/version-metadata
 export FPDB_CAPTURE_PROFILE="local-docker-ubuntu2404-v1"
 # Do not set SSL_CERT_FILE/CURL_CA_BUNDLE globally: package downloads from

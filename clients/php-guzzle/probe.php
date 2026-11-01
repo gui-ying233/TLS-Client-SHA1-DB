@@ -1,7 +1,7 @@
 <?php
-if ($argc !== 4 || !preg_match('/^[a-f0-9]{24}$/', $argv[1])) throw new RuntimeException('usage: probe.php CASE_ID VERSION URL');
-[$script, $caseId, $expected, $endpoint] = $argv;
-require __DIR__ . '/../../.fpdb-local/build/' . $caseId . '/vendor/autoload.php';
+if ($argc !== 4 || !preg_match('/^[a-f0-9]{24}$/', basename($argv[1]))) throw new RuntimeException('usage: probe.php BUILD_DIR VERSION URL');
+[$script, $buildDir, $expected, $endpoint] = $argv;
+require $buildDir . '/vendor/autoload.php';
 $actual = ltrim(Composer\InstalledVersions::getPrettyVersion('guzzlehttp/guzzle'), 'v');
 if ($actual !== $expected) throw new RuntimeException("Guzzle $actual != $expected");
 $curlOptions = [CURLOPT_FRESH_CONNECT => true];

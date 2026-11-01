@@ -8,10 +8,9 @@ from pathlib import Path
 
 
 def main() -> int:
-    if len(sys.argv) != 4 or not re.fullmatch(r"[a-f0-9]{24}", sys.argv[1]):
-        raise SystemExit("usage: run.py CASE_ID VERSION URL")
-    root = Path(__file__).resolve().parents[3]
-    directory = root / ".fpdb-local/build" / sys.argv[1]
+    if len(sys.argv) != 4 or not re.fullmatch(r"[a-f0-9]{24}", Path(sys.argv[1]).name):
+        raise SystemExit("usage: run.py BUILD_DIR VERSION URL")
+    directory = Path(sys.argv[1])
     classpath = str(directory) + os.pathsep + (directory / "classpath.txt").read_text(encoding="utf-8").strip()
     return subprocess.run(["java", "-cp", classpath, "ProbeOkHttp", *sys.argv[2:]], check=False).returncode
 

@@ -927,7 +927,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client}",
           "{client_version}",
           "{endpoint}",
@@ -939,7 +939,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -966,7 +966,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client}",
           "{client_version}",
           "{endpoint}",
@@ -978,7 +978,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -1369,7 +1369,7 @@
         "probe": [
           "python3",
           "clients/java/okhttp/run.py",
-          "{id}",
+          "{build_dir}",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1379,7 +1379,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -1411,7 +1411,7 @@
         "probe": [
           "php",
           "clients/php-guzzle/probe.php",
-          "{id}",
+          "{build_dir}",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1421,7 +1421,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       },
       "compatibility": {
@@ -1458,7 +1458,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1468,7 +1468,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -1497,7 +1497,7 @@
       "adapter": {
         "probe": [
           "dotnet",
-          ".fpdb-local/build/{id}/bin/FpdbRestSharp.dll",
+          "{build_dir}/bin/FpdbRestSharp.dll",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1507,7 +1507,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -1534,7 +1534,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1544,7 +1544,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -1571,7 +1571,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1581,7 +1581,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -1608,7 +1608,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1618,7 +1618,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -1645,7 +1645,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
@@ -1655,7 +1655,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -2002,7 +2002,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
@@ -2012,7 +2012,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     },
@@ -2038,7 +2038,7 @@
       },
       "adapter": {
         "probe": [
-          ".fpdb-local/build/{id}/fpdb-probe",
+          "{build_dir}/fpdb-probe",
           "{client_version}",
           "{endpoint}"
         ],
@@ -2048,7 +2048,7 @@
           "{target}",
           "{client_version}",
           "{runtime_version}",
-          "{id}"
+          "{build_dir}"
         ]
       }
     }
