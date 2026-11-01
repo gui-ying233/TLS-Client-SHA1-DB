@@ -7,6 +7,7 @@ matrix.json
 *.tmp
 *.patch
 .fpdb-local/
+*.log
 
 # Native probes / language install caches
 clients/go/fpdb-go
