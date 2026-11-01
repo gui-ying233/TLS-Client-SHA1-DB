@@ -1,0 +1,51 @@
+{
+  "case_id": "d49922d1f37f6a66829002e8",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "hCCNuWP9ky6AR69i97wdKYbhFQo=",
+      "tlsClientExtensionsSha1": "4oF0LRxQXUDhrRY0MazQAVJh7Go=",
+      "tlsClientExtensionsSha1Le": "Ea9swA+X7+AQtmDnJ28MlyPK/Fg=",
+      "tlsClientHelloLength": 1562,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "requests",
+    "client_version": "system",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "native-default",
+      "dependencies": {
+        "requests": "2.32.3",
+        "urllib3": "2.3.0"
+      },
+      "image": "debian:13",
+      "os": "linux",
+      "runtime_resolved_version": "3.13.5",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.5.7 9 Jun 2026"
+      }
+    },
+    "language": "python",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "system",
+    "target": "env-debian13-requests",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "hCCNuWP9ky6AR69i97wdKYbhFQo=",
+      "tlsClientExtensionsSha1": "4oF0LRxQXUDhrRY0MazQAVJh7Go=",
+      "tlsClientExtensionsSha1Le": "Ea9swA+X7+AQtmDnJ28MlyPK/Fg="
+    }
+  ],
+  "record_id": "f958c562cb2f729cd72a1c08",
+  "schema_version": 1
+}
