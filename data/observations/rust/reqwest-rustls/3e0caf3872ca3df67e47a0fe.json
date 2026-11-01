@@ -1,0 +1,137 @@
+{
+  "case_id": "d30ab9e2afbc04307240559b",
+  "evidence": [
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "0EWRxq2syGtxc7bfnuY/ItZP+jg=",
+      "tlsClientExtensionsSha1Le": "N78pZz6WaaW0jUOc12L7tu+8RgI=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "EBrWrLeNVkknijM6FBMsDH456J8=",
+      "tlsClientExtensionsSha1Le": "JSJqBwgJnKAXHS5Y5Ac6DKMq6Ao=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "R0VelYheB64mSCx77vQBnyYqKjk=",
+      "tlsClientExtensionsSha1Le": "ckXlyCJAfvrEIzQBMnGQ5+p9z5k=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "bmuGvU1a+NvoAtqvIR+eKRkZvD8=",
+      "tlsClientExtensionsSha1Le": "uVp4X1iWUyJ/bwYT8QHKrfmxyQ8=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "fl+oJI9B64iWvUf8D68caJJYbXM=",
+      "tlsClientExtensionsSha1Le": "59pyMoYEeIpthnp+oRQkJEcPzN0=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "mH9NXpzGJFIvdrygPmhfy1huJHc=",
+      "tlsClientExtensionsSha1Le": "62TBueT4Tr/heCtC9D7ZyzX50wM=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "mQXqivQqrIEJ0mbLOY+4+fLt4R8=",
+      "tlsClientExtensionsSha1Le": "3yHQyzKoJyNhkMH5oufImtRQcrg=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "rea4aJ3n7EiZSNN870vbcAlZ4hc=",
+      "tlsClientExtensionsSha1Le": "5L9C6zF9lktALvlbFiQCHSZMQNg=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "ryUmG8ytPih+OD9lcD65CDyI4Wc=",
+      "tlsClientExtensionsSha1Le": "su3nevWYEHHGZ4HCV79DFWlLs94=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    },
+    {
+      "count": 1,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA=",
+      "tlsClientExtensionsSha1": "t90xNbW/3lxrFHxh9icUAvgZ7uk=",
+      "tlsClientExtensionsSha1Le": "R/+nrIvT1v85qHAHbPzd4EIxwEw=",
+      "tlsClientHelloLength": 255,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "reqwest-rustls",
+    "client_version": "0.12.24",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "reqwest": "0.12.24"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.90.0",
+      "tls_backend": {
+        "name": "rustls",
+        "version": "0.23.46"
+      }
+    },
+    "language": "rust",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.90.0",
+    "target": "rust-reqwest-rustls",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "WUS9+h7TjVkF9aEouGuCEMjGQGA="
+    }
+  ],
+  "record_id": "3e0caf3872ca3df67e47a0fe",
+  "schema_version": 1
+}

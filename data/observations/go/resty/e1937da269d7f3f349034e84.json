@@ -1,0 +1,48 @@
+{
+  "case_id": "f2ee2d5f13c90bbf7b706fb8",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "QrF6UadKW3vtNOqdNqbd4frxxxE=",
+      "tlsClientExtensionsSha1": "aWVCohOefx9sYmnLzIkGYW/Cb9M=",
+      "tlsClientExtensionsSha1Le": "G5t+uwtBmY9hJOvSdB/+WgzrvyI=",
+      "tlsClientHelloLength": 1467,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "resty",
+    "client_version": "2.17.0",
+    "environment": {
+      "arch": "amd64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "resty": "2.17.0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "1.23.5",
+      "tls_backend": {
+        "name": "crypto/tls",
+        "version": "go1.23.5"
+      }
+    },
+    "language": "go",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "1.23.5",
+    "target": "go-resty"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "QrF6UadKW3vtNOqdNqbd4frxxxE=",
+      "tlsClientExtensionsSha1": "aWVCohOefx9sYmnLzIkGYW/Cb9M=",
+      "tlsClientExtensionsSha1Le": "G5t+uwtBmY9hJOvSdB/+WgzrvyI="
+    }
+  ],
+  "record_id": "e1937da269d7f3f349034e84",
+  "schema_version": 1
+}
