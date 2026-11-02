@@ -1,0 +1,51 @@
+{
+  "case_id": "656eb45642daa600f8196199",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "FFfbc8JG6z/8e/d9wUDI4dJ6jsc=",
+      "tlsClientExtensionsSha1Le": "Do13Vy+ggzYnCEMLXJUaj0Z5D0Y=",
+      "tlsClientHelloLength": 508,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "scrapy",
+    "client_version": "2.0.0",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "Twisted": "21.7.0",
+        "pyOpenSSL": "22.0.0",
+        "scrapy": "2.0.0",
+        "w3lib": "2.2.1"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "3.10.16",
+      "tls_backend": {
+        "name": "Twisted/OpenSSL",
+        "version": "OpenSSL 3.0.16 11 Feb 2025"
+      }
+    },
+    "language": "python",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "3.10.16",
+    "target": "python-scrapy"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "GXSPDLP4G3X+prK73a4wBuOaHRc=",
+      "tlsClientExtensionsSha1": "FFfbc8JG6z/8e/d9wUDI4dJ6jsc=",
+      "tlsClientExtensionsSha1Le": "Do13Vy+ggzYnCEMLXJUaj0Z5D0Y="
+    }
+  ],
+  "record_id": "81cc856ffafd52d03d90bb61",
+  "schema_version": 1
+}
