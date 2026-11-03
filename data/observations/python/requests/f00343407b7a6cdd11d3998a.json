@@ -3,6 +3,16 @@
   "evidence": [
     {
       "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "ECDHE-RSA-AES256-GCM-SHA384",
+      "tlsClientCiphersSha1": "Z1fmWbSzah+k8YiZb5izghjjmtY=",
+      "tlsClientExtensionsSha1": "eDp65pj0h8TuynikbMO2JDKpftA=",
+      "tlsClientExtensionsSha1Le": "YpxENriAOC1lC3KwFsk6Cc9beC4=",
+      "tlsClientHelloLength": 205,
+      "tlsVersion": "TLSv1.2"
+    },
+    {
+      "count": 5,
       "tlsCipher": "ECDHE-ECDSA-CHACHA20-POLY1305",
       "tlsClientCiphersSha1": "Z1fmWbSzah+k8YiZb5izghjjmtY=",
       "tlsClientExtensionsSha1": "eDp65pj0h8TuynikbMO2JDKpftA=",
