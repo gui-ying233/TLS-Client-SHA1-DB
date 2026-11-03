@@ -2,7 +2,7 @@
   "case_id": "1406931f69fcbd1352dbce5f",
   "evidence": [
     {
-      "count": 5,
+      "count": 10,
       "tlsAlpn": "http/1.1",
       "tlsCipher": "TLS_AES_256_GCM_SHA384",
       "tlsClientCiphersSha1": "IYXAmSyDuENo/csNLDHbae5vD0Q=",
