@@ -158,9 +158,13 @@ def prepare_sdk(engine: str, version: str, cache: Path) -> JSONObject:
             # A timed-out caller may have spent its budget waiting for this SDK.
             # Preserve configured sources and object mtimes so the next owner
             # resumes make instead of unpacking/reconfiguring the whole SDK.
-            if not (source / "Makefile").is_file():
+            # OpenResty writes Makefile before staging LuaJIT headers; it does
+            # not prove configure completed successfully after an interruption.
+            configured = source / ".fpdb-configured"
+            if not configured.is_file():
                 source = unpack(download("https://openresty.org/download/" + filename.group(1), cache), sdk / "source")
                 run(["./configure", "--prefix=" + str(prefix), "--with-http_ssl_module"], source)
+                configured.touch()
             run(["make", "-j2"], source)
             run(["make", "install"], source)
             home, binary = prefix / "luajit", prefix / "bin/resty"
