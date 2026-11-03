@@ -66,10 +66,18 @@ def download(url: str, cache: Path, expected: str | None = None) -> Path:
 def unpack(archive: Path, directory: Path) -> Path:
     directory.mkdir(parents=True, exist_ok=True)
     with tarfile.open(archive) as source:
-        source.extractall(directory, filter="data")
-        roots = {Path(member.name).parts[0] for member in source.getmembers() if member.name.strip("./")}
+        members = source.getmembers()
+        # These official SDK archives contain only regular files/directories.
+        # Check their names before native tar extraction: data_filter's per-file
+        # realpath calls are prohibitively slow on Windows Docker bind mounts.
+        if any(not (member.isfile() or member.isdir()) or Path(member.name).is_absolute()
+               or ".." in Path(member.name).parts for member in members):
+            raise ValueError("Unexpected SDK archive member")
+        roots = {Path(member.name).parts[0] for member in members if member.name.strip("./")}
     if len(roots) != 1:
         raise ValueError("Expected one source directory")
+    run(["tar", "-xzf", str(archive), "-C", str(directory),
+         "--no-same-owner", "--no-same-permissions"], ROOT)
     return directory / roots.pop()
 
 
