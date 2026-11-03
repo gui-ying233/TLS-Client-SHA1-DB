@@ -105,6 +105,12 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
     These bounds can be removed once a combination has been verified in Docker.
     Runtime comparisons are numeric, not lexicographic.
     """
+    # Its bundled nginx 1.7.7 fails on ubuntu-24.04: ngx_user.c accesses
+    # crypt_data.current_salt, removed from the system libcrypt headers.
+    # Both verification modes were attempted with the official source archive.
+    if target_id == "openresty-lua-resty-http" and runtime == "1.7.7.2":
+        return True
+
     def ver(value: str) -> tuple[int, ...]:
         return tuple(map(int, value.split(".")))
 
