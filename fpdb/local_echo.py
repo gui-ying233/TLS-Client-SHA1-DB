@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import http.client
 import json
 import os
 import shutil
@@ -162,14 +163,29 @@ def _setup(certdir: Path, *, java: bool = False) -> None:
     print(f"Local TLS echo initialized: https://{HOST}:{PORT}/")
 
 
+def _check(certdir: Path) -> None:
+    context = ssl.create_default_context(cafile=str(certdir / "ca.crt"))
+    connection = http.client.HTTPSConnection(HOST, PORT, timeout=2, context=context)
+    try:
+        connection.request("GET", "/")
+        response = connection.getresponse()
+        response.read()
+        if response.status != 200:
+            raise RuntimeError(f"Local TLS echo returned HTTP {response.status}")
+    finally:
+        connection.close()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("setup", "serve"))
+    parser.add_argument("command", choices=("setup", "serve", "check"))
     parser.add_argument("certdir", type=Path)
     parser.add_argument("--java", action="store_true", help="Create a truststore using the selected JDK")
     args = parser.parse_args()
     if args.command == "setup":
         _setup(args.certdir, java=args.java)
+    elif args.command == "check":
+        _check(args.certdir)
     else:
         _serve(args.certdir)
 
