@@ -1,0 +1,51 @@
+{
+  "case_id": "5af42c057617bd19d06bdb0e",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "EPPWGkMwL/+VHBbDlFeYFF2S3W0=",
+      "tlsClientExtensionsSha1": "GQ5kluei/Xx6OAJyC5ndcoWOJLE=",
+      "tlsClientExtensionsSha1Le": "JE5+bfgPv1p5fbM9YkCylMeVxAg=",
+      "tlsClientHelloLength": 1525,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "requests",
+    "client_version": "system",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "native-default",
+      "dependencies": {
+        "requests": "2.32.5",
+        "urllib3": "2.8.0"
+      },
+      "image": "macOS-15.7.9-x86_64-i386-64bit-Mach-O",
+      "os": "darwin",
+      "runtime_resolved_version": "3.14.7",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.6.3 9 Jun 2026"
+      }
+    },
+    "language": "python",
+    "platform": "darwin-x86_64",
+    "revision": "1",
+    "runner": "macos-15-intel",
+    "runtime_version": "system",
+    "target": "env-macos-15-intel-homebrew-requests",
+    "verify": false
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "EPPWGkMwL/+VHBbDlFeYFF2S3W0=",
+      "tlsClientExtensionsSha1": "GQ5kluei/Xx6OAJyC5ndcoWOJLE=",
+      "tlsClientExtensionsSha1Le": "JE5+bfgPv1p5fbM9YkCylMeVxAg="
+    }
+  ],
+  "record_id": "480bbcad6434752b976b70a1",
+  "schema_version": 1
+}
