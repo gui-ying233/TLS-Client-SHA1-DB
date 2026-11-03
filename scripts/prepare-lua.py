@@ -211,9 +211,14 @@ def prepare(target: str, version: str, runtime: str, directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     tree = directory / "rocks"
     config = directory / "luarocks-config.lua"
-    config.write_text("local_cache = " + json.dumps(str(cache / "downloads/rocks")) + "\n", encoding="utf-8")
+    # Concurrent installs collided on LuaRocks' shared manifest locks.
+    # A Case ID includes its Lua ABI; isolate downloads and native build temps.
+    config.write_text("local_cache = " + json.dumps(str(cache / "downloads/rocks" / directory.name)) + "\n", encoding="utf-8")
+    temporary = directory / "tmp"
+    temporary.mkdir(exist_ok=True)
     env = {**os.environ, "LUAROCKS_CONFIG": str(config), "GIT_CONFIG_COUNT": "1",
-           "GIT_CONFIG_KEY_0": "url.https://github.com/.insteadOf", "GIT_CONFIG_VALUE_0": "git://github.com/"}
+           "GIT_CONFIG_KEY_0": "url.https://github.com/.insteadOf", "GIT_CONFIG_VALUE_0": "git://github.com/",
+           "TMPDIR": str(temporary)}
     command = [str(sdk["luarocks"]), "--lua-version=" + str(sdk["abi"]), "--tree=" + str(tree)]
     run([*command, "install", package, version], directory, env)
     run([*command, "install", "dkjson", JSON_ROCK_VERSION], directory, env)
