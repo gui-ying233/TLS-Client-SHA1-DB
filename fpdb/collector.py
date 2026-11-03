@@ -41,7 +41,7 @@ def _node_cli_entry(command: list[str], root: Path) -> list[str] | None:
         return None
     directory = (root / "clients/js/node_modules" / package).resolve()
     try:
-        meta = json.loads((directory / "package.json").read_text(encoding="utf-8"))
+        meta = json_object(json.loads((directory / "package.json").read_text(encoding="utf-8")))
         bins = meta.get("bin", {})
         entry = bins.get(cli) if isinstance(bins, dict) else bins
         if not isinstance(entry, str):
@@ -259,11 +259,16 @@ def collect(root: Path, case: Case) -> Record | None:
                     prepare_input = source.replace(b"\r\n", b"\n").decode("utf-8")
                     prepare_command = ["bash", "-s", "--", *prepare_command[2:]]
                     log.info("Running CRLF-normalized preparation script: %s", script)
+        prepare_timeout = int(sampling.get("prepare_timeout_seconds", 900))
+        if case["target"] == "openresty-lua-resty-http":
+            # Building a shared SDK on a bind mount plus waiting for its lock
+            # can exceed 25 minutes. Do not repeatedly restart that exact build.
+            prepare_timeout = max(prepare_timeout, 3600)
         for trial in range(2):
             try:
                 prepared = subprocess.run(prepare_command, input=prepare_input,
                                           cwd=root, env=runtime_env, capture_output=True, text=True,
-                                          timeout=int(sampling.get("prepare_timeout_seconds", 900)), check=False)
+                                          timeout=prepare_timeout, check=False)
                 if prepared.returncode:
                     raise DataError(f"prepare exited {prepared.returncode}: {prepared.stderr[-1000:]}")
                 break

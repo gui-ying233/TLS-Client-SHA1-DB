@@ -146,8 +146,13 @@ def prepare_sdk(engine: str, version: str, cache: Path) -> JSONObject:
             filename = re.search(r'((?:ngx_)?openresty-' + re.escape(version) + r'\.tar\.gz)', page)
             if filename is None:
                 raise ValueError("No official OpenResty archive for " + version)
-            source = unpack(download("https://openresty.org/download/" + filename.group(1), cache), sdk / "source")
-            run(["./configure", "--prefix=" + str(prefix), "--with-http_ssl_module"], source)
+            source = sdk / "source" / filename.group(1).removesuffix(".tar.gz")
+            # A timed-out caller may have spent its budget waiting for this SDK.
+            # Preserve configured sources and object mtimes so the next owner
+            # resumes make instead of unpacking/reconfiguring the whole SDK.
+            if not (source / "Makefile").is_file():
+                source = unpack(download("https://openresty.org/download/" + filename.group(1), cache), sdk / "source")
+                run(["./configure", "--prefix=" + str(prefix), "--with-http_ssl_module"], source)
             run(["make", "-j2"], source)
             run(["make", "install"], source)
             home, binary = prefix / "luajit", prefix / "bin/resty"
