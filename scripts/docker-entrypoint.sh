@@ -5,7 +5,7 @@ set -euo pipefail
 [[ "$FPDB_UID" =~ ^[0-9]+$ && "$FPDB_GID" =~ ^[0-9]+$ ]] || exit 2
 # Do all CA/hosts changes strictly inside this disposable container.
 certdir="$(mktemp -d /tmp/fpdb-echo.XXXXXX)"
-python3 -m fpdb.local_echo setup "$certdir"
+python3 -m fpdb.local_echo setup "$certdir" --java
 chmod 755 "$certdir"       # CA cert may be read by the unprivileged probe user.
 export FPDB_LOCAL_CA="$certdir/ca.crt"
 python3 -m fpdb.local_echo serve "$certdir" > /tmp/fpdb-echo.log 2>&1 &

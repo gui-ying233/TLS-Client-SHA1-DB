@@ -214,7 +214,12 @@ jobs:
         continue-on-error: true
         run: sudo apt-get update -qq && sudo apt-get install -y libcurl4-openssl-dev
       - name: Initialize ephemeral local TLS echo
-        run: '"${{ steps.control-python.outputs.python-path }}" -m fpdb.local_echo setup "$RUNNER_TEMP/fpdb-local-echo"'
+        env:
+          FPDB_LANGUAGE: ${{ matrix.case.language }}
+        run: |
+          ARGS=()
+          if [[ "$FPDB_LANGUAGE" == 'java' ]]; then ARGS+=(--java); fi
+          "${{ steps.control-python.outputs.python-path }}" -m fpdb.local_echo setup "$RUNNER_TEMP/fpdb-local-echo" "${ARGS[@]}"
       - name: Collect native HTTP client TLS fingerprints
         env:
           FPDB_CASES_JSON: ${{ toJSON(matrix.cases) }}

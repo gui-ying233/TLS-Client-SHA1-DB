@@ -1,6 +1,7 @@
 """Loopback HTTPS echo: hash the genuine TLS ClientHello sent to this runner."""
 from __future__ import annotations
 
+import argparse
 import base64
 import hashlib
 import json
@@ -115,7 +116,7 @@ def _serve(certdir: Path) -> None:
                 raw.close()
 
 
-def _setup(certdir: Path) -> None:
+def _setup(certdir: Path, *, java: bool = False) -> None:
     certdir.mkdir(parents=True, exist_ok=True)
     # Explicit X.509 CA extensions are mandatory for recent Python/OpenSSL:
     # an implicit self-signed certificate may be rejected as a CA without keyUsage.
@@ -145,11 +146,15 @@ def _setup(certdir: Path) -> None:
                         "/usr/local/share/ca-certificates/fpdb-local-echo.crt"], check=True)
         subprocess.run(["sudo", "update-ca-certificates"], check=True, capture_output=True)
     subprocess.run(["sudo", "sh", "-c", f"printf '\\n127.0.0.1 {HOST}\\n' >> /etc/hosts"], check=True)
-    if shutil.which("keytool"):
-        subprocess.run(["keytool", "-importcert", "-noprompt", "-storepass", "changeit",
+    if java:
+        java_home = os.environ.get("JAVA_HOME")
+        keytool = str(Path(java_home) / "bin" / "keytool") if java_home else shutil.which("keytool")
+        if not keytool:
+            raise RuntimeError("Java TLS collection requires keytool from the selected JDK")
+        subprocess.run([keytool, "-importcert", "-noprompt", "-storepass", "changeit",
                         "-keystore", str(certdir / "java-truststore.jks"),
                         "-file", str(certdir / "ca.crt"), "-alias", "fpdb-ephemeral"],
-                       check=True, capture_output=True)
+                       check=True)
     if os.environ.get("GITHUB_ENV"):
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
             output.write(f"FPDB_LOCAL_CA={certdir / 'ca.crt'}\n")
@@ -158,12 +163,15 @@ def _setup(certdir: Path) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) != 3 or sys.argv[1] not in ("setup", "serve"):
-        raise SystemExit("Usage: python -m fpdb.local_echo [setup|serve] CERT_DIR")
-    if sys.argv[1] == "setup":
-        _setup(Path(sys.argv[2]))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("command", choices=("setup", "serve"))
+    parser.add_argument("certdir", type=Path)
+    parser.add_argument("--java", action="store_true", help="Create a truststore using the selected JDK")
+    args = parser.parse_args()
+    if args.command == "setup":
+        _setup(args.certdir, java=args.java)
     else:
-        _serve(Path(sys.argv[2]))
+        _serve(args.certdir)
 
 
 if __name__ == "__main__":
