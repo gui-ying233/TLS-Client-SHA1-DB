@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from functools import cache
 import os
 import re
@@ -70,6 +71,38 @@ def _discover_uncached(source: VersionSource) -> list[str]:
     kind = source.get("type")
     if kind == "static":
         values = list(source.get("versions", []))
+    elif kind == "lua_dist":
+        values = list(re.findall(r'href="lua-(5\.[1-5](?:\.[0-9]+)?)\.tar\.gz"',
+                                 _get_text("https://www.lua.org/ftp/"), re.I))
+    elif kind == "openresty_dist":
+        values = list(re.findall(r'href="(?:https://openresty.org/download/|download/)?(?:ngx_)?openresty-([0-9]+(?:\.[0-9]+){3})\.tar\.gz"',
+                                 _get_text("https://openresty.org/en/download.html")))
+    elif kind == "luajit_dist":
+        # Upstream removed the old tags when switching to rolling releases.
+        # Recover stable 2.0 releases from their original release commits.
+        commits = _get_json("https://api.github.com/repos/LuaJIT/LuaJIT/commits?sha=v2.0&path=src/luajit.h&per_page=100")
+        if not isinstance(commits, list):
+            raise DataError("Invalid LuaJIT release history")
+        values = []
+        for item in commits:
+            message = json_object(json_object(item)["commit"]).get("message")
+            if isinstance(message, str) and (release := re.match(r"^RELEASE LuaJIT-(2\.0\.[0-9]+)(?:\s|$)", message)):
+                values.append(release.group(1))
+        head = json_object(_get_json("https://api.github.com/repos/LuaJIT/LuaJIT/commits/v2.1"))
+        date = json_object(json_object(head["commit"])["committer"])["date"]
+        if not isinstance(date, str):
+            raise DataError("Invalid LuaJIT commit date")
+        values.append("2.1." + str(int(datetime.fromisoformat(date.replace("Z", "+00:00")).timestamp())))
+    elif kind == "luarocks":
+        package = _source_text(source, "package")
+        modules = {"luasec": "lunarmodules/luasec", "http": "daurnimator/http",
+                   "lua-resty-http": "pintsized/lua-resty-http"}
+        if package not in modules:
+            raise DataError("Unsupported LuaRocks HTTP package")
+        module = modules[package]
+        values = list(re.findall(r'href="/modules/' + re.escape(module)
+                                 + r'/([0-9]+(?:\.[0-9]+){0,3}-[0-9]+)"',
+                                 _get_text("https://luarocks.org/modules/" + module)))
     elif kind == "go_proxy":
         package = _source_text(source, "package")
         if not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+", package) or ".." in package:

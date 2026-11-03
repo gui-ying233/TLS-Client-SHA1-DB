@@ -2051,6 +2051,169 @@
           "{build_dir}"
         ]
       }
+    },
+    {
+      "id": "lua-luasec",
+      "language": "lua",
+      "client": "luasec",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "lua_dist",
+        "min_version": "5.1"
+      },
+      "client_versions": {
+        "type": "luarocks",
+        "package": "luasec"
+      },
+      "adapter": {
+        "prepare": [
+          "python3",
+          "scripts/prepare-lua.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{build_dir}"
+        ],
+        "probe": [
+          "python3",
+          "clients/lua/run.py",
+          "{build_dir}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "lua-http",
+      "language": "lua",
+      "client": "lua-http",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "lua_dist",
+        "min_version": "5.1"
+      },
+      "client_versions": {
+        "type": "luarocks",
+        "package": "http"
+      },
+      "adapter": {
+        "prepare": [
+          "python3",
+          "scripts/prepare-lua.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{build_dir}"
+        ],
+        "probe": [
+          "python3",
+          "clients/lua/run.py",
+          "{build_dir}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "luajit-luasec",
+      "language": "lua",
+      "client": "luasec",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "luajit_dist"
+      },
+      "client_versions": {
+        "type": "luarocks",
+        "package": "luasec"
+      },
+      "adapter": {
+        "prepare": [
+          "python3",
+          "scripts/prepare-lua.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{build_dir}"
+        ],
+        "probe": [
+          "python3",
+          "clients/lua/run.py",
+          "{build_dir}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "luajit-http",
+      "language": "lua",
+      "client": "lua-http",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "luajit_dist"
+      },
+      "client_versions": {
+        "type": "luarocks",
+        "package": "http"
+      },
+      "adapter": {
+        "prepare": [
+          "python3",
+          "scripts/prepare-lua.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{build_dir}"
+        ],
+        "probe": [
+          "python3",
+          "clients/lua/run.py",
+          "{build_dir}",
+          "{endpoint}"
+        ]
+      }
+    },
+    {
+      "id": "openresty-lua-resty-http",
+      "language": "lua",
+      "client": "lua-resty-http",
+      "enabled": true,
+      "revision": "1",
+      "runner": "ubuntu-24.04",
+      "platform": "linux-x86_64",
+      "runtime_versions": {
+        "type": "openresty_dist",
+        "min_version": "1.7.7.2"
+      },
+      "client_versions": {
+        "type": "luarocks",
+        "package": "lua-resty-http"
+      },
+      "adapter": {
+        "prepare": [
+          "python3",
+          "scripts/prepare-lua.py",
+          "{target}",
+          "{client_version}",
+          "{runtime_version}",
+          "{build_dir}"
+        ],
+        "probe": [
+          "python3",
+          "clients/lua/run.py",
+          "{build_dir}",
+          "{endpoint}"
+        ]
+      }
     }
   ]
 }

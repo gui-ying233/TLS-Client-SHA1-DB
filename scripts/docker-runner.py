@@ -151,7 +151,7 @@ def supported(target: Target) -> bool:
         return False
     return not target['id'].startswith('env-') and target['language'] in {
         'node', 'python', 'go', 'java', 'php', 'ruby', 'rust', 'dotnet',
-        'bun', 'deno', 'dart', 'erlang', 'perl', 'c', 'cpp', 'ubuntu'}
+        'bun', 'deno', 'dart', 'erlang', 'perl', 'c', 'cpp', 'ubuntu', 'lua'}
 
 
 @cache
@@ -197,7 +197,7 @@ def runtime_environment(case: Case) -> dict[str, str]:
     elif language == 'python':
         with resource_lock('python:' + version):
             env['FPDB_PYTHON_BIN'] = str(python_binary(version))
-    elif language in {'perl', 'c', 'cpp', 'ubuntu'}:
+    elif language in {'perl', 'c', 'cpp', 'ubuntu', 'lua'}:
         return env
     else:
         # Reuse matching distribution runtimes already supplied by the image.

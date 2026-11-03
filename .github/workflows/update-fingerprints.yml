@@ -9,6 +9,11 @@ on:
         description: 'Optional target ID (empty means all enabled targets)'
         required: false
         type: string
+      jobs:
+        description: 'Maximum collection jobs (1..200)'
+        required: false
+        default: 100
+        type: number
       recheck:
         description: 'Re-test already recorded configurations'
         required: false
@@ -36,9 +41,11 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TARGET: ${{ inputs.target || '' }}
           RECHECK: ${{ inputs.recheck || false }}
+          JOBS: ${{ inputs.jobs }}
           MODE: incremental
         run: |
           ARGS=(--mode "$MODE" --target "$TARGET" --output matrix.json)
+          if [[ -n "$JOBS" ]]; then ARGS+=(--batch-size "$JOBS"); fi
           if [[ "$RECHECK" == 'true' ]]; then ARGS+=(--recheck); fi
           python -m fpdb.cli plan "${ARGS[@]}"
 
@@ -213,6 +220,17 @@ jobs:
         if: matrix.case.language == 'c'
         continue-on-error: true
         run: sudo apt-get update -qq && sudo apt-get install -y libcurl4-openssl-dev
+      - name: Install Lua native build dependencies
+        if: matrix.case.language == 'lua'
+        run: sudo apt-get update -qq && sudo apt-get install -y build-essential pkg-config libssl-dev libreadline-dev libpcre3-dev libpcre2-dev zlib1g-dev perl unzip
+      - name: Cache Lua source downloads
+        if: matrix.case.language == 'lua'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/fpdb-local/lua/downloads
+          key: lua-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/prepare-lua.py') }}
+          restore-keys: |
+            lua-v1-${{ runner.os }}-${{ runner.arch }}-
       - name: Initialize ephemeral local TLS echo
         env:
           FPDB_LANGUAGE: ${{ matrix.case.language }}

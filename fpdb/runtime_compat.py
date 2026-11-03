@@ -6,17 +6,20 @@ unavailable, select another explicitly identified pair at planning time.
 from __future__ import annotations
 
 from functools import cache
+import importlib
 import os
 from pathlib import Path
 import re
 import subprocess
 from threading import Lock
+from typing import Callable, Protocol, cast
+from fpdb.schema import JSONValue
 
 _REQ_LOCK = Lock()
 _PYPI_REQUIREMENTS: dict[str, dict[str, tuple[str | None, ...]]] = {}
 
 
-def remember_pypi_releases(package: str, releases: dict) -> None:
+def remember_pypi_releases(package: str, releases: dict[str, JSONValue]) -> None:
     """Keep Requires-Python per non-yanked distribution file/version.
 
     Multiple files for one version can have different requirements. A pair is
@@ -26,7 +29,7 @@ def remember_pypi_releases(package: str, releases: dict) -> None:
     for version, files in releases.items():
         if not isinstance(files, list):
             continue
-        requirements = []
+        requirements: list[str | None] = []
         for file in files:
             if not isinstance(file, dict) or file.get("yanked", False):
                 continue
@@ -38,19 +41,25 @@ def remember_pypi_releases(package: str, releases: dict) -> None:
         _PYPI_REQUIREMENTS[package] = result
 
 
+class _Specifier(Protocol):
+    def contains(self, item: str, *, prereleases: bool) -> bool: ...
+
+
 @cache
 def _satisfies(runtime: str, requirement: str | None) -> bool:
     if not requirement:
         return True  # Unknown metadata must not silently erase historical cases.
     try:
         from packaging.specifiers import SpecifierSet
+        factory: Callable[[str], _Specifier] = SpecifierSet
     except ImportError:
         try:
-            from pip._vendor.packaging.specifiers import SpecifierSet
+            factory = cast(Callable[[str], _Specifier],
+                           importlib.import_module("pip._vendor.packaging.specifiers").SpecifierSet)
         except ImportError:
             raise RuntimeError("Python packaging specifiers are required for PyPI compatibility checking")
     try:
-        return SpecifierSet(requirement).contains(runtime, prereleases=True)
+        return factory(requirement).contains(runtime, prereleases=True)
     except ValueError:
         return True  # Unknown/invalid legacy metadata: allow actual installation to decide.
 
@@ -99,6 +108,12 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
     def ver(value: str) -> tuple[int, ...]:
         return tuple(map(int, value.split(".")))
 
+    if target_id == "lua-http":
+        # These published rockspecs all require bit32. Its latest 5.3.5.1-1
+        # declares lua <5.5; installation was verified to fail on Lua 5.5.1.
+        # https://luarocks.org/manifests/siffiejoe/bit32-5.3.5.1-1.rockspec
+        return ver(runtime) >= (5, 5) and client in {
+            "0.1-0", "0.1-1", "0.2-0", "0.2-1", "0.3-0", "0.4-0"}
     if target_id in {"node-tsx-ts", "node-tsx-js"}:
         # v1.0.0 does not expose a usable tsx binary in the observed npm package.
         # 1.0.0 has no executable .bin/tsx on both Node 23 and 24.
