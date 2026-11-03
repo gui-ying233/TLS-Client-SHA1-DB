@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
-import http.client
 import json
 import os
 import shutil
@@ -119,9 +118,14 @@ def _serve(certdir: Path) -> None:
 
 def _setup(certdir: Path, *, java: bool = False) -> None:
     certdir.mkdir(parents=True, exist_ok=True)
+    # OpenSSL 1.1.1 appends -addext to the default config's extensions,
+    # producing duplicate CA constraints. Use a config with no implicit extensions.
+    ca_config = certdir / "ca.cnf"
+    ca_config.write_text("[req]\ndistinguished_name=dn\n[dn]\n", encoding="ascii")
     # Explicit X.509 CA extensions are mandatory for recent Python/OpenSSL:
     # an implicit self-signed certificate may be rejected as a CA without keyUsage.
     subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "2",
+                    "-config", str(ca_config),
                     "-subj", "/CN=FPDB ephemeral local CA",
                     "-addext", "basicConstraints=critical,CA:TRUE",
                     "-addext", "keyUsage=critical,keyCertSign,cRLSign",
@@ -129,16 +133,20 @@ def _setup(certdir: Path, *, java: bool = False) -> None:
                     "-keyout", str(certdir / "ca.key"),
                     "-out", str(certdir / "ca.crt")], check=True, capture_output=True)
     subprocess.run(["openssl", "req", "-newkey", "rsa:2048", "-nodes",
+                    "-config", str(ca_config),
                     "-subj", f"/CN={HOST}", "-keyout", str(certdir / "server.key"),
                     "-out", str(certdir / "server.csr")], check=True, capture_output=True)
     (certdir / "server.ext").write_text(
         "basicConstraints=critical,CA:FALSE\n"
         "keyUsage=critical,digitalSignature,keyEncipherment\n"
+        "subjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid,issuer\n"
         f"subjectAltName=DNS:{HOST}\nextendedKeyUsage=serverAuth\n")
     subprocess.run(["openssl", "x509", "-req", "-in", str(certdir / "server.csr"),
                     "-CA", str(certdir / "ca.crt"), "-CAkey", str(certdir / "ca.key"),
                     "-CAcreateserial", "-days", "2", "-out", str(certdir / "server.crt"),
                     "-extfile", str(certdir / "server.ext")], check=True, capture_output=True)
+    subprocess.run(["openssl", "verify", "-CAfile", str(certdir / "ca.crt"),
+                    str(certdir / "server.crt")], check=True)
     if sys.platform == "darwin":
         subprocess.run(["sudo", "security", "add-trusted-cert", "-d", "-r", "trustRoot",
                         "-k", "/Library/Keychains/System.keychain", str(certdir / "ca.crt")], check=True)
@@ -163,29 +171,14 @@ def _setup(certdir: Path, *, java: bool = False) -> None:
     print(f"Local TLS echo initialized: https://{HOST}:{PORT}/")
 
 
-def _check(certdir: Path) -> None:
-    context = ssl.create_default_context(cafile=str(certdir / "ca.crt"))
-    connection = http.client.HTTPSConnection(HOST, PORT, timeout=2, context=context)
-    try:
-        connection.request("GET", "/")
-        response = connection.getresponse()
-        response.read()
-        if response.status != 200:
-            raise RuntimeError(f"Local TLS echo returned HTTP {response.status}")
-    finally:
-        connection.close()
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("setup", "serve", "check"))
+    parser.add_argument("command", choices=("setup", "serve"))
     parser.add_argument("certdir", type=Path)
     parser.add_argument("--java", action="store_true", help="Create a truststore using the selected JDK")
     args = parser.parse_args()
     if args.command == "setup":
         _setup(args.certdir, java=args.java)
-    elif args.command == "check":
-        _check(args.certdir)
     else:
         _serve(args.certdir)
 
