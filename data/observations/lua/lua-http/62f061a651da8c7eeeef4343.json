@@ -1,0 +1,58 @@
+{
+  "case_id": "050acc409d2097308153cc55",
+  "evidence": [
+    {
+      "count": 5,
+      "tlsAlpn": "http/1.1",
+      "tlsCipher": "TLS_AES_256_GCM_SHA384",
+      "tlsClientCiphersSha1": "07fEMOqfMN0qPODT/67ErTsF0Es=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ=",
+      "tlsClientHelloLength": 410,
+      "tlsVersion": "TLSv1.3"
+    }
+  ],
+  "evidence_truncated": false,
+  "identity": {
+    "client": "lua-http",
+    "client_version": "0.4-0",
+    "environment": {
+      "arch": "x86_64",
+      "capture_profile": "local-docker-ubuntu2404-v1",
+      "dependencies": {
+        "basexx": "0.4.1-1",
+        "binaryheap": "0.4-1",
+        "bit32": "5.3.5.1-1",
+        "compat53": "0.15.1-1",
+        "cqueues": "20261006.54-0",
+        "dkjson": "2.9-1",
+        "fifo": "0.2-0",
+        "http": "0.4-0",
+        "lpeg": "1.1.0-2",
+        "lpeg_patterns": "0.5-0",
+        "luaossl": "20260910-0"
+      },
+      "os": "linux",
+      "runtime_resolved_version": "5.4.5",
+      "tls_backend": {
+        "name": "OpenSSL",
+        "version": "OpenSSL 3.0.13 30 Jan 2024"
+      }
+    },
+    "language": "lua",
+    "platform": "linux-x86_64",
+    "revision": "1",
+    "runner": "ubuntu-24.04",
+    "runtime_version": "5.4.5",
+    "target": "lua-http"
+  },
+  "observations": [
+    {
+      "tlsClientCiphersSha1": "07fEMOqfMN0qPODT/67ErTsF0Es=",
+      "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+      "tlsClientExtensionsSha1Le": "6e+q3vPm88rSgMTN/h7WTTxQ2wQ="
+    }
+  ],
+  "record_id": "62f061a651da8c7eeeef4343",
+  "schema_version": 1
+}
