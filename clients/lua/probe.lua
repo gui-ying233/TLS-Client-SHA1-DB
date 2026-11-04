@@ -64,6 +64,8 @@ elseif meta.package == "http" then
     verified = not disabled
 else
     local http = require "resty.http"
+    assert(debug.getinfo(http.new, "S").source == "@" .. meta.tree .. "/share/lua/" .. meta.abi .. "/resty/http.lua",
+           "HTTP module escaped the case-local rocks tree")
     local httpc = http.new()
     httpc:set_timeout(25000)
     local host, port, path = endpoint:match("^https://([^/:]+):?(%d*)(/.*)$")
@@ -83,7 +85,8 @@ else
     verified = not disabled
 end
 
-assert(actual == meta.client_version:gsub("%-%d+$", ""), "Loaded HTTP client version differs from requested rock")
+assert(actual == (meta.module_expected_version or meta.client_version:gsub("%-%d+$", "")),
+       "Loaded HTTP client version differs from requested rock")
 local deps = meta.dependencies
 if jit then deps.luajit = jit.version end
 if meta.source_commit then deps.luajit_commit = meta.source_commit end

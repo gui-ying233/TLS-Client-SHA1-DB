@@ -8,7 +8,7 @@ from typing import Literal, cast
 from fpdb.core import DataError, digest, json_array, json_object, read_json
 from fpdb.schema import Case, CaseIdentity, Config, Job, Target
 from fpdb.versions import discover, minimum_runtime, sort_key
-from fpdb.runtime_compat import known_broken_pair, pypi_allows
+from fpdb.runtime_compat import known_broken_pair, local_ca_supported, pypi_allows
 
 
 def load_config(root: Path) -> Config:
@@ -114,7 +114,10 @@ def _compatible(pair: tuple[str, str], target: Target) -> bool:
         return False
     source = target["client_versions"]
     if target["language"] == "python" and source["type"] == "pypi":
-        if not pypi_allows(source["package"], pair[1], pair[0]):
+        package = source.get("package")
+        if not package:
+            raise DataError("PyPI version source requires package")
+        if not pypi_allows(package, pair[1], pair[0]):
             return False
     required = minimum_runtime(target["client_versions"], pair[1])
     return required is None or sort_key(pair[0]) >= sort_key(required)
@@ -206,6 +209,8 @@ def plan(root: Path, *, mode: str, target_filter: str = "",
             continue
         for runtime, client in _pairs(target, mode, active_runtime_count):
             for verify_mode in verify_modes:
+                if verify_mode == "default" and not local_ca_supported(target_id, runtime):
+                    continue
                 case = make_case(target, runtime, client,
                                  verify=False if verify_mode == "disabled" else None)
                 if case["id"] in seen or (case["id"] in completed and mode not in target.get("recheck_modes", [])):

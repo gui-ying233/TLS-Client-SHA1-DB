@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 import tarfile
+import time
 import urllib.request
 from pathlib import Path
 
@@ -17,12 +18,12 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from fpdb.core import json_object
 from fpdb.schema import JSONObject
+from fpdb.version_io import fetch_bytes
 
 
 def get_text(url: str) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "TLS-Client-SHA1-DB/1"})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return response.read().decode("utf-8")
+    return fetch_bytes(request, timeout=30).decode("utf-8")
 
 TARGETS = {"lua-luasec": ("lua", "luasec"), "lua-http": ("lua", "http"),
            "luajit-luasec": ("luajit", "luasec"), "luajit-http": ("luajit", "http"),
@@ -30,10 +31,15 @@ TARGETS = {"lua-luasec": ("lua", "luasec"), "lua-http": ("lua", "http"),
 LUAROCKS_VERSION = "3.13.0"
 # 2.8-1 explicitly excludes Lua 5.5; 2.9-1 supports every Lua ABI collected here.
 JSON_ROCK_VERSION = "2.9-1"
+# v0.15's official source still declares _VERSION='0.14'. Accept only those
+# exact upstream bytes, not a different module that happens to report 0.14.
+RESTY_HTTP_015_SHA256 = "145b1bd8937a5bc12e9c4231a9e78a158ec2478941e3e3dfbec9f5f4ee160d24"
 
 
-def run(argv: list[str], cwd: Path, env: dict[str, str] | None = None) -> str:
-    process = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, check=False)
+def run(argv: list[str], cwd: Path, env: dict[str, str] | None = None,
+        *, lock_fd: int | None = None) -> str:
+    process = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, check=False,
+                             pass_fds=() if lock_fd is None else (lock_fd,))
     if process.returncode:
         raise ValueError("Lua preparation failed: " + " ".join(argv) + "\n" +
                          (process.stdout + process.stderr)[-6000:])
@@ -53,9 +59,7 @@ def download(url: str, cache: Path, expected: str | None = None) -> Path:
         if not path.exists():
             temporary = path.with_name(path.name + "." + str(os.getpid()) + ".tmp")
             request = urllib.request.Request(url, headers={"User-Agent": "TLS-Client-SHA1-DB/1"})
-            with urllib.request.urlopen(request, timeout=90) as response, temporary.open("wb") as output:
-                while chunk := response.read(1024 * 1024):
-                    output.write(chunk)
+            temporary.write_bytes(fetch_bytes(request, timeout=90))
             temporary.replace(path)
         if expected and hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             path.unlink()
@@ -209,6 +213,35 @@ def prepare(target: str, version: str, runtime: str, directory: Path) -> None:
     cache = cache_root()
     sdk = prepare_sdk(engine, runtime, cache)
     directory.mkdir(parents=True, exist_ok=True)
+    with (directory / "prepare.lock").open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        tree = directory / "rocks"
+        # Writers inherit this lock, so a remaining LFS marker after acquiring
+        # it belongs to an interrupted install. Retain the partial tree intact.
+        if (tree / "lockfile.lfs").exists():
+            archive_rocks(directory)
+        for attempt in range(2):
+            try:
+                install_case(sdk, package, version, runtime, directory, cache, lock.fileno())
+                break
+            except ValueError as exc:
+                if (attempt == 0 and tree.exists() and
+                        ("failed deploying files" in str(exc) or "LuaRocks did not install the exact" in str(exc))):
+                    archive_rocks(directory)
+                else:
+                    raise
+
+
+def archive_rocks(directory: Path) -> None:
+    tree = directory / "rocks"
+    archive = directory / ("rocks-interrupted-" + str(time.time_ns()))
+    if tree.is_symlink() or tree.resolve().parent != directory.resolve() or archive.resolve().parent != directory.resolve():
+        raise ValueError("Cannot archive a LuaRocks tree outside its case directory")
+    tree.rename(archive)
+
+
+def install_case(sdk: JSONObject, package: str, version: str, runtime: str,
+                 directory: Path, cache: Path, lock_fd: int) -> None:
     tree = directory / "rocks"
     config = directory / "luarocks-config.lua"
     # Concurrent installs collided on LuaRocks' shared manifest locks.
@@ -220,9 +253,18 @@ def prepare(target: str, version: str, runtime: str, directory: Path) -> None:
            "GIT_CONFIG_KEY_0": "url.https://github.com/.insteadOf", "GIT_CONFIG_VALUE_0": "git://github.com/",
            "TMPDIR": str(temporary)}
     command = [str(sdk["luarocks"]), "--lua-version=" + str(sdk["abi"]), "--tree=" + str(tree)]
-    run([*command, "install", package, version], directory, env)
-    run([*command, "install", "dkjson", JSON_ROCK_VERSION], directory, env)
-    installed = run([*command, "list", "--porcelain"], directory, env)
+    if sdk["engine"] == "luajit" and runtime == "2.0.1":
+        # LuaRocks' compat53 wrapper passes an explicit nil fourth argument.
+        # LuaJIT fixed that table.concat bug in b0307884 (after 2.0.1).
+        # Adapt the installer process only; the SDK and TLS probe are untouched.
+        shim = ("local concat=table.concat; table.concat=function(t,s,i,j) "
+                "if i==nil then i=1 end; if j==nil then j=#t end; return concat(t,s,i,j) end")
+        command = [str(sdk["lua_bin"]), "-e", shim, *command]
+    # Child processes inherit our advisory lock: if this preparer is killed,
+    # a still-running LuaRocks writer continues to exclude the next preparer.
+    run([*command, "install", package, version], directory, env, lock_fd=lock_fd)
+    run([*command, "install", "dkjson", JSON_ROCK_VERSION], directory, env, lock_fd=lock_fd)
+    installed = run([*command, "list", "--porcelain"], directory, env, lock_fd=lock_fd)
     dependencies: dict[str, str] = {}
     for line in installed.splitlines():
         fields = line.split("\t")
@@ -231,9 +273,17 @@ def prepare(target: str, version: str, runtime: str, directory: Path) -> None:
     if dependencies.get(package) != version:
         raise ValueError(f"LuaRocks did not install the exact {package} {version}")
     run(["cc", "-O2", "-fPIC", "-shared", "-I" + str(sdk["include"]),
-         str(ROOT / "clients/lua/tlsmeta.c"), "-o", str(directory / "fpdb_tlsmeta.so"), "-ldl"], directory)
+         str(ROOT / "clients/lua/tlsmeta.c"), "-o", str(directory / "fpdb_tlsmeta.so"), "-ldl"], directory,
+        lock_fd=lock_fd)
     metadata = {**sdk, "runtime_version": runtime, "client_version": version,
                 "package": package, "dependencies": dependencies, "tree": str(tree)}
+    if package == "lua-resty-http" and version == "0.15-0":
+        module = tree / "share/lua" / str(sdk["abi"]) / "resty/http.lua"
+        if hashlib.sha256(module.read_bytes()).hexdigest() != RESTY_HTTP_015_SHA256:
+            raise ValueError("lua-resty-http 0.15-0 differs from its official v0.15 source")
+        metadata.update({"module_path": str(module), "module_sha256": RESTY_HTTP_015_SHA256,
+                         "module_expected_version": "0.14"})
+        dependencies["lua-resty-http.module_version"] = "0.14"
     (directory / "lua.json").write_text(json.dumps(metadata), encoding="utf-8")
 
 

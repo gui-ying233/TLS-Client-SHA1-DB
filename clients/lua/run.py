@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from pathlib import Path
 import platform
@@ -14,6 +15,9 @@ def main() -> None:
     directory = Path(sys.argv[1])
     endpoint = sys.argv[2]
     metadata = json.loads((directory / "lua.json").read_text(encoding="utf-8"))
+    if "module_sha256" in metadata:
+        if hashlib.sha256(Path(metadata["module_path"]).read_bytes()).hexdigest() != metadata["module_sha256"]:
+            raise ValueError("Prepared HTTP module changed before the TLS probe")
     abi, tree = metadata["abi"], Path(metadata["tree"])
     environment = os.environ.copy()
     fallback = ";;" if metadata["engine"] == "openresty" else ""
@@ -33,7 +37,10 @@ def main() -> None:
         if "openresty/" + metadata["runtime_version"] not in process.stdout + process.stderr:
             raise ValueError("OpenResty runtime changed after preparation")
         ca = environment.get("FPDB_LOCAL_CA")
-        if ca:
+        if ca and environment.get("FPDB_TLS_VERIFY") != "false":
+            if metadata["runtime_version"] == "1.29.2.1":
+                raise ValueError("OpenResty 1.29.2.1 crashes loading trusted CA files; "
+                                 "default verification is unavailable in this collection environment")
             command += ["--http-conf", 'lua_ssl_trusted_certificate "' + ca.replace('"', '\\"') + '";']
     command += [probe, endpoint]
     process = subprocess.run(command, env=environment, cwd=directory, check=False)

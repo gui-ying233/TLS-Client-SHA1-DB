@@ -13,7 +13,7 @@ from typing import Literal, TypeAlias, cast
 
 from fpdb.core import DataError, json_object
 from fpdb.runtime_compat import remember_pypi_releases, uv_available_python
-from fpdb.version_io import go_minimum_cached, host_slot, once_discover
+from fpdb.version_io import fetch_bytes, go_minimum_cached, once_discover
 from fpdb.schema import JSONValue, VersionSource
 
 VersionKey: TypeAlias = tuple[tuple[int, int | str], ...]
@@ -34,16 +34,12 @@ def _get_json(url: str) -> JSONValue:
     token = os.environ.get("GITHUB_TOKEN")
     if token and urllib.parse.urlsplit(url).hostname == "api.github.com":
         request.add_header("Authorization", f"Bearer {token}")
-    with host_slot(url):
-        with urllib.request.urlopen(request, timeout=25) as response:
-            return cast(JSONValue, json.load(response))
+    return cast(JSONValue, json.loads(fetch_bytes(request)))
 
 
 def _get_text(url: str) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "TLS-Client-SHA1-DB/1"})
-    with host_slot(url):
-        with urllib.request.urlopen(request, timeout=25) as response:
-            return response.read().decode("utf-8")
+    return fetch_bytes(request).decode("utf-8")
 
 
 def _select(data: JSONValue, path: str) -> JSONValue:

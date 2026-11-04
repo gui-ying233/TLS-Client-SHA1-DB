@@ -99,6 +99,13 @@ def uv_available_python() -> frozenset[str]:
     return frozenset(available)
 
 
+def local_ca_supported(target_id: str, runtime: str) -> bool:
+    # The original 1.29.2.1 SDK exits 139 even for resty -e 'print(1)' when a
+    # trusted CA is configured, before user Lua runs. verify=False works
+    # without loading a CA; retain that mode and exclude only the failing one.
+    return not (target_id == "openresty-lua-resty-http" and runtime == "1.29.2.1")
+
+
 def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
     """Narrow, observed failures; do not ban unknown/newer client versions.
 
@@ -109,6 +116,16 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
     # crypt_data.current_salt, removed from the system libcrypt headers.
     # Both verification modes were attempted with the official source archive.
     if target_id == "openresty-lua-resty-http" and runtime == "1.7.7.2":
+        return True
+
+    if target_id in {"lua-luasec", "luajit-luasec"} and client in {
+        "0.6-2", "0.6-1", "0.5-2", "0.5.1-1", "0.5-1", "0.4-4", "0.4-3",
+        "0.4-2", "0.4.1-2", "0.4.1-1", "0.4-1", "0.3.3-2", "0.3.3-1",
+        "0.3.1-2", "0.3.1-1",
+    }:
+        # These exact revisions fail against ubuntu-24.04's OpenSSL 3:
+        # x509.c accesses opaque X509_EXTENSION/EVP_PKEY fields. OpenSSL 1.1
+        # support first appeared in LuaSec 0.7 (upstream CHANGELOG).
         return True
 
     def ver(value: str) -> tuple[int, ...]:
