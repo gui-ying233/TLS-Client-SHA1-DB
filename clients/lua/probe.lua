@@ -26,6 +26,18 @@ end
 
 if meta.package == "luasec" then
     local ssl = require "ssl"
+    local legacy_receive = { ["0.7"]=true, ["0.7.1"]=true, ["0.7.2"]=true, ["0.8"]=true,
+                             ["0.8.1"]=true, ["0.8.2"]=true, ["0.9"]=true, ["1.0"]=true }
+    if meta.engine == "lua" and (meta.abi == "5.4" or meta.abi == "5.5") and legacy_receive[ssl._VERSION] then
+        -- Before LuaSec 1.0.1, luaL_buffinit can occupy missing receive arguments
+        -- on Lua >=5.4.3. Supply the API's defaults without changing TLS options.
+        -- https://github.com/lunarmodules/luasec/compare/v1.0...v1.0.1
+        local methods = debug.getregistry()["SSL:Connection"].__index
+        local receive = methods.receive
+        function methods:receive(pattern, prefix)
+            return receive(self, pattern or "*l", prefix or "")
+        end
+    end
     local https = require "ssl.https"
     local ltn12 = require "ltn12"
     local body = {}
