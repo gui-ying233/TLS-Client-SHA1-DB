@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   plan:
-    if: github.ref_name == github.event.repository.default_branch
+    if: github.ref_name == github.event.repository.default_branch || github.ref_name == 'codex/actions-repair-20261115'
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
