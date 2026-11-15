@@ -6,6 +6,7 @@ from contextlib import contextmanager
 import hashlib
 import http.client
 import json
+import logging
 import os
 from pathlib import Path
 import re
@@ -17,6 +18,8 @@ from threading import BoundedSemaphore, Lock, get_ident
 from typing import Callable, Generator
 from urllib.parse import urlsplit
 from fpdb.core import json_object
+
+log = logging.getLogger(__name__)
 
 # Each host gets an independent pool; this is not a global network cap.
 _PER_HOST = int(os.environ.get("FPDB_VERSION_PER_HOST", "4"))
@@ -40,15 +43,22 @@ def host_slot(url: str) -> Generator[None, None, None]:
 def fetch_bytes(request: urllib.request.Request, *, timeout: int = 25) -> bytes:
     """Retry transient transport failures without caching failed discoveries."""
     for attempt in range(3):
+        # Official source servers sometimes need more than the initial TLS
+        # handshake budget; keep three attempts but allow a slower response.
+        attempt_timeout = timeout * (attempt + 1)
         try:
             with host_slot(request.full_url):
-                with urllib.request.urlopen(request, timeout=timeout) as response:
+                with urllib.request.urlopen(request, timeout=attempt_timeout) as response:
                     return response.read()
         except urllib.error.HTTPError as exc:
+            log.warning("Fetch %s attempt=%d/3 timeout=%ss failed: %s",
+                        request.full_url, attempt + 1, attempt_timeout, exc)
             if exc.code not in {408, 429, 500, 502, 503, 504} or attempt == 2:
                 raise
             exc.close()
         except (OSError, http.client.IncompleteRead) as exc:
+            log.warning("Fetch %s attempt=%d/3 timeout=%ss failed: %s",
+                        request.full_url, attempt + 1, attempt_timeout, exc)
             if (attempt == 2 or isinstance(exc, ssl.SSLCertVerificationError)
                     or isinstance(exc, urllib.error.URLError)
                     and isinstance(exc.reason, ssl.SSLCertVerificationError)):

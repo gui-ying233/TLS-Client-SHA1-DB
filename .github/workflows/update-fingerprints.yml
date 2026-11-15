@@ -217,8 +217,7 @@ jobs:
         continue-on-error: true
         run: sudo apt-get update -qq && sudo apt-get install -y libio-socket-ssl-perl libjson-pp-perl libwww-perl liblwp-protocol-https-perl libwww-mechanize-perl
       - name: Install libcurl development headers
-        if: matrix.case.language == 'c'
-        continue-on-error: true
+        if: matrix.case.language == 'c' || matrix.case.target == 'python-pycurl'
         run: sudo apt-get update -qq && sudo apt-get install -y libcurl4-openssl-dev
       - name: Install Lua native build dependencies
         if: matrix.case.language == 'lua'
