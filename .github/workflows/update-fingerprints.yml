@@ -271,6 +271,7 @@ jobs:
     # Shared across both workflows: only one writer at any time.
     concurrency:
       group: fingerprint-db-writer-${{ github.repository }}
+      queue: max
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
