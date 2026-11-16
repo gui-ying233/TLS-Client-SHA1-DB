@@ -41,8 +41,11 @@ def run(argv: list[str], cwd: Path, env: dict[str, str] | None = None,
     process = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, check=False,
                              pass_fds=() if lock_fd is None else (lock_fd,))
     if process.returncode:
+        output = process.stdout + process.stderr
+        errors = [line for line in output.splitlines()
+                  if "error:" in line or "undefined reference" in line]
         raise ValueError("Lua preparation failed: " + " ".join(argv) + "\n" +
-                         (process.stdout + process.stderr)[-6000:])
+                         output[-6000:] + ("\nCompiler errors:\n" + "\n".join(errors[-8:]) if errors else ""))
     return process.stdout.strip()
 
 
@@ -167,8 +170,21 @@ def prepare_sdk(engine: str, version: str, cache: Path) -> JSONObject:
             configured = source / ".fpdb-configured"
             if not configured.is_file():
                 source = unpack(download("https://openresty.org/download/" + filename.group(1), cache), sdk / "source")
-                run(["./configure", "--prefix=" + str(prefix), "--with-http_ssl_module"], source)
-                configured.touch()
+            configure_options = ["./configure", "--prefix=" + str(prefix), "--with-http_ssl_module"]
+            legacy_crypt = any("cd.current_salt" in path.read_text(encoding="utf-8")
+                               for path in source.glob("bundle/nginx-*/src/os/unix/ngx_user.c"))
+            if legacy_crypt:
+                # Old nginx's glibc crypt workaround cannot compile with libxcrypt
+                # (nginx #1469). HTTP Basic auth is unused by native resty cosockets.
+                configure_options.append("--without-http_auth_basic_module")
+            configuration = json.dumps(configure_options)
+            if (not configured.is_file() or legacy_crypt
+                    and configured.read_text(encoding="utf-8") != configuration):
+                # Replace the old success marker only after the new configure
+                # completes; previously failed SDKs must pick up the build flag.
+                configured.unlink(missing_ok=True)
+                run(configure_options, source)
+                configured.write_text(configuration, encoding="utf-8")
             run(["make", "-j2"], source)
             run(["make", "install"], source)
             home, binary = prefix / "luajit", prefix / "bin/resty"

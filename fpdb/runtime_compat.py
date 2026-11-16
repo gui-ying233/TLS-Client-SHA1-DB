@@ -112,10 +112,12 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
     These bounds can be removed once a combination has been verified in Docker.
     Runtime comparisons are numeric, not lexicographic.
     """
-    # Its bundled nginx 1.7.7 fails on ubuntu-24.04: ngx_user.c accesses
-    # crypt_data.current_salt, removed from the system libcrypt headers.
-    # Both verification modes were attempted with the official source archive.
-    if target_id == "openresty-lua-resty-http" and runtime == "1.7.7.2":
+    # OpenResty first added OpenSSL 1.1 support in 1.13.6.2 (official
+    # changelog-1013006.html). Earlier ngx_lua dereferences opaque SSL fields;
+    # 1.13.6.1 and 1.11.2.3/.4/.5 were confirmed to fail on ubuntu-24.04's
+    # OpenSSL 3, even after bypassing unrelated server-module build failures.
+    if (target_id == "openresty-lua-resty-http"
+            and tuple(map(int, runtime.split("."))) < (1, 13, 6, 2)):
         return True
 
     if target_id in {"lua-luasec", "luajit-luasec"} and client in {
