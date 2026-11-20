@@ -161,8 +161,7 @@ def known_broken_pair(target_id: str, runtime: str, client: str) -> bool:
     if target_id == "python-pycurl":
         # Old C-API sources cannot compile against newer CPython headers.
         return ((ver(runtime) >= (3, 13, 0) and ver(client) <= (7, 45, 1))
-                or (ver(runtime) >= (3, 10, 0) and ver(client) <= (7, 43, 0, 6))
-                or (runtime == "3.8.12" and client in {"7.45.4", "7.45.5", "7.45.6", "7.45.7"}))
+                or (ver(runtime) >= (3, 10, 0) and ver(client) <= (7, 43, 0, 6)))
     if target_id == "python-requests":
         return ver(runtime) >= (3, 12, 0) and ver(client) <= (2, 24, 0)
     if target_id == "python-httpx":

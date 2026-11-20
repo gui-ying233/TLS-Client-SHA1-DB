@@ -169,7 +169,18 @@ def main() -> None:
     backend_name = 'OpenSSL'
     backend_version = ssl.OPENSSL_VERSION
     if name == 'pycurl':
-        import pycurl
+        flags: int | None = None
+        if (sys.platform == 'linux' and sys.version_info[:3] == (3, 8, 12)
+                and '_ssl' in sys.builtin_module_names and hasattr(os, 'RTLD_DEEPBIND')):
+            # The old standalone build exports its bundled OpenSSL symbols.
+            # Resolve PycURL and libcurl against their own dependencies first.
+            flags = sys.getdlopenflags()
+            sys.setdlopenflags(flags | os.RTLD_DEEPBIND)
+        try:
+            import pycurl
+        finally:
+            if flags is not None:
+                sys.setdlopenflags(flags)
         info = pycurl.version_info()
         backend_name, backend_version = 'libcurl/' + str(info[5]), str(info[5])
         dependencies['libcurl'] = str(info[1])
