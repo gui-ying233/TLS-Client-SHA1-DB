@@ -45,10 +45,19 @@ async function read() {
   if (client === 'undici') {
     const { Agent, request } = require('undici');
     const dispatcher = new Agent({connections:1,pipelining:0,...(!verify ? {connect:{rejectUnauthorized:false}} : {})});
-    try { const response=await request(endpoint,{dispatcher,headers:{accept:'application/json'},headersTimeout:25000,bodyTimeout:25000});
+    try {
+      // Keep the whole request within the collector's subprocess timeout.
+      const response = await request(endpoint, {
+        dispatcher,
+        headers: {accept:'application/json'},
+        signal: AbortSignal.timeout(25000),
+      });
       if(response.statusCode<200||response.statusCode>=300) throw Error('HTTP '+response.statusCode);
       return await response.body.json();
-    } finally {await dispatcher.close();}
+    } finally {
+      // This dispatcher owns one request. Cancel any unread response on failure.
+      await dispatcher.destroy();
+    }
   }
   if (client === 'axios') {
     // Axios 1.1.0 exports its CommonJS client under `default`.
