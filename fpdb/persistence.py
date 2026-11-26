@@ -38,17 +38,27 @@ def _check_record(record: JSONObject) -> Record:
     return cast(Record, record)
 
 
-def persist(root: Path, inbox: Path) -> tuple[int, int]:
+def persist(root: Path, inbox: Path, *, consume: bool = False) -> tuple[int, int]:
+    """Merge artifacts. Consuming callers hold the inbox lock through cleanup."""
     config = load_config(root)
     sampling = config["sampling"]
-    files = sorted(inbox.rglob("*.json")) if inbox.exists() else []
+    sources = set(inbox.rglob("*.json"))
+    if consume:
+        sources.update(path.with_suffix(".json") for path in inbox.rglob("*.merged"))
+    files = sorted(sources)
     changed = 0
     for artifact in files:
-        fresh = _check_record(json_object(read_json(artifact)))
+        checkpoint = artifact.with_suffix(".merged")
+        prepared = json_object(read_json(checkpoint)) if consume and checkpoint.is_file() else None
+        fresh = _check_record(json_object(prepared["record"] if prepared is not None else read_json(artifact)))
         fresh_truncated = fresh.get("evidence_truncated", False)
         path = record_path(root, fresh["identity"])
-        if path.exists():
-            existing = _check_record(json_object(read_json(path)))
+        existing = _check_record(json_object(read_json(path))) if path.exists() else None
+        before = digest(existing) if consume and existing is not None else None
+        if prepared is not None:
+            if existing != fresh and prepared["before"] != before:
+                raise DataError(f"Observation changed since preparing {checkpoint}")
+        elif existing is not None:
             if existing["identity"] != fresh["identity"] or existing["case_id"] != fresh["case_id"]:
                 raise DataError("Record collision or inconsistent case_id")
             combined = merge_observations(existing["observations"], fresh["observations"],
@@ -61,10 +71,18 @@ def persist(root: Path, inbox: Path) -> tuple[int, int]:
             if "evidence" in fresh:
                 fresh["evidence_truncated"] = (lost or existing.get("evidence_truncated", False)
                                                or fresh_truncated)
-        if not path.exists() or read_json(path) != fresh:
+        if consume and prepared is None:
+            # Save the final value before writing it so a restart cannot add its counts again.
+            save_json(checkpoint, {"before": before, "record": fresh})
+        if existing != fresh:
             save_json(path, fresh)
             changed += 1
     build_index(root)
+    if consume:
+        for artifact in files:
+            # A remaining checkpoint can be replayed even after its raw artifact is gone.
+            artifact.unlink(missing_ok=True)
+            artifact.with_suffix(".merged").unlink()
     return changed, len(files)
 
 

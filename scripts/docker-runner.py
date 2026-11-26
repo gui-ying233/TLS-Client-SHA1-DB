@@ -271,6 +271,15 @@ def collect_one(case: Case, target: Target, inbox: Path) -> bool:
     return code == 0 and (inbox / (case['id'] + '.json')).is_file()
 
 
+def persist_inbox(inbox: Path, *, recovered: bool = False) -> None:
+    if any(inbox.rglob('*.json')) or any(inbox.rglob('*.merged')):
+        changed, processed = persist(ROOT, inbox, consume=True)
+        label = 'recovered_artifacts' if recovered else 'artifacts'
+        print(f'{label}={processed} changed_records={changed}', flush=True)
+    for path in inbox.glob('*.skip'):
+        path.unlink()
+
+
 class Arguments(argparse.Namespace):
     target: str | None
     all_supported: bool
@@ -336,13 +345,7 @@ def main() -> int:
     except BlockingIOError:
         parser.error('Another Docker collector is using this checkout; finish it first')
     # Recover a previous interrupted invocation before planning to avoid duplicate samples.
-    recovered = list(inbox.rglob('*.json'))
-    if recovered:
-        changed, processed = persist(ROOT, inbox)
-        print(f'recovered_artifacts={processed} changed_records={changed}', flush=True)
-        for p in inbox.iterdir():
-            if p.suffix in ('.json', '.skip'):
-                p.unlink()
+    persist_inbox(inbox, recovered=True)
     # The snapshot is stable until all workers finish and persist() runs.
     scan_start = time.perf_counter()
     if not args.recheck:
@@ -438,16 +441,7 @@ def main() -> int:
               f'parallel={args.parallel}', flush=True)
         for future in as_completed(inflight):
             record_result(future)
-    artifacts = list(inbox.rglob('*.json'))
-    if artifacts:
-        changed, processed = persist(ROOT, inbox)
-        print(f'artifacts={processed} changed_records={changed}', flush=True)
-        for p in inbox.iterdir():
-            if p.suffix in ('.json', '.skip'):
-                p.unlink()
-    else:
-        for p in inbox.glob('*.skip'):
-            p.unlink()
+    persist_inbox(inbox)
     print(f'summary planned={planned} collected={succeeded} failed={failed} planning_errors={discovery_errors}', flush=True)
     print('Changes are local. Review and commit/push them yourself.', flush=True)
     return 1 if failed or discovery_errors else 0

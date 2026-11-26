@@ -15,6 +15,7 @@ from fpdb.core import DataError, FIELDS, compact, extract_echo, json_array, json
 from fpdb.evidence import extract_joint, merge_evidence
 from fpdb.planner import load_config, make_case
 from fpdb.schema import Case, Environment, Evidence, Fingerprint, JSONObject, JSONValue, Record
+from fpdb.versions import sort_key
 
 log = logging.getLogger(__name__)
 
@@ -278,6 +279,15 @@ def collect(root: Path, case: Case) -> Record | None:
             return None
 
     command = _command(adapter["probe"], replacements)
+    if (case["target"] == "node-tsx-ts"
+            and sort_key("3.4.0") <= sort_key(case["client_version"]) < sort_key("3.12.0")):
+        # Node 20+ runs ESM hooks off the main thread. These tsx releases
+        # register their CommonJS hook in the loader, which misses the .ts entry.
+        modules = root / "clients/js/node_modules"
+        loader = modules / "tsx/node_modules/@esbuild-kit/cjs-loader"
+        if not loader.is_dir():
+            loader = modules / "@esbuild-kit/cjs-loader"
+        command[1:1] = ["--require", str(loader.resolve())]
     if case["language"] == "deno" and case.get("verify") is False:
         command.insert(2, "--unsafely-ignore-certificate-errors")
         command.append("--fpdb-no-verify")
