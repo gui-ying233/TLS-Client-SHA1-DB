@@ -1,4 +1,7 @@
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from fpdb.planner import load_config, completed_case_ids, make_case, _pairs
 from fpdb.runtime_compat import local_ca_supported
 
