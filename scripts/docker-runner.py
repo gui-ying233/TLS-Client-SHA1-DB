@@ -22,6 +22,7 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed, wait, F
 from contextlib import nullcontext
 from collections.abc import Iterator
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from threading import Lock
 from typing import ContextManager
 
@@ -262,8 +263,22 @@ def collect_one(case: Case, target: Target, inbox: Path) -> bool:
     env = runtime_environment(case)
     # Explicit case identity is always verified again by fpdb.collector.
     env['FPDB_CASES_JSON'] = json.dumps([case], separators=(',', ':'))
-    with probe_lock(target, case):
-        code = subprocess.run([sys.executable, '-m', 'fpdb.cli', 'collect',
+    with probe_lock(target, case), (
+        TemporaryDirectory(prefix='fpdb-undici-', dir='/tmp')
+        if target['id'] == 'node-undici' else nullcontext()
+    ) as staging:
+        probe_root = ROOT
+        if staging is not None:
+            # Avoid bind-mount reads while Node loads Undici's modules.
+            probe_root = Path(staging)
+            shutil.copyfile(ROOT / 'config.json', probe_root / 'config.json')
+            environments = ROOT / 'config.environments.json'
+            if environments.is_file():
+                shutil.copyfile(environments, probe_root / environments.name)
+            probe = probe_root / 'clients/node/probe.cjs'
+            probe.parent.mkdir(parents=True)
+            shutil.copyfile(ROOT / 'clients/node/probe.cjs', probe)
+        code = subprocess.run([sys.executable, '-m', 'fpdb.cli', '--root', str(probe_root), 'collect',
                                '--cases-env', 'FPDB_CASES_JSON', '--output-dir', str(inbox)],
                               cwd=ROOT, env=env, check=False).returncode
     if code:
